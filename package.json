@@ -1,0 +1,40 @@
+{
+  "name": "minizinc-playground",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "require": "./dist/minizinc-playground.umd.cjs",
+      "default": "./dist/minizinc-playground.js"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@lezer/generator": "^1.2.2",
+    "@sveltejs/vite-plugin-svelte": "^2.0.2",
+    "sass": "^1.58.1",
+    "svelte": "^3.55.1",
+    "vite": "^4.1.1"
+  },
+  "dependencies": {
+    "@codemirror/lang-json": "^6.0.1",
+    "@fortawesome/free-solid-svg-icons": "^6.3.0",
+    "@lezer/highlight": "^1.1.3",
+    "@lezer/lr": "^1.3.3",
+    "bulma": "^0.9.4",
+    "codemirror": "^6.0.1",
+    "file-saver": "^2.0.5",
+    "jszip": "^3.10.1",
+    "lodash": "^4.17.21",
+    "minizinc": "^4.0.0",
+    "split.js": "^1.6.5",
+    "svelte-fa": "^3.0.3",
+    "thememirror": "^2.0.1"
+  }
+}

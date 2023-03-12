@@ -1,0 +1,30 @@
+name: Embeddable library
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - run: npm ci
+      - run: npm run build
+        env:
+          EMBEDDED_PLAYGROUND: "y"
+      - name: Deploy
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          git config --global user.email "<>"
+          git config --global user.name "Automatic library publish"
+          git add -f dist/*
+          git commit -m "Publish library (${GITHUB_SHA})"
+          git push -f origin "${GITHUB_REF_NAME}:library"

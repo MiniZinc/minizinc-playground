@@ -1,0 +1,374 @@
+@precedence {
+  call,
+  default @left,
+  annotation @left,
+  unary,
+  exponent @left,
+  multiplicative @left,
+  additive @left,
+  intersect @left,
+  unaryRange @left,
+  range @left,
+  symdiff @left,
+  set_diff @left,
+  union @left,
+  comparative @left,
+  conjunction @left,
+  exclusive_disjunction @left,
+  disjunction @left,
+  implication @left,
+  equivalence @left
+}
+
+@top SourceFile {  
+  (item ";")* item?
+}
+
+item {
+  Annotation |
+  Assignment |
+  Constraint |
+  Declaration |
+  Enumeration |
+  FunctionItem |
+  Goal |
+  Include |
+  Output |
+  Predicate |
+  TypeAlias
+}
+
+Annotation {
+  kw<"annotation"> identifier parameters? ("=" !equivalence expression)?
+}
+
+Assignment {
+  identifier ~conflict1 "=" !equivalence expression
+}
+
+Constraint {
+  kw<"constraint"> annotationList? expression
+}
+
+Declaration {
+  type ":" identifier annotationList? ("=" !equivalence expression)?
+}
+
+Enumeration {
+  kw<"enum"> identifier annotationList? ("=" !equivalence expression)?
+}
+
+FunctionItem {
+  kw<"function"> type ":" identifier parameters annotationList? ("=" !equivalence expression)?
+}
+
+Goal {
+  kw<"solve"> annotationList? (kw<"satisfy"> | (kw<"maximize"> | kw<"minimize">) expression)
+}
+
+Include {
+  kw<"include"> StringLiteral
+}
+
+Output {
+  kw<"output"> ("::" !annotation StringLiteral)? expression
+}
+
+Predicate {
+  (kw<"predicate"> | kw<"test">) identifier parameters annotationList? ("=" expression)?
+}
+
+annotationList {
+  !annotation "::" expression
+}
+
+parameters {
+  "(" (Parameter ",")* Parameter? ")"
+}
+
+Parameter {
+  type (":" identifier annotationList?)?
+}
+
+TypeAlias {
+  kw<"type"> identifier "=" type
+}
+
+expression {
+  literal |
+  ArrayComprehension |
+  IfThenElse |
+  InfixOperator |
+  LetExpression |
+  PrefixOperator |
+  PostfixOperator |
+  SetComprehension |
+  identifier ~conflict1 |
+  Call |
+  GeneratorCall |
+  IndexedAccess |
+  TupleAccess |
+  RecordAccess |
+  ParenthesisedExpression
+}
+
+ParenthesisedExpression {
+  "(" expression ")"
+}
+
+ArrayComprehension {
+  "[" (expression ":")? expression "|" Generator ("," Generator)* ","? "]"
+}
+
+Call {
+  identifier !call Application
+}
+
+Application {
+  "(" (expression ~generatorConflict ",")* expression? ")"
+}
+
+GeneratorCall {
+  identifier !call GeneratorCallGenerators ParenthesisedExpression
+}
+
+GeneratorCallGenerators {
+  "(" Generator ("," Generator)* ","? ")"
+}
+
+Generator {
+  identifier ~generatorConflict ("," identifier)* ","? !comparative kw<"in"> expression (kw<"where"> expression)?
+}
+
+IfThenElse {
+  kw<"if"> expression kw<"then"> expression (kw<"elseif"> expression kw<"then"> expression)* (kw<"else"> expression)? kw<"endif">
+}
+
+IndexedAccess {
+  expression !call "[" (".." | "<.." | "..<" | "<..<" | expression ~indexConflict) ("," (".." | "<.." | "..<" | "<..<" | expression))* ","? "]"
+}
+
+TupleAccess {
+  expression !call "." Number { tuple_accessor }
+}
+
+RecordAccess {
+  expression !call "." identifier
+}
+
+InfixOperator {
+  (expression !equivalence ("<->" | "⟷" | "⇔") expression) |
+  (expression !implication ("->" | "→" | "⇒" | "<-" | "←" | "⇐") expression) |
+  (expression !disjunction ("\\/" | "∨") expression) |
+  (expression !exclusive_disjunction (kw<"xor"> | "⊻") expression) |
+  (expression !conjunction ("/\\" | "∧") expression) |
+  (expression !comparative ("=" | "==" | "!=" | "≠" | "<" | "<=" | "≤" | ">" | ">=" | "≥" | kw<"in"> | "∈" | kw<"subset"> | "⊆" | kw<"superset"> | "⊇" | "~=" | "~!=") expression) |
+  (expression !union (kw<"union"> | "∪") expression) |
+  (expression !set_diff (kw<"diff"> | "∖") expression) |
+  (expression !symdiff kw<"symdiff"> expression) |
+  (expression !intersect (kw<"intersect"> | "∩") expression) |
+  (expression !range (".." | "<.." | "..<" | "<..<") expression) |
+  (expression !additive ("+" | "-" | "++" | "~+" | "~-") expression) |
+  (expression !multiplicative ("*" | "/" | kw<"div"> | kw<"mod"> | "~*" | "~div" | "~/") expression) |
+  (expression !exponent "^" expression) |
+  (expression !default kw<"default"> expression) |
+  (expression !annotation "::" expression)
+}
+
+LetExpression {
+  kw<"let"> LetItems kw<"in"> expression
+}
+
+LetItems {
+  "{" ((Declaration | Constraint) ("," | ";"))* (Declaration | Constraint)? "}"
+}
+
+PrefixOperator {
+  (!unary ("-" | kw<"not"> | kw<"¬">) expression) |
+  (!unaryRange (".." | "<.." | "..<" | "<..<") expression)
+}
+
+PostfixOperator {
+  expression !unaryRange (".." | "<.." | "..<" | "<..<")
+}
+
+SetComprehension {
+  "{" expression "|" Generator ("," Generator)* ","? "}"
+}
+
+type {
+  ArrayType |
+  SetType |
+  TupleType |
+  RecordType |
+  OperationType |
+  TypeBase |
+  AnyType
+}
+
+ArrayType {
+  kw<"array"> "[" TypeBase ("," TypeBase)* ","? "]" kw<"of"> type
+}
+
+SetType {
+  (kw<"var"> | kw<"par">)? kw<"opt">? kw<"set"> kw<"of"> type
+}
+
+TupleType {
+  kw<"tuple"> "(" type "," type ("," type)* ","? ")"
+}
+
+RecordType {
+  kw<"record"> "(" RecordTypeField ("," RecordTypeField)* ","? ")"
+}
+
+RecordTypeField {
+  type ":" identifier
+}
+
+OperationType {
+  kw<"op"> "(" type ":" "(" (type ",")* type? ")" ")"
+}
+
+TypeBase {
+  (kw<"var"> | kw<"par">)? kw<"opt">? (PrimitiveType | TypeInstId | TypeInstEnumId | expression) |
+  kw<"any"> TypeInstId
+}
+
+PrimitiveType {
+  kw<"ann"> |
+  kw<"bool"> |
+  kw<"float"> |
+  kw<"int"> |
+  kw<"string">
+}
+
+AnyType {
+  kw<"any">
+}
+
+literal {
+  (
+    Absent |
+    Anonymous |
+    ArrayLiteral2d |
+    ArrayLiteral |
+    BooleanLiteral |
+    Infinity |
+    Number |
+    EmptySet |
+    SetLiteral |
+    StringLiteral |
+    TupleLiteral |
+    RecordLiteral
+  )
+  ~conflict2
+}
+
+Anonymous {
+  kw<"_">
+}
+
+ArrayLiteral {
+  "[" (ArrayLiteralMember  ~indexConflict ",")* ArrayLiteralMember? "]"
+}
+
+ArrayLiteralMember {
+  (expression ":")? expression
+}
+
+ArrayLiteral2d {
+  "[|" (((expression ":" ~conflict3)+ | ArrayLiteral2dRow) ("|" ArrayLiteral2dRow)* "|"?)? "|]"
+}
+
+ArrayLiteral2dRow {
+  (expression ":" ~conflict3)? expression ("," expression)* ","?
+}
+
+BooleanLiteral {
+  kw<"true"> |
+  kw<"false">
+}
+
+Infinity {
+  kw<"infinity"> |
+  "∞"
+}
+
+EmptySet {
+  kw<"∅">
+}
+
+SetLiteral {
+  "{" (expression ",")* expression? "}"
+}
+
+TupleLiteral {
+  "(" expression "," expression ("," expression)* ","? ")"
+}
+
+RecordLiteral {
+  "(" RecordMember ("," RecordMember)* ","? ")"
+}
+
+RecordMember {
+  identifier ":" expression
+}
+
+identifier {
+  Identifier |
+  QuotedIdentifier
+}
+
+Interpolation { "\\(" expression ")" }
+
+kw<term> { @specialize[@name=Keyword]<Identifier, term> }
+
+@skip { space | LineComment | BlockComment }
+
+@skip {} {
+  StringLiteral {
+    "\"" (chars | escape | Interpolation)* "\""
+  }
+}
+
+@tokens {
+  space {
+    $[ \t\r\n]+
+  }
+  tuple_accessor {
+    $[1-9] $[0-9]*
+  }
+  TypeInstId {
+    "\\$" $[A-Za-z] $[A-Za-z0-9_]*
+  }
+  TypeInstEnumId {
+    "\\$\\$" $[A-Za-z] $[A-Za-z0-9_]*
+  }
+  Absent {
+    "<>"
+  }
+  Number {
+    ("0x" | "0b" | "0o")? $[0-9]+ ("." $[0-9]+ | $[0-9]+ ("." $[0-9]+)? $[Ee] $[+-]? $[0-9]+)?
+  }
+  chars {
+    !["\n\\]+
+  }
+  escape {
+    ("\\" $[0-7] $[0-7]? $[0-7]?) |
+    ("\\x" $[0-9a-fA-F] $[0-9a-fA-F]?) |
+    "\\n" | "\\t" | "\\\"" | "\\\\"
+  }
+  Identifier {
+    $[A-Za-z_] $[A-Za-z0-9_]*
+  }
+  QuotedIdentifier {
+    "'" ![']* "'"
+  }
+  LineComment {
+    "%" ![\n]*
+  }
+  BlockComment {
+    "/*" (![*] | "\\*" ![\/] | "\\n")* "\\*"? "*/"
+  }
+}
