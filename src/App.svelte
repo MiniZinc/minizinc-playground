@@ -86,7 +86,6 @@
                 undefined,
                 `#session=${newSession()}`
             );
-            return;
         }
 
         const id = window.location.hash.substring(9);
