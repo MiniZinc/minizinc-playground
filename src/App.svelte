@@ -81,7 +81,11 @@
 
         if (!window.location.hash.startsWith('#session=')) {
             // Start new session
-            window.location.hash = `#session=${newSession()}`;
+            window.history.replaceState(
+                undefined,
+                undefined,
+                `#session=${newSession()}`
+            );
             return;
         }
 
