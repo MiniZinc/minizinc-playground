@@ -72,8 +72,37 @@
                 );
                 project = migrateProject(JSON.parse(json));
                 currentSession = newSession();
-                window.location.hash = `#session=${currentSession}`;
+                window.history.replaceState(
+                    undefined,
+                    undefined,
+                    `#session=${currentSession}`
+                );
                 return;
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        if (window.location.hash.startsWith('#code=')) {
+            try {
+                const contents = decodeURIComponent(
+                    window.location.hash.substring(6)
+                );
+                project = {
+                    files: [
+                        {
+                            name: 'Playground.mzn',
+                            contents,
+                            anchor: contents.length,
+                        },
+                    ],
+                };
+                currentSession = newSession();
+                window.history.replaceState(
+                    undefined,
+                    undefined,
+                    `#session=${currentSession}`
+                );
             } catch (e) {
                 console.error(e);
             }
