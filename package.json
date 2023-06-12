@@ -16,25 +16,25 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "@lezer/generator": "^1.2.2",
-    "@sveltejs/vite-plugin-svelte": "^2.0.4",
-    "sass": "^1.60.0",
-    "svelte": "^3.58.0",
-    "vite": "^4.2.1"
+    "@lezer/generator": "^1.2.3",
+    "@sveltejs/vite-plugin-svelte": "^2.4.1",
+    "sass": "^1.63.3",
+    "svelte": "^3.59.1",
+    "vite": "^4.3.9"
   },
   "dependencies": {
     "@codemirror/lang-json": "^6.0.1",
     "@fortawesome/free-solid-svg-icons": "^6.4.0",
-    "@lezer/highlight": "^1.1.4",
-    "@lezer/lr": "^1.3.3",
+    "@lezer/highlight": "^1.1.6",
+    "@lezer/lr": "^1.3.6",
     "bulma": "^0.9.4",
     "codemirror": "^6.0.1",
     "file-saver": "^2.0.5",
     "jszip": "^3.10.1",
     "lodash": "^4.17.21",
-    "minizinc": "^4.0.1",
+    "minizinc": "^4.0.2",
     "split.js": "^1.6.5",
-    "svelte-fa": "^3.0.3",
+    "svelte-fa": "^3.0.4",
     "thememirror": "^2.0.1"
   }
 }
