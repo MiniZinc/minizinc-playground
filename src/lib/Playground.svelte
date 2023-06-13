@@ -25,14 +25,16 @@
     import ModelModal from './ModelModal.svelte';
     import ParameterModal from './ParameterModal.svelte';
     import SolverConfig from './SolverConfig.svelte';
+    import Dropdown from './Dropdown.svelte';
     import { addErrors, lineCharToPos } from '../lang/underline';
     import { onMount, tick } from 'svelte';
     import { EditorView } from 'codemirror';
-    import * as MiniZinc from 'minizinc';
-    import minizincWorker from 'minizinc/minizinc-worker.js?url';
-    import minizincWasm from 'minizinc/minizinc.wasm?url';
-    import minizincData from 'minizinc/minizinc.data?url';
 
+    import * as MiniZincLatest from 'https://cdn.jsdelivr.net/npm/minizinc/dist/minizinc.mjs';
+    import * as MiniZincEdge from 'https://cdn.jsdelivr.net/npm/minizinc@edge/dist/minizinc.mjs';
+
+    export let showVersionSwitcher = true;
+    export let edgeMiniZinc = false;
     export let autoClearOutput = false;
     export let canEditTabs = true;
     export let compilationEnabled = true;
@@ -45,22 +47,55 @@
     export let canToggleShowHidden = true;
     export let showHidden = false;
 
-    let busyState = 1; // Wait for MiniZinc initialisation and mounting
+    let busyState = 0;
     let allSolvers = [];
-    const solversLoaded = new Promise(async (resolve, _reject) => {
-        MiniZinc.shutdown();
-        await MiniZinc.init({
-            workerURL: new URL(minizincWorker, window.location.href),
-            wasmURL: new URL(minizincWasm, window.location.href),
-            dataURL: new URL(minizincData, window.location.href),
-        });
-        allSolvers = await MiniZinc.solvers();
-        await tick();
-        busyState--;
-        resolve();
-    });
+    let solversLoaded;
+    let MiniZinc;
+
+    let minizincVersions = {
+        latest: { label: 'Latest', detail: 'stable' },
+        edge: { label: 'Edge', detail: 'development' },
+    };
+    $: versionItems = [minizincVersions.latest, minizincVersions.edge];
+
+    function loadSolvers(e) {
+        const toLoad = edgeMiniZinc ? MiniZincEdge : MiniZincLatest;
+        if (MiniZinc !== toLoad) {
+            busyState++;
+            const pendingLoad = solversLoaded;
+            solversLoaded = new Promise(async (resolve, _reject) => {
+                if (pendingLoad) {
+                    await pendingLoad;
+                }
+                if (MiniZinc) {
+                    MiniZinc.shutdown();
+                }
+                MiniZinc = toLoad;
+                MiniZinc.shutdown();
+                await MiniZinc.init();
+                const [mznVersion] =
+                    /version \d+\.\d+\.\d+(?:, build .*)?$/m.exec(
+                        await MiniZinc.version()
+                    );
+                const key = edgeMiniZinc ? 'edge' : 'latest';
+                minizincVersions = {
+                    ...minizincVersions,
+                    [key]: { ...minizincVersions[key], detail: mznVersion },
+                };
+                allSolvers = await MiniZinc.solvers();
+                await tick();
+                busyState--;
+                resolve();
+            });
+        }
+        return solversLoaded;
+    }
+
+    $: loadSolvers(edgeMiniZinc);
+
     const mounted = new Promise((resolve, _reject) => {
         onMount(() => {
+            loadSolvers();
             resolve();
         });
     });
@@ -68,12 +103,13 @@
     $: loadProject(project);
 
     export async function loadProject(project) {
+        edgeMiniZinc = project.minizincVersion === 'edge';
         await mounted;
         files = [];
         openFiles(project.files);
         currentIndex = project.tab || 0;
         if (project.solverId) {
-            await solversLoaded;
+            await loadSolvers();
             currentSolverIndex = solvers.findIndex(
                 (s) => s.id === project.solverId
             );
@@ -142,7 +178,7 @@
 
     $: enforceValidSolver(solvers, currentSolverIndex);
     async function enforceValidSolver(_solvers, _currentSolverIndex) {
-        await solversLoaded;
+        await loadSolvers();
         if (currentSolverIndex < 0 || currentSolverIndex >= solvers.length) {
             const idx = solvers.findIndex(
                 (s) => s.extraInfo && s.extraInfo.isDefault
@@ -563,6 +599,7 @@
             tab: currentIndex,
             solverId: currentSolver.id,
             solverConfig: solverConfig.save(),
+            minizincVersion: edgeMiniZinc ? 'edge' : 'latest',
         };
     }
 
@@ -672,6 +709,10 @@
             editor.setCursor(pos);
         }
     }
+
+    function selectVersion(e) {
+        edgeMiniZinc = e.detail.item === minizincVersions.edge;
+    }
 </script>
 
 <div class="mzn-playground">
@@ -719,6 +760,21 @@
                                         >
                                             <span>Compile</span>
                                         </button>
+                                    </div>
+                                {/if}
+                                {#if showVersionSwitcher}
+                                    <div class="control">
+                                        <Dropdown
+                                            items={versionItems}
+                                            currentItem={edgeMiniZinc
+                                                ? minizincVersions.edge
+                                                : minizincVersions.latest}
+                                            on:selectItem={selectVersion}
+                                        >
+                                            <span slot="item" let:item>
+                                                {item.label} ({item.detail})
+                                            </span>
+                                        </Dropdown>
                                     </div>
                                 {/if}
                                 <slot name="navbar-run-buttons" />
