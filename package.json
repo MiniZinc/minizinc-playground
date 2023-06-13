@@ -16,8 +16,9 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "@lezer/generator": "^1.2.3",
+    "@lezer/generator": "^1.2.4",
     "@sveltejs/vite-plugin-svelte": "^2.4.1",
+    "minizinc": "^4.0.2",
     "sass": "^1.63.3",
     "svelte": "^3.59.1",
     "vite": "^4.3.9"
@@ -32,7 +33,6 @@
     "file-saver": "^2.0.5",
     "jszip": "^3.10.1",
     "lodash": "^4.17.21",
-    "minizinc": "^4.0.2",
     "split.js": "^1.6.5",
     "svelte-fa": "^3.0.4",
     "thememirror": "^2.0.1"
