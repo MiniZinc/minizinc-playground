@@ -46,6 +46,8 @@
     export let externalPlaygroundURL = null;
     export let canToggleShowHidden = true;
     export let showHidden = false;
+    export let splitterDirection = 'vertical'
+    export let splitterSize = 75;
 
     let busyState = 0;
     let allSolvers = [];
@@ -886,7 +888,7 @@
         </div>
         <div class="grow main-panel">
             <div class="left">
-                <SplitPanel direction="vertical" split={75}>
+                <SplitPanel direction={splitterDirection} bind:split={splitterSize}>
                     <div class="panel stack" slot="panelA">
                         <div class="top">
                             <Tabs
@@ -916,6 +918,7 @@
                             on:clear={() => (output = [])}
                             on:goto={(e) => gotoLocation(e.detail.location)}
                             bind:autoClearOutput
+                            bind:orientation={splitterDirection}
                         />
                     </div>
                 </SplitPanel>

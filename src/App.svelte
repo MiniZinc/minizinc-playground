@@ -7,7 +7,12 @@
         files: [],
     };
 
-    let settings = { autoClearOutput: false, sessions: {} };
+    let settings = {
+        autoClearOutput: false,
+        splitterDirection: 'vertical',
+        splitterSize: 75,
+        sessions: {},
+    };
     try {
         const savedSettings = localStorage.getItem('mznPlayground');
         if (savedSettings && savedSettings.length > 0) {
@@ -164,6 +169,8 @@
         bind:this={playground}
         {project}
         bind:autoClearOutput={settings.autoClearOutput}
+        bind:splitterDirection={settings.splitterDirection}
+        bind:splitterSize={settings.splitterSize}
     />
 </div>
 

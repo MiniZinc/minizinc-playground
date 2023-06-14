@@ -10,15 +10,19 @@
 
     let instance = null;
 
-    $: init(direction, split);
+    $: init(direction);
+    $: resize(split);
 
-    function init(direction, split) {
+    function init(direction) {
         cleanup();
         if (panelA && panelB) {
             instance = Split([panelA, panelB], {
                 direction,
                 minSize: 0,
                 sizes: [split, 100 - split],
+                onDragEnd(sizes) {
+                    split = sizes[0];
+                },
             });
         }
     }
@@ -30,8 +34,14 @@
         }
     }
 
+    function resize(split) {
+        if (instance && instance.getSizes()[0] !== split) {
+            instance.setSizes([split, 100 - split]);
+        }
+    }
+
     onMount(() => {
-        init(direction, split);
+        init(direction);
         return cleanup;
     });
 </script>
