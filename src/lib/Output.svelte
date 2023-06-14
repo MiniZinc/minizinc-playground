@@ -3,12 +3,15 @@
     import Fa from 'svelte-fa/src/fa.svelte';
     import {
         faEraser,
+        faRotate,
         faTrash,
     } from '@fortawesome/free-solid-svg-icons';
     const dispatch = createEventDispatcher();
 
     export let output;
     export let autoClearOutput = false;
+    export let orientation = 'horizontal';
+
     let outputElement;
     let showStatistics = true;
     let showStderr = true;
@@ -125,6 +128,14 @@
         }
         return `${loc.filename}:${loc.firstLine}.${loc.firstColumn}-${loc.lastLine}.${loc.lastColumn}`;
     }
+
+    function switchOrientation() {
+        if (orientation === 'horizontal') {
+            orientation = 'vertical';
+        } else {
+            orientation = 'horizontal';
+        }
+    }
 </script>
 
 <div class="stack">
@@ -216,6 +227,16 @@
             </button>
         {/if}
         <div class="field has-addons">
+            <p class="control">
+                <button
+                    class="button is-small"
+                    title="Switch orientation"
+                    on:click={switchOrientation}
+                >
+                    <span class="icon"><Fa icon={faRotate} /></span>
+                </button>
+            </p>
+
             <p class="control">
                 <button
                     class="button is-small"
