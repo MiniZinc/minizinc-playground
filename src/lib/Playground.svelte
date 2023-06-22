@@ -538,6 +538,7 @@
             // Cancelled
             return;
         }
+        resetVisualisation();
         const { model, fileList } = mznModel;
         const name = fileList[0];
         const startTime = Date.now();
