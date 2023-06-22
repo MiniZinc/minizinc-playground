@@ -6,20 +6,14 @@
     export let active = false;
     export let parameters;
     export let dataFiles;
-    export let selectedDataFiles = [];
-    export let dataTab = true;
-
+    
+    let dataTab = true;
     let selectedFiles = [];
     let parameterValues = [];
 
-    $: createSelectedFiles(selectedDataFiles);
     $: createParameterValues(parameters);
     $: hasDataFiles = dataFiles.length > 0;
     $: dataTabActive = hasDataFiles && dataTab;
-
-    function createSelectedFiles(selectedDataFiles) {
-        selectedFiles = [...selectedDataFiles];
-    }
 
     function createParameterValues(parameters) {
         parameterValues = Object.keys(parameters)

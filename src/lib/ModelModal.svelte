@@ -4,18 +4,14 @@
     const dispatch = createEventDispatcher();
 
     export let modelFiles;
-    export let selectedModelFile = null;
     export let active = false;
     let selectedModel = null;
 
-    $: init(selectedModelFile);
-    function init(selectedModelFile) {
-        selectedModel =
-            selectedModelFile === null || selectedModelFile === undefined
-                ? modelFiles.length > 0
-                    ? modelFiles[0]
-                    : null
-                : selectedModelFile;
+    $: init(modelFiles);
+    function init(modelFiles) {
+        if (!selectedModel && modelFiles && modelFiles.length > 0) {
+            selectedModel = modelFiles[0];
+        }
     }
 
     function accept() {

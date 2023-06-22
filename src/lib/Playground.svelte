@@ -146,7 +146,6 @@
 
     let needsModel = false;
     let needsData = null;
-    let dataFileTab = true;
 
     $: state = currentFile ? currentFile.state : null;
     $: canRun =
@@ -175,7 +174,6 @@
         .filter((f) => f.name.endsWith('.dzn') || f.name.endsWith('.json'))
         .map((f) => f.name);
 
-    let modelModalModel = null;
     let parameterModalDataFiles = [];
     let parameterModalParameters = {};
 
@@ -361,11 +359,13 @@
 
     let getModelResolve = null;
     async function getModel(addChecker) {
+        busyState++;
         currentFile.state = editor.getState();
         let modelFile = isModel ? currentFile : null;
         if (!modelFile) {
             if (modelFiles.length === 0) {
                 // No models to run
+                busyState--;
                 return false;
             } else if (modelFiles.length === 1) {
                 // Only one model, so use it
@@ -378,6 +378,7 @@
                     });
                     if (!result) {
                         // Cancelled
+                        busyState--;
                         return false;
                     }
                     modelFile = files.find((f) => f.name === result.modelFile);
@@ -442,6 +443,7 @@
                     });
                     if (!result) {
                         // Cancelled
+                        busyState--;
                         return false;
                     }
                     if (result.parameters) {
@@ -452,7 +454,6 @@
                             }
                         }
                         model.addDznString(dzn);
-                        dataFileTab = false;
                         parameterModalParameters = result.parameters;
                     } else {
                         for (const file of result.dataFiles) {
@@ -461,7 +462,6 @@
                                 fileList.push(file);
                             }
                         }
-                        dataFileTab = true;
                         parameterModalDataFiles = result.dataFiles;
                     }
                 } finally {
@@ -472,18 +472,22 @@
             // Ignore and just run
             console.error(e);
         }
+        busyState--;
         return { model, fileList };
     }
 
     async function run() {
-        busyState++;
         const mznModel = await getModel(true);
         if (!mznModel) {
             // Cancelled
-            busyState--;
             return;
         }
         const { model, fileList } = mznModel;
+        const options = solverConfig.getSolvingConfiguration(currentSolver.id);
+        await runWith(model, fileList, options);
+    }
+
+    async function runWith(model, fileList, options) {
         const startTime = Date.now();
         if (autoClearOutput) {
             output = [];
@@ -496,14 +500,10 @@
             },
         ];
         minizinc = model.solve({
-            options: solverConfig.getSolvingConfiguration(currentSolver.id),
+            options,
             jsonOutput: false,
         });
-        busyState--;
-        if (visualisation) {
-            visualisation.reset();
-        }
-        hasVisualisation = false;
+        resetVisualisation();
         minizinc.on('error', addOutput);
         minizinc.on('warning', addOutput);
         minizinc.on('solution', (v) => addOutput(v, Date.now() - startTime));
@@ -533,11 +533,9 @@
     }
 
     async function compile() {
-        busyState++;
         const mznModel = await getModel(true);
         if (!mznModel) {
             // Cancelled
-            busyState--;
             return;
         }
         const { model, fileList } = mznModel;
@@ -557,7 +555,6 @@
         minizinc = model.compile({
             options: solverConfig.getCompilationConfiguration(currentSolver.id),
         });
-        busyState--;
         minizinc.on('error', addOutput);
         minizinc.on('warning', addOutput);
         minizinc.on('statistics', addOutput);
@@ -601,6 +598,14 @@
         processVisMessage(value, time);
         output[output.length - 1].output.push(value);
         output = output; // Force update
+    }
+
+    function resetVisualisation() {
+        if (visualisation) {
+            visualisation.reset();
+        }
+        hasVisualisation = false;
+        visualisationOpen = false;
     }
 
     async function processVisMessage(value, time) {
@@ -798,6 +803,45 @@
     let visualisation;
     let hasVisualisation = false;
     let visualisationOpen = false;
+
+    function visReSolve(cfg) {
+        if (minizinc) {
+            stop();
+        }
+
+        const fileList = [cfg.modelFile];
+        const modelFileName = cfg.modelFile.substring(
+            0,
+            cfg.modelFile.length - 4
+        );
+        const checker = files.find(
+            (f) =>
+                f.name === `${modelFileName}.mzc` ||
+                f.name === `${modelFileName}.mzc.mzn`
+        );
+        if (checker) {
+            fileList.push(checker.name);
+        }
+        if (cfg.dataFiles) {
+            for (const dzn of cfg.dataFiles) {
+                fileList.push(dzn);
+            }
+        }
+        const model = new MiniZinc.Model();
+        for (const file of files) {
+            model.addFile(
+                file.name,
+                file.state.doc.toString(),
+                fileList.indexOf(file.name) !== -1
+            );
+        }
+        runWith(
+            model,
+            fileList,
+            cfg.options ||
+                solverConfig.getSolvingConfiguration(currentSolver.id)
+        );
+    }
 </script>
 
 <div class="mzn-playground">
@@ -1046,7 +1090,10 @@
                                 class="tab-window"
                                 class:visible={visualisationOpen}
                             >
-                                <Visualisation bind:this={visualisation} />
+                                <Visualisation
+                                    bind:this={visualisation}
+                                    on:solve={(e) => visReSolve(e.detail)}
+                                />
                             </div>
                             <div
                                 class="tab-window"
@@ -1127,7 +1174,6 @@
     <ModelModal
         active={needsModel}
         {modelFiles}
-        selectedModelFile={modelModalModel}
         on:accept={(e) => getModelResolve(e.detail)}
         on:cancel={() => getModelResolve(false)}
     />
@@ -1135,8 +1181,6 @@
     <ParameterModal
         active={needsData}
         {dataFiles}
-        selectedDataFiles={parameterModalDataFiles}
-        dataTab={dataFileTab}
         parameters={parameterModalParameters}
         on:accept={(e) => getModelResolve(e.detail)}
         on:cancel={() => getModelResolve(false)}
