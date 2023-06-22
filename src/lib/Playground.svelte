@@ -11,6 +11,7 @@
         faDownload,
         faClipboard,
         faArrowUpRightFromSquare,
+        faRotate,
     } from '@fortawesome/free-solid-svg-icons';
     import Modal from './Modal.svelte';
     import { EditorState } from '@codemirror/state';
@@ -19,8 +20,10 @@
         JSONEditorExtensions,
         ReadonlyTextExtensions,
         DataZincEditorExtensions,
+        HTMLEditorExtensions,
     } from '../lang';
     import Output from './Output.svelte';
+    import Visualisation from './Visualisation.svelte';
     import NewFileModal from './NewFileModal.svelte';
     import ModelModal from './ModelModal.svelte';
     import ParameterModal from './ParameterModal.svelte';
@@ -46,12 +49,15 @@
     export let externalPlaygroundURL = null;
     export let canToggleShowHidden = true;
     export let showHidden = false;
-    export let splitterDirection = 'vertical'
+    export let splitterDirection = 'vertical';
     export let splitterSize = 75;
 
     let busyState = 0;
     let allSolvers = [];
     let solversLoaded;
+    /**
+     * @type typeof MiniZincLatest
+     */
     let MiniZinc;
 
     let minizincVersions = {
@@ -236,6 +242,9 @@
         }
         if (suffix === '.dzn') {
             return DataZincEditorExtensions;
+        }
+        if (suffix === '.html') {
+            return HTMLEditorExtensions;
         }
         return mznExtensions;
     }
@@ -491,12 +500,16 @@
             jsonOutput: false,
         });
         busyState--;
+        if (visualisation) {
+            visualisation.reset();
+        }
+        hasVisualisation = false;
         minizinc.on('error', addOutput);
         minizinc.on('warning', addOutput);
-        minizinc.on('solution', addOutput);
-        minizinc.on('status', addOutput);
+        minizinc.on('solution', (v) => addOutput(v, Date.now() - startTime));
+        minizinc.on('status', (v) => addOutput(v, Date.now() - startTime));
         minizinc.on('statistics', addOutput);
-        minizinc.on('trace', addOutput);
+        minizinc.on('trace', (v) => addOutput(v, Date.now() - startTime));
         minizinc.on('statistics', addOutput);
         minizinc.on('comment', addOutput);
         minizinc.on('time', addOutput);
@@ -584,9 +597,64 @@
         minizinc.cancel();
     }
 
-    async function addOutput(value) {
+    function addOutput(value, time) {
+        processVisMessage(value, time);
         output[output.length - 1].output.push(value);
         output = output; // Force update
+    }
+
+    async function processVisMessage(value, time) {
+        if (value.type === 'trace' && value.section === 'vis_json') {
+            if (!hasVisualisation) {
+                hasVisualisation = true;
+                visualisationOpen = true;
+            }
+            await tick();
+            const file = files.find((f) => f.name === value.message.url);
+            let html = null;
+            if (file) {
+                html = file.state.doc.toString();
+            } else {
+                try {
+                    html = await MiniZinc.readStdlibFileContents(
+                        value.message.url
+                    );
+                } catch (e) {
+                    console.error(e);
+                    return;
+                }
+            }
+            if (html === null) {
+                console.error(
+                    `Failed to get visualisation file ${value.message.url}`
+                );
+                return;
+            }
+            visualisation.addVisualisation(html, value.message.userData);
+            return;
+        }
+        if (hasVisualisation) {
+            while (!visualisation) {
+                await tick();
+            }
+            switch (value.type) {
+                case 'solution':
+                    visualisation.addSolution(
+                        value.output.vis_json,
+                        'time' in value ? value.time : time
+                    );
+                    break;
+                case 'status':
+                    visualisation.status(
+                        value.status,
+                        'time' in value ? value.time : time
+                    );
+                    break;
+                case 'exit':
+                    visualisation.status('time' in value ? value.time : time);
+                    break;
+            }
+        }
     }
 
     export function getProject() {
@@ -712,9 +780,24 @@
         }
     }
 
+    function switchOrientation() {
+        if (splitterDirection === 'horizontal') {
+            splitterDirection = 'vertical';
+        } else {
+            splitterDirection = 'horizontal';
+        }
+    }
+
     function selectVersion(e) {
         edgeMiniZinc = e.detail.item === minizincVersions.edge;
     }
+
+    /**
+     * @type Visualisation
+     */
+    let visualisation;
+    let hasVisualisation = false;
+    let visualisationOpen = false;
 </script>
 
 <div class="mzn-playground">
@@ -772,6 +855,7 @@
                                                 ? minizincVersions.edge
                                                 : minizincVersions.latest}
                                             on:selectItem={selectVersion}
+                                            disabled={isRunning}
                                         >
                                             <span slot="item" let:item>
                                                 {item.label} ({item.detail})
@@ -888,7 +972,10 @@
         </div>
         <div class="grow main-panel">
             <div class="left">
-                <SplitPanel direction={splitterDirection} bind:split={splitterSize}>
+                <SplitPanel
+                    direction={splitterDirection}
+                    bind:split={splitterSize}
+                >
                     <div class="panel stack" slot="panelA">
                         <div class="top">
                             <Tabs
@@ -912,14 +999,88 @@
                             {/if}
                         </div>
                     </div>
-                    <div class="panel" slot="panelB">
-                        <Output
-                            {output}
-                            on:clear={() => (output = [])}
-                            on:goto={(e) => gotoLocation(e.detail.location)}
-                            bind:autoClearOutput
-                            bind:orientation={splitterDirection}
-                        />
+                    <div class="panel stack" slot="panelB">
+                        {#if hasVisualisation}
+                            <div class="top">
+                                <div class="tabs is-boxed">
+                                    <ul>
+                                        <li
+                                            class:is-active={!visualisationOpen}
+                                        >
+                                            <!-- svelte-ignore a11y-invalid-attribute -->
+                                            <a
+                                                href="javascript:void(0);"
+                                                on:click={() => {
+                                                    visualisationOpen = false;
+                                                }}>Output</a
+                                            >
+                                        </li>
+                                        <li class:is-active={visualisationOpen}>
+                                            <!-- svelte-ignore a11y-invalid-attribute -->
+                                            <a
+                                                href="javascript:void(0);"
+                                                on:click={() => {
+                                                    visualisationOpen = true;
+                                                }}>Visualisation</a
+                                            >
+                                        </li>
+                                        <li class="tab-end">
+                                            <button
+                                                class="button is-small"
+                                                title="Switch orientation"
+                                                on:click={switchOrientation}
+                                            >
+                                                <span class="icon"
+                                                    ><Fa
+                                                        icon={faRotate}
+                                                    /></span
+                                                >
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        {/if}
+                        <div class="grow">
+                            <div
+                                class="tab-window"
+                                class:visible={visualisationOpen}
+                            >
+                                <Visualisation bind:this={visualisation} />
+                            </div>
+                            <div
+                                class="tab-window"
+                                class:visible={!hasVisualisation ||
+                                    !visualisationOpen}
+                            >
+                                <Output
+                                    {output}
+                                    on:clear={() => (output = [])}
+                                    on:goto={(e) =>
+                                        gotoLocation(e.detail.location)}
+                                    bind:autoClearOutput
+                                >
+                                    <p
+                                        class="control"
+                                        slot="before-right-controls"
+                                    >
+                                        {#if !hasVisualisation}
+                                            <button
+                                                class="button is-small"
+                                                title="Switch orientation"
+                                                on:click={switchOrientation}
+                                            >
+                                                <span class="icon"
+                                                    ><Fa
+                                                        icon={faRotate}
+                                                    /></span
+                                                >
+                                            </button>
+                                        {/if}
+                                    </p>
+                                </Output>
+                            </div>
+                        </div>
                     </div>
                 </SplitPanel>
             </div>
@@ -1047,5 +1208,18 @@
     }
     .panel {
         height: 100%;
+    }
+    .tab-end {
+        flex: 1 1 auto;
+        display: flex !important;
+        justify-content: flex-end;
+        padding-right: 0.5rem;
+    }
+    .tab-window {
+        display: none;
+        height: 100%;
+    }
+    .tab-window.visible {
+        display: block;
     }
 </style>

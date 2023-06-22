@@ -62,6 +62,16 @@
                 >
             </li>
         </ul>
+        <p class="menu-label">Visualisation</p>
+        <ul class="menu-list">
+            <li>
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-missing-attribute -->
+                <a on:click={() => dispatch('new', { type: '.html' })}
+                    >Custom visualisation (.html)</a
+                >
+            </li>
+        </ul>
         <p class="menu-label">Import</p>
         <ul class="menu-list">
             <li>
@@ -80,5 +90,5 @@
     bind:files
     on:change={uploaded}
     multiple
-    accept=".mzn,.mzc,.dzn,.json"
+    accept=".mzn,.mzc,.dzn,.json,.html"
 />

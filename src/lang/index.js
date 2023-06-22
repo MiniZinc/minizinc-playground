@@ -13,6 +13,7 @@ import {
 } from '@codemirror/language';
 import { styleTags, tags as t } from '@lezer/highlight';
 import { json } from '@codemirror/lang-json';
+import { html } from '@codemirror/lang-html';
 import { debounce } from 'lodash';
 
 export const MiniZincLanguage = LRLanguage.define({
@@ -127,6 +128,7 @@ export const MiniZincEditorExtensions = (f) => [
     EditorView.updateListener.of(debounce(f, 250)),
 ];
 export const JSONEditorExtensions = [...extensions, json()];
+export const HTMLEditorExtensions = [...extensions, html()];
 
 export const ReadonlyTextExtensions = [
     ...extensions,
