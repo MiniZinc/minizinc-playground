@@ -477,6 +477,16 @@
     }
 
     async function run() {
+        if (isFzn) {
+            const model = new MiniZinc.Model();
+            model.addFile(currentFile.name, currentFile.state.doc.toString());
+            const fileList = [currentFile.name];
+            const options = solverConfig.getSolvingConfiguration(
+                currentSolver.id
+            );
+            await runWith(model, fileList, options);
+            return;
+        }
         const mznModel = await getModel(true);
         if (!mznModel) {
             // Cancelled
