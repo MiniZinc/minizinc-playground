@@ -115,8 +115,8 @@
                 if (message.message.event === 'goToSolution') {
                     prevFollowLatest = message.message.payload === -1;
                     followLatest = message.message.payload === -1;
-                    prevSolution = message.message.payload;
-                    currentSolution = message.message.payload;
+                    prevSolution = message.message.payload + 1;
+                    currentSolution = message.message.payload + 1;
                 }
                 break;
             case 'solve':
