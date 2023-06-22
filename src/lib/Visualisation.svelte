@@ -73,7 +73,7 @@
         for (let i = 0; i < visualisations.length; i++) {
             const payload = {
                 time,
-                data: solution[i],
+                data: solution ? solution[i] : null,
             };
             visualisations[i].solutions.push(payload);
             sendMessage({ event: 'solution', payload }, visualisations[i]);
