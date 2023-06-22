@@ -3,14 +3,12 @@
     import Fa from 'svelte-fa/src/fa.svelte';
     import {
         faEraser,
-        faRotate,
         faTrash,
     } from '@fortawesome/free-solid-svg-icons';
     const dispatch = createEventDispatcher();
 
     export let output;
     export let autoClearOutput = false;
-    export let orientation = 'horizontal';
 
     let outputElement;
     let showStatistics = true;
@@ -46,6 +44,7 @@
             ...messages.filter((m) => m.type === 'trace').map((m) => m.section),
         ]);
         sections.delete('raw'); // Exclude raw section
+        sections.delete('vis_json'); // Exclude vis_json section
         const result = [...sections.values()];
         result.sort();
         hiddenSections = hiddenSections.filter((s) => sections.has(s));
@@ -127,14 +126,6 @@
             return `${loc.filename}:${loc.firstLine}.${loc.firstColumn}-${loc.lastColumn}`;
         }
         return `${loc.filename}:${loc.firstLine}.${loc.firstColumn}-${loc.lastLine}.${loc.lastColumn}`;
-    }
-
-    function switchOrientation() {
-        if (orientation === 'horizontal') {
-            orientation = 'vertical';
-        } else {
-            orientation = 'horizontal';
-        }
     }
 </script>
 
@@ -227,15 +218,7 @@
             </button>
         {/if}
         <div class="field has-addons">
-            <p class="control">
-                <button
-                    class="button is-small"
-                    title="Switch orientation"
-                    on:click={switchOrientation}
-                >
-                    <span class="icon"><Fa icon={faRotate} /></span>
-                </button>
-            </p>
+            <slot name="before-right-controls"/>
 
             <p class="control">
                 <button
@@ -276,7 +259,7 @@
                         {#each run.output as msg}
                             {#if msg.type === 'solution'}
                                 {#each msg.sections as section}
-                                    {#if hiddenSections.indexOf(section) === -1}
+                                    {#if hiddenSections.indexOf(section) === -1 && section !== 'vis_json'}
                                         {#if section === 'json' || section.endsWith('_json')}
                                             <pre>{JSON.stringify(
                                                     msg.output[section],
@@ -326,8 +309,18 @@
                                     <br />
                                 {/if}
                             {:else if msg.type === 'trace'}
-                                {#if hiddenSections.indexOf(msg.section) === -1}
-                                    <pre class="mzn-trace">{msg.message}</pre>
+                                {#if hiddenSections.indexOf(msg.section) === -1 && msg.section !== 'vis_json'}
+                                    {#if msg.section === 'json' || msg.section.endsWith('_json')}
+                                        <pre>{JSON.stringify(
+                                                msg.message,
+                                                null,
+                                                2
+                                            )}</pre>
+                                        <br />
+                                    {:else}
+                                        <pre
+                                            class="mzn-trace">{msg.message}</pre>
+                                    {/if}
                                 {/if}
                             {:else if msg.type === 'comment'}
                                 <pre class="mzn-comment">{msg.comment}</pre>

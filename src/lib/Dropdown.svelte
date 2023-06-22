@@ -9,6 +9,7 @@
     export let currentItem = null;
 
     export let active = false;
+    export let disabled = false;
 
     let element;
 
@@ -28,7 +29,7 @@
 
 <div class="dropdown" class:is-active={active} bind:this={element}>
     <div class="dropdown-trigger">
-        <button class="button" on:click={() => (active = !active)}>
+        <button class="button" on:click={() => (active = !active)} {disabled}>
             <span>
                 {#if currentItem}
                     <slot name="selected" item={currentItem}>
