@@ -2,18 +2,12 @@
     import { createEventDispatcher } from 'svelte';
     import Tab from './Tab.svelte';
     import Fa from 'svelte-fa/src/fa.svelte';
-    import {
-        faPlus,
-        faEye,
-        faEyeSlash,
-    } from '@fortawesome/free-solid-svg-icons';
+    import { faPlus, faFolderTree } from '@fortawesome/free-solid-svg-icons';
     import { flip } from 'svelte/animate';
 
     export let files = [];
     export let currentIndex = 0;
     export let readonly = false;
-    export let showHidden = false;
-    export let canToggleShowHidden = true;
 
     const dispatch = createEventDispatcher();
 
@@ -55,13 +49,11 @@
         dispatch('close', { index });
     }
 
-    function toggleShowHidden() {
-        showHidden = !showHidden;
-    }
-
     $: tabs = files
         .map((f, index) => {
-            const dot = f.name.indexOf('.');
+            const dot = f.name.endsWith('.mzc.mzn')
+                ? f.name.length - 8
+                : f.name.lastIndexOf('.');
             return {
                 ...f,
                 stem: f.name.substring(0, dot),
@@ -69,8 +61,7 @@
                 index,
             };
         })
-        .filter((f) => showHidden || !f.hidden);
-    $: hasHiddenTabs = files.some((f) => f.hidden);
+        .filter((f) => !f.hidden);
 </script>
 
 <div class="tabs is-boxed">
@@ -106,18 +97,14 @@
                     </span>
                 </a>
             </li>
-        {/if}
-        {#if canToggleShowHidden && hasHiddenTabs}
-            <li class="show-hidden">
+            <li class="right">
                 <button
                     class="button is-small"
-                    class:is-primary={showHidden}
-                    class:is-light={!showHidden}
-                    title="Click to {showHidden ? 'hide' : 'show'} hidden files"
-                    on:click={toggleShowHidden}
+                    title="Manage files"
+                    on:click={() => dispatch('manageFiles')}
                 >
                     <span class="icon">
-                        <Fa icon={showHidden ? faEye : faEyeSlash} />
+                        <Fa icon={faFolderTree} />
                     </span>
                 </button>
             </li>
@@ -133,7 +120,7 @@
     .add-icon {
         margin: 0 !important;
     }
-    .show-hidden {
+    .right {
         flex: 1 1 auto;
         display: flex !important;
         justify-content: flex-end;
