@@ -25,6 +25,7 @@
     import Output from './Output.svelte';
     import Visualisation from './Visualisation.svelte';
     import NewFileModal from './NewFileModal.svelte';
+    import ManageFilesModal from './ManageFilesModal.svelte';
     import ModelModal from './ModelModal.svelte';
     import ParameterModal from './ParameterModal.svelte';
     import SolverConfig from './SolverConfig.svelte';
@@ -47,8 +48,6 @@
     export let showShareButton = true;
     export let showDownloadButton = true;
     export let externalPlaygroundURL = null;
-    export let canToggleShowHidden = true;
-    export let showHidden = false;
     export let splitterDirection = 'vertical';
     export let splitterSize = 75;
 
@@ -143,10 +142,12 @@
 
     let newFileRequested = false;
     let deleteFileRequested = null;
+    let managingFiles = false;
 
     let needsModel = false;
     let needsData = null;
 
+    $: visibleFileCount = files.filter((f) => !f.hidden).length;
     $: state = currentFile ? currentFile.state : null;
     $: canRun =
         busyState === 0 && currentSolver && (isModel || isData || isFzn);
@@ -206,17 +207,23 @@
         showSolverConfig = !showSolverConfig;
     }
 
-    function selectTab(index) {
+    async function selectTab(index) {
         if (editor) {
             if (currentIndex < files.length) {
                 currentFile.state = editor.getState();
                 currentFile.scrollTop = editor.getView().scrollDOM.scrollTop;
                 currentFile.scrollLeft = editor.getView().scrollDOM.scrollLeft;
             }
-            while (!showHidden && index > 0 && files[index].hidden) {
-                index--;
-            }
-            currentIndex = index;
+        }
+        while (index >= 0 && files[index].hidden) {
+            index--;
+        }
+        if (index === -1) {
+            index = files.findIndex((f) => !f.hidden);
+        }
+        currentIndex = index;
+        await tick();
+        if (editor && currentFile) {
             editor.focus();
             if (currentFile.scrollTop !== undefined) {
                 editor.getView().requestMeasure({
@@ -233,18 +240,18 @@
 
     function getExtensions(suffix) {
         if (suffix === '.json' || suffix === '.mpc') {
-            return JSONEditorExtensions;
+            return [...JSONEditorExtensions];
         }
         if (suffix === '.mzc') {
-            return ReadonlyTextExtensions;
+            return [...ReadonlyTextExtensions];
         }
         if (suffix === '.dzn') {
-            return DataZincEditorExtensions;
+            return [...DataZincEditorExtensions];
         }
         if (suffix === '.html') {
-            return HTMLEditorExtensions;
+            return [...HTMLEditorExtensions];
         }
-        return mznExtensions;
+        return [...mznExtensions];
     }
 
     function newFile(suffix) {
@@ -282,7 +289,7 @@
                 name = `${stem}-${i++}${suffix}`;
             }
             const extensions = getExtensions(suffix);
-            if (file.readonlyContent) {
+            if (file.readOnly) {
                 extensions.push(EditorView.editable.of(false));
             }
             toAdd.push({
@@ -308,7 +315,9 @@
         while (files.some((f) => f === dest + suffix)) {
             dest = `${name}-${i++}`;
         }
-        currentFile.state = editor.getState();
+        if (currentFile) {
+            currentFile.state = editor.getState();
+        }
         files = [
             ...files.slice(0, index),
             { ...files[index], name: name + suffix },
@@ -317,22 +326,51 @@
     }
 
     function closeFile(index) {
-        if (files.length === 1) {
-            files = [
-                {
-                    name: 'Untitled.mzn',
-                    state: EditorState.create({
-                        extensions: mznExtensions,
-                    }),
-                },
-            ];
-        } else {
-            files = [...files.slice(0, index), ...files.slice(index + 1)];
-        }
+        const createNew = visibleFileCount === 1 && !files[index].hidden;
+        files = [
+            ...files.slice(0, index),
+            ...files.slice(index + 1),
+            ...(createNew
+                ? [
+                      {
+                          name: 'Untitled.mzn',
+                          state: EditorState.create({
+                              extensions: mznExtensions,
+                          }),
+                      },
+                  ]
+                : []),
+        ];
         if (currentIndex >= files.length) {
             selectTab(files.length - 1);
+        } else {
+            selectTab(currentIndex);
         }
         deleteFileRequested = null;
+    }
+
+    function modifyFile(index, opts) {
+        if (currentFile) {
+            currentFile.state = editor.getState();
+        }
+        const file = { ...files[index], ...opts };
+        if ('readOnly' in opts) {
+            const dot = file.name.endsWith('.mzc.mzn')
+                ? file.name.length - 8
+                : file.name.lastIndexOf('.');
+            const suffix = file.name.substring(dot);
+            const extensions = getExtensions(suffix);
+            if (file.readOnly) {
+                extensions.push(EditorView.editable.of(false));
+            }
+            file.state = EditorState.create({
+                doc: file.state.doc,
+                extensions,
+                selection: { anchor: file.anchor || 0 },
+            });
+        }
+        files = [...files.slice(0, index), file, ...files.slice(index + 1)];
+        selectTab(currentIndex);
     }
 
     function reorder(src, dest) {
@@ -681,6 +719,8 @@
             files: files.map((f) => ({
                 name: f.name,
                 contents: f.state.doc.toString(),
+                ...(f.hidden ? { hidden: true } : {}),
+                ...(f.readOnly ? { readOnly: true } : {}),
             })),
             tab: currentIndex,
             solverId: currentSolver.id,
@@ -696,7 +736,8 @@
             const JSZip = (await import('jszip')).default;
             const FileSaver = (await import('file-saver')).default;
             const project = getProject();
-            const names = files.map((f) => f.name);
+            const projectFiles = files.map((f) => f.name);
+            const openFiles = files.filter((f) => !f.hidden).map((f) => f.name);
             let solverId = currentSolver.id;
             if (solverId === 'org.minizinc.gecode_presolver') {
                 solverId = 'org.gecode.gecode';
@@ -711,8 +752,8 @@
                 'Project.mzp',
                 JSON.stringify({
                     version: 105,
-                    projectFiles: names,
-                    openFiles: names,
+                    projectFiles,
+                    openFiles,
                     openTab: project.tab,
                     selectedBuiltinConfigId: solverId,
                     selectedBuiltinConfigVersion: 'default',
@@ -1037,8 +1078,6 @@
                                 {files}
                                 {currentIndex}
                                 readonly={!canEditTabs}
-                                {canToggleShowHidden}
-                                bind:showHidden
                                 on:selectTab={(e) => selectTab(e.detail.index)}
                                 on:reorder={(e) =>
                                     reorder(e.detail.src, e.detail.dest)}
@@ -1046,6 +1085,7 @@
                                 on:rename={rename}
                                 on:close={(e) =>
                                     (deleteFileRequested = e.detail.index)}
+                                on:manageFiles={() => (managingFiles = true)}
                             />
                         </div>
                         <div class="grow">
@@ -1150,6 +1190,15 @@
             />
         </div>
     </div>
+
+    <ManageFilesModal
+        active={managingFiles}
+        {files}
+        on:close={() => (managingFiles = false)}
+        on:delete={(e) => (deleteFileRequested = e.detail.index)}
+        on:modifyFile={(e) => modifyFile(e.detail.index, e.detail.options)}
+        on:newFile={() => (newFileRequested = true)}
+    />
 
     <NewFileModal
         active={newFileRequested}
