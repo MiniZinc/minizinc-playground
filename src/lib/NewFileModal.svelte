@@ -92,3 +92,9 @@
     multiple
     accept=".mzn,.mzc,.dzn,.json,.html"
 />
+
+<style>
+    .is-hidden {
+        display: none;
+    }
+</style>
