@@ -33,6 +33,7 @@
             <li>
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-missing-attribute -->
+                <!-- svelte-ignore a11y-no-static-element-interactions-->
                 <a on:click={() => dispatch('new', { type: '.mzn' })}
                     >Model file (.mzn)</a
                 >
@@ -40,6 +41,7 @@
             <li>
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-missing-attribute -->
+                <!-- svelte-ignore a11y-no-static-element-interactions-->
                 <a on:click={() => dispatch('new', { type: '.mzc.mzn' })}
                     >Solution checker model (.mzc.mzn)</a
                 >
@@ -50,6 +52,7 @@
             <li>
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-missing-attribute -->
+                <!-- svelte-ignore a11y-no-static-element-interactions-->
                 <a on:click={() => dispatch('new', { type: '.dzn' })}
                     >Data file (.dzn)</a
                 >
@@ -57,6 +60,7 @@
             <li>
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-missing-attribute -->
+                <!-- svelte-ignore a11y-no-static-element-interactions-->
                 <a on:click={() => dispatch('new', { type: '.json' })}
                     >JSON data file (.json)</a
                 >
@@ -67,6 +71,7 @@
             <li>
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-missing-attribute -->
+                <!-- svelte-ignore a11y-no-static-element-interactions-->
                 <a on:click={() => dispatch('new', { type: '.html' })}
                     >Custom visualisation (.html)</a
                 >
@@ -77,6 +82,7 @@
             <li>
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-missing-attribute -->
+                <!-- svelte-ignore a11y-no-static-element-interactions-->
                 <a on:click={() => fileInput.click()}>Upload file(s)</a>
             </li>
         </ul>

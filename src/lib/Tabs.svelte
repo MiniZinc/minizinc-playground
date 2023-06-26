@@ -91,6 +91,7 @@
             <li>
                 <!-- svelte-ignore a11y-missing-attribute -->
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-no-static-element-interactions-->
                 <a title="Add new file" on:click={() => dispatch('newFile')}>
                     <span class="icon add-icon">
                         <Fa icon={faPlus} />

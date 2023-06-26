@@ -6,7 +6,7 @@
     export let active = false;
     export let parameters;
     export let dataFiles;
-    
+
     let dataTab = true;
     let selectedFiles = [];
     let parameterValues = [];
@@ -46,11 +46,13 @@
                 <li class:is-active={!dataTab}>
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <!-- svelte-ignore a11y-missing-attribute -->
+                    <!-- svelte-ignore a11y-no-static-element-interactions-->
                     <a on:click={() => (dataTab = false)}>Enter parameters</a>
                 </li>
                 <li class:is-active={dataTab}>
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <!-- svelte-ignore a11y-missing-attribute -->
+                    <!-- svelte-ignore a11y-no-static-element-interactions-->
                     <a on:click={() => (dataTab = true)}>Select data file</a>
                 </li>
             </ul>
