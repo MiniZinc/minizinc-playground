@@ -134,7 +134,7 @@
 {#if active}
     <div transition:fly={{ x: 100, duration: 200 }} class="config-window">
         <button
-            class="button is-white is-small exit-button"
+            class="button is-text is-small exit-button"
             on:click={() => dispatch('close')}
         >
             <span class="icon"><Fa icon={faXmark} /></span>
@@ -282,8 +282,8 @@
         flex: 0 0 30%;
         min-width: 300px;
         max-width: 450px;
-        border-top: solid 1px hsl(0deg, 0%, 86%);
-        border-left: solid 1px hsl(0deg, 0%, 86%);
+        border-top: solid 1px var(--mzn-playground-border);
+        border-left: solid 1px var(--mzn-playground-border);
     }
     .exit-button {
         position: absolute;

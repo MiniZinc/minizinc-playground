@@ -15,4 +15,99 @@ $navbar-breakpoint: 600px;
     box-sizing: border-box;
     line-height: $body-line-height;
     font-family: $body-family;
+    background-color: $dark;
+
+    background-color: $body-background-color;
+    font-size: $body-size;
+    min-width: $body-min-width;
+
+    font-family: $body-family;
+    color: $body-color;
+    font-size: $body-font-size;
+    font-weight: $body-weight;
+    line-height: $body-line-height;
+
+    --mzn-playground-border: hsl(0, 0%, 86%);
+    --mzn-playground-input-background-color: hsl(0, 0%, 100%);
+    --mzn-playground-splitter: #EEE;
+
+}
+
+.mzn-playground.is-dark {
+    $background: hsl(0, 0%, 8%);
+    $border: hsl(0, 0%, 29%);
+    $scheme-main: hsl(0, 0%, 16%);
+    $scheme-main-bis: hsl(0, 0%, 18%);
+    $scheme-main-ter: hsl(0, 0%, 20%);
+    $text: hsl(0, 100%, 96%);
+    $text-strong: hsl(0, 100%, 100%);
+    $link: #6294ff;
+    $link-hover: hsl(0, 0%, 71%);
+    $link-hover-border: hsl(0, 0%, 29%);
+    $link-focus: hsl(0, 0%, 79%);
+    $link-focus-border: hsl(229, 53%,  47%);
+    $link-active: hsl(0, 0%, 79%);
+    $link-active-border: hsl(0, 0%, 71%);
+    $label-color: hsl(0, 0%, 71%);
+    $input-background-color: hsl(0, 0%, 12%);
+    $button-background-color: hsl(0, 0%, 12%);
+    
+    $tag-background-color: hsl(0, 0%, 96%);
+
+    @import "../node_modules/bulma/sass/utilities/_all";
+    @import '../node_modules/bulma/sass/base/_all';
+    @import "../node_modules/bulma/sass/elements/_all";
+    @import "../node_modules/bulma/sass/form/_all";
+    @import "../node_modules/bulma/sass/components/_all";
+    @import "../node_modules/bulma/sass/grid/_all";
+    @import "../node_modules/bulma/sass/helpers/_all";
+    @import "../node_modules/bulma/sass/layout/_all";
+
+    --mzn-playground-border: hsl(0, 0%, 29%);
+    --mzn-playground-input-background-color: hsl(0, 0%, 12%);
+    --mzn-playground-splitter: hsl(0, 0%, 29%);
+
+    .delete {
+        background-color: hsl(0, 0%, 20%);
+        &::before, &::after {
+            background-color: $text;
+        }
+        
+        &:hover, &:focus {
+            background-color: hsl(0, 0%, 16%);
+        }
+        &:active {
+            background-color: hsl(0, 0%, 20%);
+        }
+    }
+    
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: hsl(0, 0%, 24%) hsl(0, 0%, 16%);
+        &::-webkit-scrollbar {
+            width: 8px;
+        }
+        &::-webkit-scrollbar-track {
+            background: hsl(0, 0%, 16%);
+        }
+        &::-webkit-scrollbar-thumb {
+            background-color: hsl(0, 0%, 24%);
+        }
+    }
+    
+    /** Apply these here since we can't apply to body */
+    box-sizing: border-box;
+    line-height: $body-line-height;
+    font-family: $body-family;
+    background-color: $dark;
+
+    background-color: $body-background-color;
+    font-size: $body-size;
+    min-width: $body-min-width;
+
+    font-family: $body-family;
+    color: $body-color;
+    font-size: $body-font-size;
+    font-weight: $body-weight;
+    line-height: $body-line-height;
 }

@@ -313,7 +313,7 @@
         flex: 0 0 auto;
         display: flex;
         padding: 0.5rem;
-        border-bottom: solid 1px hsl(0deg, 0%, 86%);
+        border-bottom: solid 1px var(--mzn-playground-border);
     }
 
     .top > .field {
@@ -326,7 +326,7 @@
         display: grid;
         grid-auto-rows: auto;
         gap: 1px;
-        background: 1px hsl(0deg, 0%, 86%);
+        background: var(--mzn-playground-border);
     }
 
     .vis-window {

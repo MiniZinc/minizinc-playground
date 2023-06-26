@@ -1,5 +1,6 @@
 import { parser } from './minizinc.grammar';
 import { basicSetup } from 'codemirror';
+import { Compartment, EditorState } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { indentWithTab } from '@codemirror/commands';
 import { createTheme } from 'thememirror';
@@ -49,7 +50,8 @@ export const MiniZincLanguage = LRLanguage.define({
             styleTags({
                 Keyword: t.keyword,
                 'Identifier QuotedIdentifier': t.variableName,
-                'Call/Identifier Call/QuotedIdentifier GeneratorCall/Identifier GeneratorCall/QuotedIdentifier': t.name,
+                'Call/Identifier Call/QuotedIdentifier GeneratorCall/Identifier GeneratorCall/QuotedIdentifier':
+                    t.name,
                 Absent: t.null,
                 Anonymous: t.null,
                 BooleanLiteral: t.bool,
@@ -73,7 +75,7 @@ export function MiniZinc() {
     return new LanguageSupport(MiniZincLanguage);
 }
 
-const theme = createTheme({
+const lightTheme = createTheme({
     variant: 'light',
     settings: {
         background: '#fff',
@@ -112,25 +114,100 @@ const theme = createTheme({
     ],
 });
 
-const extensions = [
-    basicSetup,
-    keymap.of([indentWithTab]),
-    theme,
-    EditorView.theme({
-        '&': { height: '100%' },
-        '&.cm-editor.cm-focused': { outline: 'none' },
-        '.cm-content, .cm-gutter': { minHeight: '100%' },
-    }),
-];
-export const DataZincEditorExtensions = [...extensions, MiniZinc()];
-export const MiniZincEditorExtensions = (f) => [
-    ...DataZincEditorExtensions,
-    EditorView.updateListener.of(debounce(f, 250)),
-];
-export const JSONEditorExtensions = [...extensions, json()];
-export const HTMLEditorExtensions = [...extensions, html()];
+const darkTheme = createTheme({
+    variant: 'dark',
+    settings: {
+        background: '#222',
+        foreground: '#F6F6F6',
+        caret: '#EEE',
+        selection: '#036dd626',
+        gutterBackground: '#333',
+        gutterForeground: '#999',
+        lineHighlight: '#90909020',
+    },
+    styles: [
+        {
+            tag: t.comment,
+            color: 'slategray',
+        },
+        {
+            tag: t.string,
+            color: '#e09177',
+        },
+        {
+            tag: [t.number, t.bool, t.null],
+            color: '#a9e07e',
+        },
+        {
+            tag: t.variableName,
+            color: '#FFFFFF',
+        },
+        {
+            tag: t.name,
+            color: '#e6cf77',
+        },
+        {
+            tag: [t.keyword],
+            color: '#54a2e3',
+        },
+    ],
+});
 
-export const ReadonlyTextExtensions = [
-    ...extensions,
-    EditorView.editable.of(false),
-];
+const theme = new Compartment();
+const editable = new Compartment();
+
+export const readOnlyEffect = editable.reconfigure(
+    EditorView.editable.of(false)
+);
+export const editableEffect = editable.reconfigure(
+    EditorView.editable.of(true)
+);
+export const lightThemeEffect = theme.reconfigure(lightTheme);
+export const darkThemeEffect = theme.reconfigure(darkTheme);
+
+export function getExtensions(suffix, codeCheck, darkMode, readOnly = false) {
+    const extensions = [
+        basicSetup,
+        keymap.of([indentWithTab]),
+        theme.of(darkMode ? darkTheme : lightTheme),
+        EditorView.theme({
+            '&': { height: '100%' },
+            '&.cm-editor.cm-focused': { outline: 'none' },
+            '.cm-content, .cm-gutter': { minHeight: '100%' },
+            '&.cm-focused .cm-selectionBackground': {
+                backgroundColor: '#036dd638',
+            },
+        }),
+    ];
+
+    if (suffix === '.json' || suffix === '.mpc') {
+        return [
+            ...extensions,
+            editable.of(EditorView.editable.of(!readOnly)),
+            json(),
+        ];
+    }
+    if (suffix === '.mzc') {
+        return [...extensions, editable.of(EditorView.editable.of(false))];
+    }
+    if (suffix === '.dzn') {
+        return [
+            ...extensions,
+            editable.of(EditorView.editable.of(!readOnly)),
+            MiniZinc(),
+        ];
+    }
+    if (suffix === '.html') {
+        return [
+            ...extensions,
+            editable.of(EditorView.editable.of(!readOnly)),
+            html(),
+        ];
+    }
+    return [
+        ...extensions,
+        editable.of(EditorView.editable.of(!readOnly)),
+        MiniZinc(),
+        EditorView.updateListener.of(debounce(codeCheck, 250)),
+    ];
+}

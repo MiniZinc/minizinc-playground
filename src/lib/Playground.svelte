@@ -16,11 +16,11 @@
     import Modal from './Modal.svelte';
     import { EditorState } from '@codemirror/state';
     import {
-        MiniZincEditorExtensions,
-        JSONEditorExtensions,
-        ReadonlyTextExtensions,
-        DataZincEditorExtensions,
-        HTMLEditorExtensions,
+        editableEffect,
+        readOnlyEffect,
+        lightThemeEffect,
+        darkThemeEffect,
+        getExtensions,
     } from '../lang';
     import Output from './Output.svelte';
     import Visualisation from './Visualisation.svelte';
@@ -32,7 +32,6 @@
     import Dropdown from './Dropdown.svelte';
     import { addErrors, lineCharToPos } from '../lang/underline';
     import { onMount, tick } from 'svelte';
-    import { EditorView } from 'codemirror';
 
     import * as MiniZincLatest from 'https://cdn.jsdelivr.net/npm/minizinc/dist/minizinc.mjs';
     import * as MiniZincEdge from 'https://cdn.jsdelivr.net/npm/minizinc@edge/dist/minizinc.mjs';
@@ -50,6 +49,7 @@
     export let externalPlaygroundURL = null;
     export let splitterDirection = 'vertical';
     export let splitterSize = 75;
+    export let theme = 'auto';
 
     let busyState = 0;
     let allSolvers = [];
@@ -104,6 +104,16 @@
         onMount(() => {
             loadSolvers();
             resolve();
+
+            const query = window.matchMedia('(prefers-color-scheme: dark)');
+            const setColorScheme = () => {
+                browserDark = window.matchMedia(
+                    '(prefers-color-scheme: dark)'
+                ).matches;
+            };
+            setColorScheme();
+            query.addEventListener('change', setColorScheme);
+            return () => query.removeEventListener('change', setColorScheme);
         });
     });
 
@@ -129,10 +139,6 @@
     export function hasFiles() {
         return files.length > 0;
     }
-
-    const mznExtensions = MiniZincEditorExtensions((e) => {
-        checkCode(e.view);
-    });
 
     let editor;
     let files = [];
@@ -238,22 +244,6 @@
         }
     }
 
-    function getExtensions(suffix) {
-        if (suffix === '.json' || suffix === '.mpc') {
-            return [...JSONEditorExtensions];
-        }
-        if (suffix === '.mzc') {
-            return [...ReadonlyTextExtensions];
-        }
-        if (suffix === '.dzn') {
-            return [...DataZincEditorExtensions];
-        }
-        if (suffix === '.html') {
-            return [...HTMLEditorExtensions];
-        }
-        return [...mznExtensions];
-    }
-
     function newFile(suffix) {
         let name = `Untitled${suffix}`;
         let i = 2;
@@ -265,7 +255,7 @@
             {
                 name,
                 state: EditorState.create({
-                    extensions: getExtensions(suffix),
+                    extensions: getExtensions(suffix, checkCode, darkMode),
                 }),
             },
         ];
@@ -288,10 +278,12 @@
             while (files.find((f) => f.name === name)) {
                 name = `${stem}-${i++}${suffix}`;
             }
-            const extensions = getExtensions(suffix);
-            if (file.readOnly) {
-                extensions.push(EditorView.editable.of(false));
-            }
+            const extensions = getExtensions(
+                suffix,
+                checkCode,
+                darkMode,
+                file.readOnly
+            );
             toAdd.push({
                 ...file,
                 hidden: file.hidden || suffix === '.mzc',
@@ -335,7 +327,11 @@
                       {
                           name: 'Untitled.mzn',
                           state: EditorState.create({
-                              extensions: mznExtensions,
+                              extensions: getExtensions(
+                                  '.mzn',
+                                  checkCode,
+                                  darkMode
+                              ),
                           }),
                       },
                   ]
@@ -355,19 +351,10 @@
         }
         const file = { ...files[index], ...opts };
         if ('readOnly' in opts) {
-            const dot = file.name.endsWith('.mzc.mzn')
-                ? file.name.length - 8
-                : file.name.lastIndexOf('.');
-            const suffix = file.name.substring(dot);
-            const extensions = getExtensions(suffix);
-            if (file.readOnly) {
-                extensions.push(EditorView.editable.of(false));
-            }
-            file.state = EditorState.create({
-                doc: file.state.doc,
-                extensions,
-                selection: { anchor: file.anchor || 0 },
-            });
+            enqueueEffect(
+                file,
+                opts.readOnly ? readOnlyEffect : editableEffect
+            );
         }
         files = [...files.slice(0, index), file, ...files.slice(index + 1)];
         selectTab(currentIndex);
@@ -393,6 +380,22 @@
         const newIndex = newFiles.indexOf(currentFile);
         files = newFiles;
         currentIndex = newIndex;
+    }
+
+    function enqueueEffect(file, effect) {
+        file.effects = file.effects ? [...file.effects, effect] : [effect];
+    }
+
+    $: applyEffects(currentFile);
+    async function applyEffects(file) {
+        if (editor && file && file.effects && file.effects.length > 0) {
+            await tick();
+            const view = editor.getView();
+            if (view && view.state === file.state) {
+                view.dispatch({ effects: file.effects });
+                file.effects = [];
+            }
+        }
     }
 
     let getModelResolve = null;
@@ -617,7 +620,7 @@
                 {
                     name: `${name.substring(0, name.indexOf('.'))}.fzn`,
                     state: EditorState.create({
-                        extensions: mznExtensions,
+                        extensions: getExtensions('.fzn', checkCode, darkMode),
                         doc: fzn,
                     }),
                 },
@@ -787,7 +790,8 @@
     }
 
     let prevText = null;
-    async function checkCode(view) {
+    async function checkCode(editor) {
+        const view = editor.view;
         if (
             busyState !== 0 ||
             !currentSolver ||
@@ -849,6 +853,20 @@
         edgeMiniZinc = e.detail.item === minizincVersions.edge;
     }
 
+    let browserDark = false;
+    $: darkMode = { dark: true, light: false, auto: browserDark }[theme];
+
+    function setTheme(dark) {
+        if (currentFile) {
+            currentFile.state = editor.getState();
+        }
+        files.forEach((file) =>
+            enqueueEffect(file, dark ? darkThemeEffect : lightThemeEffect)
+        );
+        applyEffects(currentFile);
+    }
+    $: setTheme(darkMode);
+
     /**
      * @type Visualisation
      */
@@ -896,7 +914,7 @@
     }
 </script>
 
-<div class="mzn-playground">
+<div class="mzn-playground" class:is-dark={darkMode}>
     <div class="stack">
         <div class="top">
             <nav class="navbar">
