@@ -67,7 +67,7 @@
     }
 
     .split :global(.gutter) {
-        background-color: #eee;
+        background-color: var(--mzn-playground-splitter);
         background-repeat: no-repeat;
         background-position: 50%;
     }

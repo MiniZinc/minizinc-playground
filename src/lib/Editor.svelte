@@ -55,7 +55,8 @@
         overflow: auto;
     }
 
-    .mzn-editor :global(.cm-mzn-underline-error), .mzn-editor :global(.cm-mzn-underline-warning) {
+    .mzn-editor :global(.cm-mzn-underline-error),
+    .mzn-editor :global(.cm-mzn-underline-warning) {
         position: relative;
         display: inline-block;
     }
