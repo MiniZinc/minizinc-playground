@@ -1,10 +1,7 @@
 <script>
     import { createEventDispatcher, tick } from 'svelte';
     import Fa from 'svelte-fa/src/fa.svelte';
-    import {
-        faEraser,
-        faTrash,
-    } from '@fortawesome/free-solid-svg-icons';
+    import { faEraser, faTrash } from '@fortawesome/free-solid-svg-icons';
     const dispatch = createEventDispatcher();
 
     export let output;
@@ -218,7 +215,7 @@
             </button>
         {/if}
         <div class="field has-addons">
-            <slot name="before-right-controls"/>
+            <slot name="before-right-controls" />
 
             <p class="control">
                 <button
@@ -356,6 +353,7 @@
                                             {#if i === 0 || entry.location.filename !== msg.stack[i - 1].location.filename || entry.location.firstLine !== msg.stack[i - 1].location.firstLine}
                                                 <!-- svelte-ignore a11y-missing-attribute -->
                                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                                <!-- svelte-ignore a11y-no-static-element-interactions-->
                                                 <pre><a
                                                         class="mzn-link mzn-{msg.type}"
                                                         on:click={() =>
@@ -380,6 +378,7 @@
                                     {:else if msg.location}
                                         <!-- svelte-ignore a11y-missing-attribute -->
                                         <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                        <!-- svelte-ignore a11y-no-static-element-interactions-->
                                         <pre><a
                                                 class="mzn-link mzn-{msg.type}"
                                                 on:click={() =>

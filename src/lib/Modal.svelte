@@ -14,6 +14,7 @@
 {#if active}
     <div transition:fade={{ duration: 200 }} class="modal is-active">
         <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-static-element-interactions-->
         <div class="modal-background" on:click={cancel} />
         <div transition:fly={{ y: -200, duration: 200 }} class="modal-card">
             <header class="modal-card-head">

@@ -1121,6 +1121,7 @@
                                             class:is-active={!visualisationOpen}
                                         >
                                             <!-- svelte-ignore a11y-invalid-attribute -->
+                                            <!-- svelte-ignore a11y-no-static-element-interactions-->
                                             <a
                                                 href="javascript:void(0);"
                                                 on:click={() => {
@@ -1130,6 +1131,7 @@
                                         </li>
                                         <li class:is-active={visualisationOpen}>
                                             <!-- svelte-ignore a11y-invalid-attribute -->
+                                            <!-- svelte-ignore a11y-no-static-element-interactions-->
                                             <a
                                                 href="javascript:void(0);"
                                                 on:click={() => {
