@@ -1,21 +1,15 @@
 $primary: #1491eb;
 $navbar-breakpoint: 600px;
+$pre-font-size: 1em;
+$pre-code-font-size: 1em;
 
 .mzn-playground {
-    @import "../node_modules/bulma/sass/utilities/_all";
-    @import '../node_modules/bulma/sass/base/_all';
-    @import "../node_modules/bulma/sass/elements/_all";
-    @import "../node_modules/bulma/sass/form/_all";
-    @import "../node_modules/bulma/sass/components/_all";
-    @import "../node_modules/bulma/sass/grid/_all";
-    @import "../node_modules/bulma/sass/helpers/_all";
-    @import "../node_modules/bulma/sass/layout/_all";
-    
+    @import "./bulma";
+
     /** Apply these here since we can't apply to body */
     box-sizing: border-box;
     line-height: $body-line-height;
     font-family: $body-family;
-    background-color: $dark;
 
     background-color: $body-background-color;
     font-size: $body-size;
@@ -30,7 +24,6 @@ $navbar-breakpoint: 600px;
     --mzn-playground-border: hsl(0, 0%, 86%);
     --mzn-playground-input-background-color: hsl(0, 0%, 100%);
     --mzn-playground-splitter: #EEE;
-
 }
 
 .mzn-playground.is-dark {
@@ -54,14 +47,7 @@ $navbar-breakpoint: 600px;
     
     $tag-background-color: hsl(0, 0%, 96%);
 
-    @import "../node_modules/bulma/sass/utilities/_all";
-    @import '../node_modules/bulma/sass/base/_all';
-    @import "../node_modules/bulma/sass/elements/_all";
-    @import "../node_modules/bulma/sass/form/_all";
-    @import "../node_modules/bulma/sass/components/_all";
-    @import "../node_modules/bulma/sass/grid/_all";
-    @import "../node_modules/bulma/sass/helpers/_all";
-    @import "../node_modules/bulma/sass/layout/_all";
+    @import "./bulma";
 
     --mzn-playground-border: hsl(0, 0%, 29%);
     --mzn-playground-input-background-color: hsl(0, 0%, 12%);
@@ -95,19 +81,6 @@ $navbar-breakpoint: 600px;
         }
     }
     
-    /** Apply these here since we can't apply to body */
-    box-sizing: border-box;
-    line-height: $body-line-height;
-    font-family: $body-family;
-    background-color: $dark;
-
     background-color: $body-background-color;
-    font-size: $body-size;
-    min-width: $body-min-width;
-
-    font-family: $body-family;
     color: $body-color;
-    font-size: $body-font-size;
-    font-weight: $body-weight;
-    line-height: $body-line-height;
 }
