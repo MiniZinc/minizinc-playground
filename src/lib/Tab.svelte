@@ -66,6 +66,7 @@
         />{suffix}
     {:else}
         <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-static-element-interactions-->
         <span class="filename" on:click={editName}>{name}{suffix}</span>
         {#if active && !readonly}
             <span class="close-tab" on:click={() => dispatch('close')}>

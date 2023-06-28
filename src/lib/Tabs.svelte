@@ -121,10 +121,11 @@
     .add-icon {
         margin: 0 !important;
     }
+
     .right {
         flex: 1 1 auto;
         display: flex !important;
         justify-content: flex-end;
-        padding-right: 0.5rem;
+        padding-right: 0.5rem !important;
     }
 </style>

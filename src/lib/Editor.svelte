@@ -64,13 +64,13 @@
     .mzn-editor :global(.cm-mzn-underline-error),
     .mzn-editor :global(.cm-mzn-underline-error::before),
     .mzn-editor :global(.cm-mzn-underline-error::after) {
-        border-color: red;
+        border-color: var(--mzn-playground-red);
     }
 
     .mzn-editor :global(.cm-mzn-underline-warning),
     .mzn-editor :global(.cm-mzn-underline-warning::before),
     .mzn-editor :global(.cm-mzn-underline-warning::after) {
-        border-color: #d1d100;
+        border-color: var(--mzn-playground-yellow);
     }
 
     .mzn-editor :global(.cm-mzn-underline-error::before),

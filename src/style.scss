@@ -6,24 +6,14 @@ $pre-code-font-size: 1em;
 .mzn-playground {
     @import "./bulma";
 
-    /** Apply these here since we can't apply to body */
-    box-sizing: border-box;
-    line-height: $body-line-height;
-    font-family: $body-family;
-
-    background-color: $body-background-color;
-    font-size: $body-size;
-    min-width: $body-min-width;
-
-    font-family: $body-family;
-    color: $body-color;
-    font-size: $body-font-size;
-    font-weight: $body-weight;
-    line-height: $body-line-height;
-
     --mzn-playground-border: hsl(0, 0%, 86%);
     --mzn-playground-input-background-color: hsl(0, 0%, 100%);
     --mzn-playground-splitter: #EEE;
+
+    --mzn-playground-gray: gray;
+    --mzn-playground-blue: blue;
+    --mzn-playground-red: red;
+    --mzn-playground-yellow: #d1d100;
 }
 
 .mzn-playground.is-dark {
@@ -53,6 +43,11 @@ $pre-code-font-size: 1em;
     --mzn-playground-input-background-color: hsl(0, 0%, 12%);
     --mzn-playground-splitter: hsl(0, 0%, 29%);
 
+    --mzn-playground-gray: gray;
+    --mzn-playground-blue: #33beff;
+    --mzn-playground-red: red;
+    --mzn-playground-yellow: #d1d100;
+
     .delete {
         background-color: hsl(0, 0%, 20%);
         &::before, &::after {
@@ -80,7 +75,4 @@ $pre-code-font-size: 1em;
             background-color: hsl(0, 0%, 24%);
         }
     }
-    
-    background-color: $body-background-color;
-    color: $body-color;
 }

@@ -491,20 +491,20 @@
     .mzn-comment,
     .mzn-stderr,
     .mzn-checker {
-        color: gray;
+        color: var(--mzn-playground-gray);
     }
 
     .mzn-stat,
     .mzn-runtime {
-        color: blue;
+        color: var(--mzn-playground-blue);
     }
 
     .mzn-error {
-        color: red;
+        color: var(--mzn-playground-red);
     }
 
     .mzn-warning {
-        color: #d1d100;
+        color: var(--mzn-playground-yellow);
     }
 
     .mzn-link {
