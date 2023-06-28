@@ -11,3 +11,24 @@
 @import "../node_modules/bulma/sass/components/navbar";
 @import "../node_modules/bulma/sass/components/panel";
 @import "../node_modules/bulma/sass/components/tabs";
+
+& {
+    /** Apply these here since we can't apply to body */
+    box-sizing: border-box;
+    line-height: $body-line-height;
+    font-family: $body-family;
+
+    background-color: $body-background-color;
+    font-size: $body-size;
+    min-width: $body-min-width;
+
+    font-family: $body-family;
+    color: $body-color;
+    font-size: $body-font-size;
+    font-weight: $body-weight;
+    line-height: $body-line-height;
+
+    .navbar-item, .navbar-link {
+        padding: 0.5rem;
+    }
+}
