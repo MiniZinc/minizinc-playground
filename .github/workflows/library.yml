@@ -15,14 +15,18 @@ jobs:
   library:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Setup NodeJS LTS
+        uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - run: npm ci
-      - run: npm run build
-        env:
-          EMBEDDED_PLAYGROUND: "y"
+      - name: Install dependencies
+        run: npm ci
+      - name: Build library
+        run: npm run build -- --mode library
+      - name: Build library with external Svelte
+        run: npm run build -- --mode library-external-svelte
       - name: Deploy
         if: ${{ github.ref == 'refs/heads/main' }}
         run: |

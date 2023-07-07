@@ -43,24 +43,35 @@ function lezer() {
     };
 }
 
-const BUILD_LIBRARY = /[yY1]/.test(process.env.EMBEDDED_PLAYGROUND || '');
+const libraryBuild = {
+    lib: {
+        entry: 'src/embed.js',
+        name: 'MiniZincPlayground',
+    },
+    rollupOptions: {
+        output: {
+            globals: (g) => g,
+        },
+    },
+};
+
+const buildConfigs = {
+    library: libraryBuild,
+    'library-external-svelte': {
+        lib: {
+            ...libraryBuild.lib,
+        },
+        rollupOptions: {
+            ...libraryBuild.rollupOptions,
+            external: ['svelte', /svelte\/.*/],
+        },
+        outDir: 'dist/external-svelte',
+    },
+};
 
 // https://vitejs.dev/config/
-export default defineConfig({
-    build: BUILD_LIBRARY
-        ? {
-              lib: {
-                  entry: 'src/embed.js',
-                  name: 'MiniZincPlayground',
-              },
-              rollupOptions: {
-                  external: ['svelte', /svelte\/.*/],
-                  output: {
-                    globals: (g) => g
-                  }
-              },
-          }
-        : undefined,
+export default defineConfig(({ mode }) => ({
+    build: buildConfigs[mode],
     base: process.env.BASE_PATH,
     plugins: [lezer(), svelte()],
-});
+}));
