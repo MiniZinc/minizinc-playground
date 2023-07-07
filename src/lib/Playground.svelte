@@ -37,6 +37,7 @@
     import * as MiniZincEdge from 'https://cdn.jsdelivr.net/npm/minizinc@edge/dist/minizinc.mjs';
 
     export let showVersionSwitcher = true;
+    export let showSolverDropdown = true;
     export let edgeMiniZinc = false;
     export let autoClearOutput = false;
     export let canEditTabs = true;
@@ -49,7 +50,13 @@
     export let externalPlaygroundURL = null;
     export let splitterDirection = 'vertical';
     export let splitterSize = 75;
+    export let canSwitchOrientation = true;
+    export let showClearOutput = true;
+    export let showAutoClearOutput = true;
+    export let showOutputSectionToggles = true;
+    export let showOutputRightControls = true;
     export let theme = 'auto';
+    export let hideOutputOnStartup = true;
 
     let busyState = 0;
     let allSolvers = [];
@@ -158,6 +165,9 @@
     $: canRun =
         busyState === 0 && currentSolver && (isModel || isData || isFzn);
     $: canCompile = busyState === 0 && currentSolver && (isModel || isData);
+
+    let hasRun = false;
+    $: splitterShowPanel = (!hideOutputOnStartup || hasRun) ? 'all' : 'a';
 
     let output = [];
     let minizinc = null;
@@ -539,6 +549,7 @@
     }
 
     async function runWith(model, fileList, options) {
+        hasRun = true;
         const startTime = Date.now();
         if (autoClearOutput) {
             output = [];
@@ -584,6 +595,7 @@
     }
 
     async function compile() {
+        hasRun = true;
         const mznModel = await getModel(true);
         if (!mznModel) {
             // Cancelled
@@ -981,7 +993,7 @@
                             </div>
                         </div>
                         <slot name="navbar-after-run-buttons" />
-                        {#if solvers.length > 0}
+                        {#if showSolverDropdown && solvers.length > 0}
                             <div class="navbar-item">
                                 <div class="field has-addons">
                                     <div class="control">
@@ -1089,6 +1101,7 @@
                 <SplitPanel
                     direction={splitterDirection}
                     bind:split={splitterSize}
+                    showPanels={splitterShowPanel}
                 >
                     <div class="panel stack" slot="panelA">
                         <div class="top">
@@ -1139,19 +1152,21 @@
                                                 }}>Visualisation</a
                                             >
                                         </li>
-                                        <li class="tab-end">
-                                            <button
-                                                class="button is-small"
-                                                title="Switch orientation"
-                                                on:click={switchOrientation}
-                                            >
-                                                <span class="icon"
-                                                    ><Fa
-                                                        icon={faRotate}
-                                                    /></span
+                                        {#if canSwitchOrientation}
+                                            <li class="tab-end">
+                                                <button
+                                                    class="button is-small"
+                                                    title="Switch orientation"
+                                                    on:click={switchOrientation}
                                                 >
-                                            </button>
-                                        </li>
+                                                    <span class="icon"
+                                                        ><Fa
+                                                            icon={faRotate}
+                                                        /></span
+                                                    >
+                                                </button>
+                                            </li>
+                                        {/if}
                                     </ul>
                                 </div>
                             </div>
@@ -1177,12 +1192,17 @@
                                     on:goto={(e) =>
                                         gotoLocation(e.detail.location)}
                                     bind:autoClearOutput
+                                    {showClearOutput}
+                                    {showAutoClearOutput}
+                                    showSectionToggles={showOutputSectionToggles}
+                                    showRightControls={showOutputRightControls}
+                                    isTab={hasVisualisation}
                                 >
                                     <p
                                         class="control"
                                         slot="before-right-controls"
                                     >
-                                        {#if !hasVisualisation}
+                                        {#if canSwitchOrientation && !hasVisualisation}
                                             <button
                                                 class="button is-small"
                                                 title="Switch orientation"

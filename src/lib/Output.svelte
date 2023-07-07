@@ -6,6 +6,11 @@
 
     export let output;
     export let autoClearOutput = false;
+    export let showClearOutput = true;
+    export let showAutoClearOutput = true;
+    export let showSectionToggles = true;
+    export let showRightControls = true;
+    export let isTab = false;
 
     let outputElement;
     let showStatistics = true;
@@ -127,118 +132,127 @@
 </script>
 
 <div class="stack">
-    <div class="top">
-        <button
-            class="button is-small section-toggle"
-            on:click={() => toggleAllSections()}
-            disabled={userSections.length === 0}
-        >
-            {#if hiddenSections.length === 0}
-                Hide all
-            {:else}
-                Show all
+    <div class="top" class:is-empty={!showSectionToggles && !showRightControls} class:is-tab={isTab}>
+        {#if showSectionToggles}
+            <button
+                class="button is-small section-toggle"
+                on:click={() => toggleAllSections()}
+                disabled={userSections.length === 0}
+            >
+                {#if hiddenSections.length === 0}
+                    Hide all
+                {:else}
+                    Show all
+                {/if}
+            </button>
+            {#each userSections as section}
+                <button
+                    class="button is-small section-toggle"
+                    class:is-primary={hiddenSections.indexOf(section) === -1}
+                    class:is-light={hiddenSections.indexOf(section) !== -1}
+                    title={`Click to ${
+                        hiddenSections.indexOf(section) === -1 ? 'hide' : 'show'
+                    } ${section} output`}
+                    on:click={() => toggleSection(section)}
+                >
+                    {section}
+                </button>
+            {/each}
+            <div class="spacer" />
+            {#if hasStatistics}
+                <button
+                    class="button is-small section-toggle"
+                    class:is-primary={showStatistics}
+                    class:is-light={!showStatistics}
+                    title={`Click to ${
+                        showStatistics ? 'hide' : 'show'
+                    } statistics information`}
+                    on:click={() => (showStatistics = !showStatistics)}
+                >
+                    Statistics
+                </button>
             {/if}
-        </button>
-        {#each userSections as section}
-            <button
-                class="button is-small section-toggle"
-                class:is-primary={hiddenSections.indexOf(section) === -1}
-                class:is-light={hiddenSections.indexOf(section) !== -1}
-                title={`Click to ${
-                    hiddenSections.indexOf(section) === -1 ? 'hide' : 'show'
-                } ${section} output`}
-                on:click={() => toggleSection(section)}
-            >
-                {section}
-            </button>
-        {/each}
-        <div class="spacer" />
-        {#if hasStatistics}
-            <button
-                class="button is-small section-toggle"
-                class:is-primary={showStatistics}
-                class:is-light={!showStatistics}
-                title={`Click to ${
-                    showStatistics ? 'hide' : 'show'
-                } statistics information`}
-                on:click={() => (showStatistics = !showStatistics)}
-            >
-                Statistics
-            </button>
-        {/if}
-        {#if hasStderr}
-            <button
-                class="button is-small section-toggle"
-                class:is-primary={showStderr}
-                class:is-light={!showStderr}
-                title={`Click to ${
-                    showStderr ? 'hide' : 'show'
-                } standard error output`}
-                on:click={() => (showStderr = !showStderr)}
-            >
-                Standard error
-            </button>
-        {/if}
-        {#if hasTiming}
-            <button
-                class="button is-small section-toggle"
-                class:is-primary={showTiming}
-                class:is-light={!showTiming}
-                title={`Click to ${
-                    showTiming ? 'hide' : 'show'
-                } timing information`}
-                on:click={() => (showTiming = !showTiming)}
-            >
-                Timing
-            </button>
-        {/if}
-        {#if hasWarnings}
-            <button
-                class="button is-small section-toggle"
-                class:is-primary={showWarnings}
-                class:is-light={!showWarnings}
-                title={`Click to ${showTiming ? 'hide' : 'show'} warnings`}
-                on:click={() => (showWarnings = !showWarnings)}
-            >
-                Warnings
-            </button>
-        {/if}
-        {#if hasErrors}
-            <button
-                class="button is-small section-toggle"
-                class:is-primary={showErrors}
-                class:is-light={!showErrors}
-                title={`Click to ${showTiming ? 'hide' : 'show'} errors`}
-                on:click={() => (showErrors = !showErrors)}
-            >
-                Errors
-            </button>
-        {/if}
-        <div class="field has-addons">
-            <slot name="before-right-controls" />
-
-            <p class="control">
+            {#if hasStderr}
                 <button
-                    class="button is-small"
-                    class:is-primary={autoClearOutput}
-                    class:is-light={!autoClearOutput}
-                    title="Clear output on each run"
-                    on:click={() => (autoClearOutput = !autoClearOutput)}
+                    class="button is-small section-toggle"
+                    class:is-primary={showStderr}
+                    class:is-light={!showStderr}
+                    title={`Click to ${
+                        showStderr ? 'hide' : 'show'
+                    } standard error output`}
+                    on:click={() => (showStderr = !showStderr)}
                 >
-                    <span class="icon"><Fa icon={faEraser} /></span>
+                    Standard error
                 </button>
-            </p>
-
-            <p class="control">
+            {/if}
+            {#if hasTiming}
                 <button
-                    class="button is-small is-danger"
-                    title="Clear output"
-                    on:click={() => dispatch('clear')}
+                    class="button is-small section-toggle"
+                    class:is-primary={showTiming}
+                    class:is-light={!showTiming}
+                    title={`Click to ${
+                        showTiming ? 'hide' : 'show'
+                    } timing information`}
+                    on:click={() => (showTiming = !showTiming)}
                 >
-                    <span class="icon"><Fa icon={faTrash} /></span>
+                    Timing
                 </button>
-            </p>
-        </div>
+            {/if}
+            {#if hasWarnings}
+                <button
+                    class="button is-small section-toggle"
+                    class:is-primary={showWarnings}
+                    class:is-light={!showWarnings}
+                    title={`Click to ${showTiming ? 'hide' : 'show'} warnings`}
+                    on:click={() => (showWarnings = !showWarnings)}
+                >
+                    Warnings
+                </button>
+            {/if}
+            {#if hasErrors}
+                <button
+                    class="button is-small section-toggle"
+                    class:is-primary={showErrors}
+                    class:is-light={!showErrors}
+                    title={`Click to ${showTiming ? 'hide' : 'show'} errors`}
+                    on:click={() => (showErrors = !showErrors)}
+                >
+                    Errors
+                </button>
+            {/if}
+        {/if}
+        {#if showRightControls}
+            <div class="field has-addons">
+                <slot name="before-right-controls" />
+
+                {#if showAutoClearOutput}
+                    <p class="control">
+                        <button
+                            class="button is-small"
+                            class:is-primary={autoClearOutput}
+                            class:is-light={!autoClearOutput}
+                            title="Clear output on each run"
+                            on:click={() =>
+                                (autoClearOutput = !autoClearOutput)}
+                        >
+                            <span class="icon"><Fa icon={faEraser} /></span>
+                        </button>
+                    </p>
+                {/if}
+
+                {#if showClearOutput}
+                    <p class="control">
+                        <button
+                            class="button is-small is-danger"
+                            title="Clear output"
+                            on:click={() => dispatch('clear')}
+                        >
+                            <span class="icon"><Fa icon={faTrash} /></span>
+                        </button>
+                    </p>
+                {/if}
+            </div>
+        {/if}
     </div>
     <div class="grow">
         <div bind:this={outputElement} class="output-window">
@@ -446,6 +460,14 @@
         display: flex;
         padding: 0.5rem;
         border-bottom: solid 1px var(--mzn-playground-border);
+    }
+
+    .stack > .top.is-empty {
+        padding: 0;
+    }
+
+    .stack > .top.is-empty.is-tab {
+        border-bottom: 0;
     }
 
     .top > .field {
