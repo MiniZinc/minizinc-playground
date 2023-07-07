@@ -4,18 +4,20 @@
 
     export let direction = 'horizontal';
     export let split = 50;
+    export let showPanels = 'all';
 
     let panelA;
     let panelB;
 
     let instance = null;
 
-    $: init(direction);
+    $: init(direction, showPanels);
     $: resize(split);
 
-    function init(direction) {
+    function init(direction, showPanels) {
         cleanup();
-        if (panelA && panelB) {
+        if (showPanels === 'all' && panelA && panelB) {
+            console.log(direction);
             instance = Split([panelA, panelB], {
                 direction,
                 minSize: 0,
@@ -40,17 +42,31 @@
         }
     }
 
+    function showPanel(panel) {
+        return showPanels === 'all' || showPanels === panel;
+    }
+
     onMount(() => {
-        init(direction);
+        init(direction, showPanels);
         return cleanup;
     });
 </script>
 
 <div class="split" class:horizontal={direction === 'horizontal'}>
-    <div bind:this={panelA}>
+    <div
+        bind:this={panelA}
+        class="split-panel"
+        class:no-splitter={showPanels !== 'all'}
+        class:is-hidden={!showPanel('a')}
+    >
         <slot name="panelA" />
     </div>
-    <div bind:this={panelB}>
+    <div
+        bind:this={panelB}
+        class="split-panel"
+        class:no-splitter={showPanels !== 'all'}
+        class:is-hidden={!showPanel('b')}
+    >
         <slot name="panelB" />
     </div>
 </div>
@@ -59,11 +75,20 @@
     .split {
         width: 100%;
         height: 100%;
+        display: flex;
+        flex-direction: column;
     }
 
     .split.horizontal {
-        display: flex;
         flex-direction: row;
+    }
+
+    .no-splitter {
+        flex: 1 1 auto;
+    }
+    
+    .no-splitter.is-hidden {
+        display: none;
     }
 
     .split :global(.gutter) {
