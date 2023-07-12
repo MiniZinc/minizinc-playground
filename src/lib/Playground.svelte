@@ -167,7 +167,7 @@
     $: canCompile = busyState === 0 && currentSolver && (isModel || isData);
 
     let hasRun = false;
-    $: splitterShowPanel = (!hideOutputOnStartup || hasRun) ? 'all' : 'a';
+    $: splitterShowPanel = !hideOutputOnStartup || hasRun ? 'all' : 'a';
 
     let output = [];
     let minizinc = null;
@@ -801,6 +801,12 @@
         copiedShareUrl = true;
     }
 
+    function openInExternalPlayground() {
+        if (externalPlaygroundURL) {
+            window.open(getShareUrl(externalPlaygroundURL), '_blank').focus();
+        }
+    }
+
     let prevText = null;
     async function checkCode(editor) {
         const view = editor.view;
@@ -1073,12 +1079,7 @@
                                         <button
                                             class="button is-primary"
                                             title="Open in playground"
-                                            on:click={() => {
-                                                window.location.href =
-                                                    getShareUrl(
-                                                        externalPlaygroundURL
-                                                    );
-                                            }}
+                                            on:click={openInExternalPlayground}
                                         >
                                             <span class="icon">
                                                 <Fa
