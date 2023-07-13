@@ -1049,6 +1049,7 @@
                                         <button
                                             class="button is-primary"
                                             title="Share"
+                                            disabled={busyState !== 0}
                                             on:click={() =>
                                                 (shareUrl = getShareUrl(
                                                     window.location.href
@@ -1066,7 +1067,8 @@
                                             class="button"
                                             title="Download project"
                                             on:click={() => downloadProject()}
-                                            disabled={generatingProject}
+                                            disabled={generatingProject ||
+                                                busyState !== 0}
                                         >
                                             <span class="icon">
                                                 <Fa icon={faDownload} />
@@ -1079,6 +1081,7 @@
                                         <button
                                             class="button is-primary"
                                             title="Open in playground"
+                                            disabled={busyState !== 0}
                                             on:click={openInExternalPlayground}
                                         >
                                             <span class="icon">
