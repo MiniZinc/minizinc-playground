@@ -12,6 +12,8 @@
         faClipboard,
         faArrowUpRightFromSquare,
         faRotate,
+        faHammer,
+        faShuffle,
     } from '@fortawesome/free-solid-svg-icons';
     import Modal from './Modal.svelte';
     import { EditorState } from '@codemirror/state';
@@ -149,6 +151,8 @@
 
     let editor;
     let files = [];
+
+    let menuActive = false;
 
     let currentIndex = 0;
     let solverConfig;
@@ -936,113 +940,143 @@
     <div class="stack">
         <div class="top">
             <nav class="navbar">
-                <div class="navbar-menu is-active">
-                    <div class="navbar-start">
-                        <slot name="navbar-before-run-buttons" />
-                        <div class="navbar-item">
+                <div class="navbar-brand">
+                    <slot name="navbar-before-run-buttons" />
+                    <div class="navbar-item is-expanded">
+                        <div class="field has-addons navbar-run-buttons">
+                            <div class="control">
+                                {#if isRunning}
+                                    <button
+                                        class="button is-danger"
+                                        title="Cancel solving"
+                                        on:click={stop}
+                                    >
+                                        <span>Stop</span>
+                                        <span class="icon">
+                                            <Fa icon={faStop} />
+                                        </span>
+                                    </button>
+                                {:else}
+                                    <button
+                                        class="button is-primary"
+                                        title="Run the current file"
+                                        on:click={run}
+                                        disabled={!canRun}
+                                    >
+                                        <span>Run</span>
+                                        <span class="icon">
+                                            <Fa icon={faPlay} />
+                                        </span>
+                                    </button>
+                                {/if}
+                            </div>
+                            {#if compilationEnabled}
+                                <div class="control is-hidden-mobile">
+                                    <button
+                                        class="button"
+                                        title="Compile the current file and show the resultant FlatZinc"
+                                        on:click={compile}
+                                        disabled={isRunning || !canCompile}
+                                    >
+                                        <span>Compile</span>
+                                    </button>
+                                </div>
+                            {/if}
+                            {#if showVersionSwitcher}
+                                <div class="control is-hidden-mobile">
+                                    <Dropdown
+                                        items={versionItems}
+                                        currentItem={edgeMiniZinc
+                                            ? minizincVersions.edge
+                                            : minizincVersions.latest}
+                                        on:selectItem={selectVersion}
+                                        disabled={isRunning}
+                                    >
+                                        <span slot="item" let:item>
+                                            {item.label} ({item.detail})
+                                        </span>
+                                    </Dropdown>
+                                </div>
+                            {/if}
+                            <slot name="navbar-run-buttons" />
+
+                            {#if showSolverDropdown && solvers.length > 0}
+                                <div
+                                    class="control is-expanded is-hidden-tablet"
+                                >
+                                    <div class="select is-fullwidth">
+                                        <select bind:value={currentSolverIndex}>
+                                            {#each solvers as solver, i}
+                                                <option value={i}>
+                                                    {solver.name}
+                                                    {solver.version}
+                                                </option>
+                                            {/each}
+                                        </select>
+                                    </div>
+                                </div>
+                            {/if}
+                        </div>
+                    </div>
+                    <slot name="navbar-after-run-buttons" />
+                    {#if showSolverDropdown && solvers.length > 0}
+                        <div class="navbar-item is-hidden-mobile">
                             <div class="field has-addons">
                                 <div class="control">
-                                    {#if isRunning}
-                                        <button
-                                            class="button is-danger"
-                                            title="Cancel solving"
-                                            on:click={stop}
-                                        >
-                                            <span>Stop</span>
-                                            <span class="icon">
-                                                <Fa icon={faStop} />
-                                            </span>
-                                        </button>
-                                    {:else}
+                                    <button class="button is-static">
+                                        Solver:
+                                    </button>
+                                </div>
+                                <div class="control is-expanded">
+                                    <div class="select is-fullwidth">
+                                        <select bind:value={currentSolverIndex}>
+                                            {#each solvers as solver, i}
+                                                <option value={i}>
+                                                    {solver.name}
+                                                    {solver.version}
+                                                </option>
+                                            {/each}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {#if canEditSolverSettings}
+                                    <div class="control">
                                         <button
                                             class="button is-primary"
-                                            title="Run the current file"
-                                            on:click={run}
-                                            disabled={!canRun}
+                                            on:click={toggleSolverConfig}
                                         >
-                                            <span>Run</span>
                                             <span class="icon">
-                                                <Fa icon={faPlay} />
+                                                <Fa icon={faCog} />
                                             </span>
-                                        </button>
-                                    {/if}
-                                </div>
-                                {#if compilationEnabled}
-                                    <div class="control">
-                                        <button
-                                            class="button"
-                                            title="Compile the current file and show the resultant FlatZinc"
-                                            on:click={compile}
-                                            disabled={isRunning || !canCompile}
-                                        >
-                                            <span>Compile</span>
                                         </button>
                                     </div>
                                 {/if}
-                                {#if showVersionSwitcher}
-                                    <div class="control">
-                                        <Dropdown
-                                            items={versionItems}
-                                            currentItem={edgeMiniZinc
-                                                ? minizincVersions.edge
-                                                : minizincVersions.latest}
-                                            on:selectItem={selectVersion}
-                                            disabled={isRunning}
-                                        >
-                                            <span slot="item" let:item>
-                                                {item.label} ({item.detail})
-                                            </span>
-                                        </Dropdown>
-                                    </div>
-                                {/if}
-                                <slot name="navbar-run-buttons" />
                             </div>
                         </div>
-                        <slot name="navbar-after-run-buttons" />
-                        {#if showSolverDropdown && solvers.length > 0}
-                            <div class="navbar-item">
-                                <div class="field has-addons">
-                                    <div class="control">
-                                        <button class="button is-static">
-                                            Solver:
-                                        </button>
-                                    </div>
-                                    <div class="control is-expanded">
-                                        <div class="select is-fullwidth">
-                                            <select
-                                                bind:value={currentSolverIndex}
-                                            >
-                                                {#each solvers as solver, i}
-                                                    <option value={i}>
-                                                        {solver.name}
-                                                        {solver.version}
-                                                    </option>
-                                                {/each}
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    {#if canEditSolverSettings}
-                                        <div class="control">
-                                            <button
-                                                class="button is-primary"
-                                                on:click={toggleSolverConfig}
-                                            >
-                                                <span class="icon">
-                                                    <Fa icon={faCog} />
-                                                </span>
-                                            </button>
-                                        </div>
-                                    {/if}
-                                </div>
-                            </div>
-                        {/if}
-                        <slot name="navbar-after-solver-selector" />
-                    </div>
-
+                    {/if}
+                    <slot name="navbar-after-solver-selector" />
+                    <!-- svelte-ignore a11y-missing-attribute -->
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <!-- svelte-ignore a11y-interactive-supports-focus -->
+                    <a
+                        role="button"
+                        class="navbar-burger"
+                        class:is-active={menuActive}
+                        aria-label="menu"
+                        aria-expanded={menuActive}
+                        on:click={() => {menuActive = !menuActive; showSolverConfig = false;}}
+                    >
+                        <span aria-hidden="true" />
+                        <span aria-hidden="true" />
+                        <span aria-hidden="true" />
+                    </a>
+                </div>
+                <div class="navbar-menu" class:is-active={menuActive}>
+                    <div class="navbar-start is-hidden-tablet" />
                     <div class="navbar-end">
                         <slot name="navbar-before-share-buttons" />
-                        <div class="navbar-item">
+                        <div class="navbar-item is-hidden-mobile">
                             <div class="field has-addons">
                                 {#if showShareButton}
                                     <div class="control">
@@ -1095,6 +1129,75 @@
                                 <slot name="navbar-share-buttons" />
                             </div>
                         </div>
+
+                        {#if compilationEnabled && !isRunning && canCompile}
+                            <!-- svelte-ignore a11y-invalid-attribute -->
+                            <a
+                                class="navbar-item is-hidden-tablet mobile-menu-item"
+                                href="javascript:void(0);"
+                                on:click={() => { compile(); menuActive = false}} 
+                            >
+                                <span class="icon">
+                                    <Fa icon={faHammer} />
+                                </span>
+                                <span>Compile current file</span>
+                            </a>
+                        {/if}
+                        {#if canEditSolverSettings && showSolverDropdown && solvers.length > 0}
+                            <!-- svelte-ignore a11y-invalid-attribute -->
+                            <a
+                                class="navbar-item is-hidden-tablet mobile-menu-item"
+                                href="javascript:void(0);"
+                                on:click={() => {toggleSolverConfig(); menuActive = false}}
+                            >
+                                <span class="icon">
+                                    <Fa icon={faCog} />
+                                </span>
+                                <span>Solver configuration</span>
+                            </a>
+                        {/if}
+                        {#if showVersionSwitcher && !isRunning}
+                            <!-- svelte-ignore a11y-invalid-attribute -->
+                            <a
+                                class="navbar-item is-hidden-tablet mobile-menu-item"
+                                href="javascript:void(0);"
+                                on:click={() => {edgeMiniZinc = !edgeMiniZinc; menuActive = false;}}
+                            >
+                                <span class="icon">
+                                    <Fa icon={faShuffle} />
+                                </span>
+                                <span>Switch to the {edgeMiniZinc ? 'latest' : 'edge'} version of MiniZinc</span>
+                            </a>
+                        {/if}
+                        {#if showShareButton && busyState === 0}
+                            <!-- svelte-ignore a11y-invalid-attribute -->
+                            <a
+                                class="navbar-item is-hidden-tablet mobile-menu-item"
+                                href="javascript:void(0);"
+                                on:click={() =>
+                                    {shareUrl = getShareUrl(
+                                        window.location.href
+                                    );menuActive = false;}}
+                            >
+                                <span class="icon">
+                                    <Fa icon={faShareNodes} />
+                                </span>
+                                <span>Share this project</span>
+                            </a>
+                        {/if}
+                        {#if externalPlaygroundURL && busyState === 0}
+                            <!-- svelte-ignore a11y-invalid-attribute -->
+                            <a
+                                class="navbar-item is-hidden-tablet mobile-menu-item"
+                                href="javascript:void(0);"
+                                on:click={() => {openInExternalPlayground(); menuActive = false}}
+                            >
+                                <span class="icon">
+                                    <Fa icon={faArrowUpRightFromSquare} />
+                                </span>
+                                <span>Open in MiniZinc Playground</span>
+                            </a>
+                        {/if}
                         <slot name="navbar-after-share-buttons" />
                     </div>
                 </div>
@@ -1369,5 +1472,25 @@
     }
     .tab-window.visible {
         display: block;
+    }
+
+    .mobile-menu-item {
+        display: flex;
+        align-items: center;
+    }
+
+    .mobile-menu-item .icon:first-child {
+        margin-right: 0.5rem;
+    }
+
+    .mobile-menu-item .icon:last-child {
+        margin-left: 0.5rem;
+    }
+
+    @media only screen and (max-width: 768px) {
+        .navbar-run-buttons {
+            flex-grow: 1;
+            flex-shrink: 1;
+        }
     }
 </style>

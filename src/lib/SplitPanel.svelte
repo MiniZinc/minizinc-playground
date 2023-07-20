@@ -42,7 +42,7 @@
         }
     }
 
-    function showPanel(panel) {
+    function showPanel(panel, showPanels) {
         return showPanels === 'all' || showPanels === panel;
     }
 
@@ -57,7 +57,7 @@
         bind:this={panelA}
         class="split-panel"
         class:no-splitter={showPanels !== 'all'}
-        class:is-hidden={!showPanel('a')}
+        class:is-hidden={!showPanel('a', showPanels)}
     >
         <slot name="panelA" />
     </div>
@@ -65,7 +65,7 @@
         bind:this={panelB}
         class="split-panel"
         class:no-splitter={showPanels !== 'all'}
-        class:is-hidden={!showPanel('b')}
+        class:is-hidden={!showPanel('b', showPanels)}
     >
         <slot name="panelB" />
     </div>
@@ -85,10 +85,6 @@
 
     .no-splitter {
         flex: 1 1 auto;
-    }
-    
-    .no-splitter.is-hidden {
-        display: none;
     }
 
     .split :global(.gutter) {
