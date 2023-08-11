@@ -2,6 +2,7 @@
     import { createEventDispatcher, tick } from 'svelte';
     import Fa from 'svelte-fa/src/fa.svelte';
     import { faEraser, faTrash } from '@fortawesome/free-solid-svg-icons';
+    import ErrorOutput from './ErrorOutput.svelte';
     const dispatch = createEventDispatcher();
 
     export let output;
@@ -29,10 +30,22 @@
         run.output.some((m) => m.type === 'time')
     );
     $: hasWarnings = output.some((run) =>
-        run.output.some((m) => m.type === 'warning')
+        run.output.some(
+            (m) =>
+                m.type === 'warning' ||
+                (m.type === 'checker' &&
+                    m.messages &&
+                    m.messages.some((m) => m.type === 'warning'))
+        )
     );
     $: hasErrors = output.some((run) =>
-        run.output.some((m) => m.type === 'error')
+        run.output.some(
+            (m) =>
+                m.type === 'error' ||
+                (m.type === 'checker' &&
+                    m.messages &&
+                    m.messages.some((m) => m.type === 'error'))
+        )
     );
 
     function getUserSections(output) {
@@ -116,23 +129,64 @@
         return elapsed.trimEnd();
     }
 
-    function prependLines(prefix, s) {
-        return `${prefix}${s.split('\n').join(`\n${prefix}`)}`;
-    }
-
-    function displayLocation(loc) {
-        if (loc.firstLine == loc.lastLine) {
-            if (loc.firstColumn == loc.lastColumn) {
-                return `${loc.filename}:${loc.firstLine}.${loc.firstColumn}`;
+    function processCheckerMessage(msg, hiddenSections) {
+        const parts = [];
+        let buffer = [];
+        const flush = () => {
+            if (buffer.length > 0) {
+                const split = buffer.join('').split('\n');
+                if (split[split.length - 1] === '') {
+                    split.splice(split.length - 1, 1);
+                }
+                parts.push({
+                    type: 'text',
+                    message: split.map((x) => `% ${x}`).join('\n'),
+                });
+                buffer = [];
             }
-            return `${loc.filename}:${loc.firstLine}.${loc.firstColumn}-${loc.lastColumn}`;
+        };
+        if (msg.messages) {
+            for (const message of msg.messages) {
+                if (message.type === 'solution') {
+                    for (const section of message.sections) {
+                        if (
+                            hiddenSections.indexOf(section) === -1 &&
+                            section !== 'raw'
+                        ) {
+                            buffer.push(msg.output[section]);
+                        }
+                    }
+                } else if (message.type === 'trace') {
+                    if (
+                        hiddenSections.indexOf(message.section) === -1 &&
+                        message.section !== 'raw'
+                    ) {
+                        buffer.push(message.message);
+                    }
+                } else {
+                    flush();
+                    parts.push(message);
+                }
+            }
+            flush();
+        } else {
+            for (const section of msg.sections) {
+                if (hiddenSections.indexOf(section) === -1) {
+                    buffer.push(msg.output[section]);
+                }
+            }
+            flush();
         }
-        return `${loc.filename}:${loc.firstLine}.${loc.firstColumn}-${loc.lastLine}.${loc.lastColumn}`;
+        return parts;
     }
 </script>
 
-<div class="stack">
-    <div class="top" class:is-empty={!showSectionToggles && !showRightControls} class:is-tab={isTab}>
+<div class="stack output-window">
+    <div
+        class="top"
+        class:is-empty={!showSectionToggles && !showRightControls}
+        class:is-tab={isTab}
+    >
         {#if showSectionToggles}
             <button
                 class="button is-small section-toggle"
@@ -289,28 +343,19 @@
                                 <span class="mzn-checker">
                                     <pre>% Solution checker report:</pre>
                                     <br />
-                                    {#each msg.sections as section}
-                                        {#if hiddenSections.indexOf(section) === -1}
-                                            {#if section === 'json' || section.endsWith('_json')}
-                                                <pre>{prependLines(
-                                                        '% ',
-                                                        JSON.stringify(
-                                                            msg.output[section],
-                                                            null,
-                                                            2
-                                                        )
-                                                    )}</pre>
-                                                <br />
-                                            {:else if section !== 'raw'}
-                                                <pre>{prependLines(
-                                                        '% ',
-                                                        msg.output[section]
-                                                    )}</pre>
+                                    {#each processCheckerMessage(msg, hiddenSections) as part}
+                                        {#if part.type === 'text'}
+                                            <pre>{part.message}</pre>
+                                        {:else if part.type === 'error' || part.type === 'warning'}
+                                            {#if (part.type === 'error' && showErrors) || (part.type === 'warning' && showWarnings)}
+                                                <ErrorOutput
+                                                    msg={part}
+                                                    on:goto
+                                                />
                                             {/if}
                                         {/if}
-                                    {/each}</span
-                                >
-                                <br />
+                                    {/each}
+                                </span>
                             {:else if msg.type === 'time'}
                                 {#if showTiming}
                                     <pre
@@ -362,68 +407,7 @@
                                 <br />
                             {:else if msg.type === 'error' || msg.type === 'warning'}
                                 {#if (msg.type === 'error' && showErrors) || (msg.type === 'warning' && showWarnings)}
-                                    {#if msg.stack}
-                                        {#each msg.stack as entry, i}
-                                            {#if i === 0 || entry.location.filename !== msg.stack[i - 1].location.filename || entry.location.firstLine !== msg.stack[i - 1].location.firstLine}
-                                                <!-- svelte-ignore a11y-missing-attribute -->
-                                                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                                <!-- svelte-ignore a11y-no-static-element-interactions-->
-                                                <pre><a
-                                                        class="mzn-link mzn-{msg.type}"
-                                                        on:click={() =>
-                                                            dispatch('goto', {
-                                                                location:
-                                                                    entry.location,
-                                                            })}
-                                                        >{displayLocation(
-                                                            entry.location
-                                                        )}</a
-                                                    ></pre>
-                                                <br />
-                                            {/if}
-                                            {#if entry.isCompIter}
-                                                <pre>    with </pre>
-                                            {:else}
-                                                <pre>  in </pre>
-                                            {/if}
-                                            <pre>{entry.description}</pre>
-                                            <br />
-                                        {/each}
-                                    {:else if msg.location}
-                                        <!-- svelte-ignore a11y-missing-attribute -->
-                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                        <!-- svelte-ignore a11y-no-static-element-interactions-->
-                                        <pre><a
-                                                class="mzn-link mzn-{msg.type}"
-                                                on:click={() =>
-                                                    dispatch('goto', {
-                                                        location: msg.location,
-                                                    })}
-                                                >{displayLocation(
-                                                    msg.location
-                                                )}</a
-                                            >:</pre>
-                                        <br />
-                                    {/if}
-                                    {#if msg.includedFrom}
-                                        {#each msg.includedFrom as include}
-                                            <pre> (included from {include})</pre>
-                                            <br />
-                                        {/each}
-                                    {/if}
-                                    {#if msg.type === 'error'}
-                                        <pre>MiniZinc:</pre>
-                                    {:else}
-                                        <pre>Warning:</pre>
-                                    {/if}
-                                    <pre>{msg.what}: {msg.message}</pre>
-                                    {#if msg.cycle}
-                                        {#each msg.cycle as it}
-                                            <pre> {it}</pre>
-                                            <br />
-                                        {/each}
-                                    {/if}
-                                    <br />
+                                    <ErrorOutput {msg} on:goto />
                                 {/if}
                             {:else if msg.type === 'exit'}
                                 {#if msg.code}
@@ -501,35 +485,7 @@
         line-height: 1.25;
     }
 
-    pre {
-        padding: 0;
-        background: none;
-        display: inline;
-        color: inherit;
-        white-space: pre-wrap;
-    }
-
-    .mzn-trace,
-    .mzn-comment,
-    .mzn-stderr,
     .mzn-checker {
-        color: var(--mzn-playground-gray);
-    }
-
-    .mzn-stat,
-    .mzn-runtime {
-        color: var(--mzn-playground-blue);
-    }
-
-    .mzn-error {
-        color: var(--mzn-playground-red);
-    }
-
-    .mzn-warning {
-        color: var(--mzn-playground-yellow);
-    }
-
-    .mzn-link {
-        text-decoration: underline;
+        display: block;
     }
 </style>
