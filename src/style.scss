@@ -79,3 +79,37 @@ $pre-code-font-size: 1em;
         }
     }
 }
+
+.mzn-playground, .mzn-playground.is-dark {
+    .output-window pre {
+        padding: 0;
+        background: none;
+        display: inline;
+        color: inherit;
+        white-space: pre-wrap;
+    }
+
+    .mzn-trace,
+    .mzn-comment,
+    .mzn-stderr,
+    .mzn-checker {
+        color: var(--mzn-playground-gray) !important;
+    }
+
+    .mzn-stat,
+    .mzn-runtime {
+        color: var(--mzn-playground-blue) !important;
+    }
+
+    .mzn-error {
+        color: var(--mzn-playground-red) !important;
+    }
+
+    .mzn-warning {
+        color: var(--mzn-playground-yellow) !important;
+    }
+
+    .mzn-link {
+        text-decoration: underline !important;
+    }
+}
