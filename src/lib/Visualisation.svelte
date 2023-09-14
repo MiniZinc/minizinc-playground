@@ -305,7 +305,7 @@
         height: 100%;
     }
     .stack > .grow {
-        flex: 1 1 auto;
+        flex: 1 1 0;
         overflow: hidden;
     }
 
