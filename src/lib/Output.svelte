@@ -171,7 +171,10 @@
             flush();
         } else {
             for (const section of msg.sections) {
-                if (hiddenSections.indexOf(section) === -1) {
+                if (
+                    hiddenSections.indexOf(section) === -1 &&
+                    section !== 'raw'
+                ) {
                     buffer.push(msg.output[section]);
                 }
             }
