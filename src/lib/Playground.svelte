@@ -1441,7 +1441,7 @@
         height: 100%;
     }
     .stack > .grow {
-        flex: 1 1 auto;
+        flex: 1 1 0;
         overflow: hidden;
     }
     .main-panel {
@@ -1452,7 +1452,7 @@
         overflow: hidden;
     }
     .main-panel > .left {
-        flex: 1 1 auto;
+        flex: 1 1 0;
     }
     .stack > .top {
         flex: 0 0 auto;
