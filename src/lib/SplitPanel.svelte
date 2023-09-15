@@ -17,7 +17,6 @@
     function init(direction, showPanels) {
         cleanup();
         if (showPanels === 'all' && panelA && panelB) {
-            console.log(direction);
             instance = Split([panelA, panelB], {
                 direction,
                 minSize: 0,
