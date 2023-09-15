@@ -662,8 +662,15 @@
         minizinc.cancel();
     }
 
+    let visQueue = null;
     function addOutput(value, time) {
-        processVisMessage(value, time);
+        if (visQueue) {
+            visQueue.then(() => {
+                visQueue = processVisMessage(value, time);
+            });
+        } else {
+            visQueue = processVisMessage(value, time);
+        }
         output[output.length - 1].output.push(value);
         output = output; // Force update
     }
@@ -1065,7 +1072,10 @@
                         class:is-active={menuActive}
                         aria-label="menu"
                         aria-expanded={menuActive}
-                        on:click={() => {menuActive = !menuActive; showSolverConfig = false;}}
+                        on:click={() => {
+                            menuActive = !menuActive;
+                            showSolverConfig = false;
+                        }}
                     >
                         <span aria-hidden="true" />
                         <span aria-hidden="true" />
@@ -1135,7 +1145,10 @@
                             <a
                                 class="navbar-item is-hidden-tablet mobile-menu-item"
                                 href="javascript:void(0);"
-                                on:click={() => { compile(); menuActive = false}} 
+                                on:click={() => {
+                                    compile();
+                                    menuActive = false;
+                                }}
                             >
                                 <span class="icon">
                                     <Fa icon={faHammer} />
@@ -1148,7 +1161,10 @@
                             <a
                                 class="navbar-item is-hidden-tablet mobile-menu-item"
                                 href="javascript:void(0);"
-                                on:click={() => {toggleSolverConfig(); menuActive = false}}
+                                on:click={() => {
+                                    toggleSolverConfig();
+                                    menuActive = false;
+                                }}
                             >
                                 <span class="icon">
                                     <Fa icon={faCog} />
@@ -1161,12 +1177,19 @@
                             <a
                                 class="navbar-item is-hidden-tablet mobile-menu-item"
                                 href="javascript:void(0);"
-                                on:click={() => {edgeMiniZinc = !edgeMiniZinc; menuActive = false;}}
+                                on:click={() => {
+                                    edgeMiniZinc = !edgeMiniZinc;
+                                    menuActive = false;
+                                }}
                             >
                                 <span class="icon">
                                     <Fa icon={faShuffle} />
                                 </span>
-                                <span>Switch to the {edgeMiniZinc ? 'latest' : 'edge'} version of MiniZinc</span>
+                                <span
+                                    >Switch to the {edgeMiniZinc
+                                        ? 'latest'
+                                        : 'edge'} version of MiniZinc</span
+                                >
                             </a>
                         {/if}
                         {#if showShareButton && busyState === 0}
@@ -1174,10 +1197,12 @@
                             <a
                                 class="navbar-item is-hidden-tablet mobile-menu-item"
                                 href="javascript:void(0);"
-                                on:click={() =>
-                                    {shareUrl = getShareUrl(
+                                on:click={() => {
+                                    shareUrl = getShareUrl(
                                         window.location.href
-                                    );menuActive = false;}}
+                                    );
+                                    menuActive = false;
+                                }}
                             >
                                 <span class="icon">
                                     <Fa icon={faShareNodes} />
@@ -1190,7 +1215,10 @@
                             <a
                                 class="navbar-item is-hidden-tablet mobile-menu-item"
                                 href="javascript:void(0);"
-                                on:click={() => {openInExternalPlayground(); menuActive = false}}
+                                on:click={() => {
+                                    openInExternalPlayground();
+                                    menuActive = false;
+                                }}
                             >
                                 <span class="icon">
                                     <Fa icon={faArrowUpRightFromSquare} />
