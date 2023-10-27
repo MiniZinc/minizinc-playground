@@ -1313,6 +1313,7 @@
                             >
                                 <Visualisation
                                     bind:this={visualisation}
+                                    {files}
                                     on:solve={(e) => visReSolve(e.detail)}
                                 />
                             </div>
