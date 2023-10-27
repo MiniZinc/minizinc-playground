@@ -15,6 +15,8 @@
 
     const dispatch = createEventDispatcher();
 
+    export let files = [];
+
     let prevFollowLatest = true;
     let followLatest = true;
     let prevSolution = 0;
@@ -30,6 +32,9 @@
     export function reset() {
         for (const vis of visualisations) {
             URL.revokeObjectURL(vis.url);
+            for (const url of vis.extraUrls) {
+                URL.revokeObjectURL(url);
+            }
         }
         prevFollowLatest = true;
         followLatest = true;
@@ -52,8 +57,45 @@
                 '*'
             );
         });
+        const projectFiles = files.reduce(
+            (acc, x) => ({ ...acc, [x.name]: x.state.doc.toString() }),
+            {}
+        );
+        const extraUrls = [];
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        for (const script of doc.getElementsByTagName('script')) {
+            const src = script.getAttribute('src');
+            if (src === '/minizinc-ide.js') {
+                script.src = connectorURL;
+            } else if (src in projectFiles && src.endsWith('.js')) {
+                const url = URL.createObjectURL(
+                    new Blob([projectFiles[src]], {
+                        type: 'text/javascript; charset=utf-8',
+                    })
+                );
+                script.src = url;
+                extraUrls.push(url);
+            }
+        }
+        for (const link of doc.getElementsByTagName('link')) {
+            const href = link.getAttribute('href');
+            if (href in projectFiles && href.endsWith('.css')) {
+                const url = URL.createObjectURL(
+                    new Blob([projectFiles[href]], {
+                        type: 'text/css; charset=utf-8',
+                    })
+                );
+                link.href = url;
+                extraUrls.push(url);
+            }
+        }
+
+        const contents =
+            new XMLSerializer().serializeToString(doc.doctype) +
+            doc.documentElement.outerHTML;
+        console.log(contents);
         const url = URL.createObjectURL(
-            new Blob([html.replace('/minizinc-ide.js', connectorURL)], {
+            new Blob([contents], {
                 type: 'text/html; charset=utf-8',
             })
         );
@@ -61,6 +103,7 @@
             ...visualisations,
             {
                 url,
+                extraUrls,
                 makeReady,
                 ready,
                 solutions: [],
