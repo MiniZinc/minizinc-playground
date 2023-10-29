@@ -1401,7 +1401,7 @@
             >
                 Delete
             </button>
-            <button class="button" on:click={() => (deleteFileRequested = null)}
+            <button type="button" class="button" on:click={() => (deleteFileRequested = null)}
                 >Cancel</button
             >
         </div>
@@ -1440,6 +1440,7 @@
             </p>
             <p class="control">
                 <button
+                    type="button"
                     class="button"
                     class:is-primary={!copiedShareUrl}
                     class:is-success={copiedShareUrl}

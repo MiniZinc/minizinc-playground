@@ -55,9 +55,13 @@
         { label: 'Solution checkers', files: checkers },
         { label: 'Other files', files: other },
     ].filter((s) => s.files.length > 0);
+
+    function accept() {
+        dispatch('close');
+    }
 </script>
 
-<Modal {active} title="Manage files" on:cancel={() => dispatch('close')}>
+<Modal {active} title="Manage files" on:submit={accept} on:cancel={accept}>
     {#each sections as section}
         <p>{section.label}</p>
         <table class="table is-fullwidth">
@@ -75,6 +79,7 @@
                                             : 'hide'} this file"
                                         class:is-primary={!file.hidden}
                                         class:is-light={file.hidden}
+                                        type="button"
                                         on:click={() =>
                                             dispatch('modifyFile', {
                                                 index,
@@ -97,6 +102,7 @@
                                         <button
                                             class="button is-small is-light"
                                             title="Compiled checkers are read only"
+                                            type="button"
                                             disabled
                                         >
                                             <span class="icon">
@@ -111,6 +117,7 @@
                                                 : 'lock'} this file for editing"
                                             class:is-primary={!file.readOnly}
                                             class:is-light={file.readOnly}
+                                            type="button"
                                             on:click={() =>
                                                 dispatch('modifyFile', {
                                                     index,
@@ -134,6 +141,7 @@
                                     <button
                                         class="button is-small is-danger"
                                         title="Delete this file"
+                                        type="button"
                                         on:click={() =>
                                             dispatch('delete', { index })}
                                     >
@@ -154,6 +162,7 @@
         <button
             class="button is-fullwidth"
             on:click={() => dispatch('newFile')}
+            type="button"
         >
             <span class="icon">
                 <Fa icon={faPlus} />
@@ -163,9 +172,9 @@
     </div>
 
     <div slot="footer">
-        <button class="button is-primary" on:click={() => dispatch('close')}
-            >Accept</button
-        >
+        <button class="button is-primary">
+            Accept
+        </button>
     </div>
 </Modal>
 

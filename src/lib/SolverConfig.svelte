@@ -142,136 +142,139 @@
 
         <h5 class="title is-5">Solving options</h5>
 
-        <div class="field is-grouped">
-            <p class="control checkbox-control">
-                <input
-                    id="enable-timelimit"
-                    type="checkbox"
-                    bind:checked={enableTimeLimit}
-                />
-                <label for="enable-timelimit">Time limit (s)</label>
-            </p>
-            <p class="control is-expanded">
-                <input
-                    class="input is-fullwidth"
-                    type="number"
-                    step="1"
-                    min={0}
-                    disabled={!enableTimeLimit}
-                    bind:value={timeLimit}
-                />
-            </p>
-        </div>
-
-        {#if hasStdFlag(stdFlags, '-a')}
-            <div class="field">
+        <form on:submit={() => dispatch('close')}>
+            <div class="field is-grouped">
                 <p class="control checkbox-control">
                     <input
-                        id="enable-all-solutions"
+                        id="enable-timelimit"
                         type="checkbox"
-                        bind:checked={allSolutions}
+                        bind:checked={enableTimeLimit}
                     />
-                    <label for="enable-all-solutions">
-                        All solutions (for satisfication problems)
-                    </label>
+                    <label for="enable-timelimit">Time limit (s)</label>
+                </p>
+                <p class="control is-expanded">
+                    <input
+                        class="input is-fullwidth"
+                        type="number"
+                        step="1"
+                        min={0}
+                        disabled={!enableTimeLimit}
+                        bind:value={timeLimit}
+                    />
                 </p>
             </div>
-        {/if}
 
-        {#if hasStdFlag(stdFlags, '-f')}
+            {#if hasStdFlag(stdFlags, '-a')}
+                <div class="field">
+                    <p class="control checkbox-control">
+                        <input
+                            id="enable-all-solutions"
+                            type="checkbox"
+                            bind:checked={allSolutions}
+                        />
+                        <label for="enable-all-solutions">
+                            All solutions (for satisfication problems)
+                        </label>
+                    </p>
+                </div>
+            {/if}
+
+            {#if hasStdFlag(stdFlags, '-f')}
+                <div class="field">
+                    <p class="control checkbox-control">
+                        <input
+                            id="enable-free-search"
+                            type="checkbox"
+                            bind:checked={freeSearch}
+                        />
+                        <label for="enable-free-search">Free search</label>
+                    </p>
+                </div>
+            {/if}
+
+            <h5 class="title is-5">Output options</h5>
+
             <div class="field">
                 <p class="control checkbox-control">
                     <input
-                        id="enable-free-search"
+                        id="enable-verbose-compile"
                         type="checkbox"
-                        bind:checked={freeSearch}
+                        bind:checked={verboseCompilation}
                     />
-                    <label for="enable-free-search">Free search</label>
-                </p>
-            </div>
-        {/if}
-
-        <h5 class="title is-5">Output options</h5>
-
-        <div class="field">
-            <p class="control checkbox-control">
-                <input
-                    id="enable-verbose-compile"
-                    type="checkbox"
-                    bind:checked={verboseCompilation}
-                />
-                <label for="enable-verbose-compile">Verbose compilation</label>
-            </p>
-        </div>
-
-        {#if hasStdFlag(stdFlags, '-v')}
-            <div class="field">
-                <p class="control checkbox-control">
-                    <input
-                        id="enable-verbose-solve"
-                        type="checkbox"
-                        bind:checked={verboseSolving}
-                    />
-                    <label for="enable-verbose-solve">Verbose solving</label>
-                </p>
-            </div>
-        {/if}
-
-        <div class="field">
-            <p class="control checkbox-control">
-                <input
-                    id="enable-compilation-satistics"
-                    type="checkbox"
-                    bind:checked={compilerStatistics}
-                />
-                <label for="enable-compilation-satistics"
-                    >Compilation statistics</label
-                >
-            </p>
-        </div>
-
-        {#if hasStdFlag(stdFlags, '-s')}
-            <div class="field">
-                <p class="control checkbox-control">
-                    <input
-                        id="enable-solving-satistics"
-                        type="checkbox"
-                        bind:checked={solvingStatistics}
-                    />
-                    <label for="enable-solving-satistics"
-                        >Solving statistics</label
+                    <label for="enable-verbose-compile"
+                        >Verbose compilation</label
                     >
                 </p>
             </div>
-        {/if}
 
-        <div class="field">
-            <p class="control checkbox-control">
-                <input
-                    id="enable-timing-information"
-                    type="checkbox"
-                    bind:checked={outputTime}
-                />
-                <label for="enable-timing-information">Timing information</label
-                >
-            </p>
-        </div>
+            {#if hasStdFlag(stdFlags, '-v')}
+                <div class="field">
+                    <p class="control checkbox-control">
+                        <input
+                            id="enable-verbose-solve"
+                            type="checkbox"
+                            bind:checked={verboseSolving}
+                        />
+                        <label for="enable-verbose-solve">Verbose solving</label
+                        >
+                    </p>
+                </div>
+            {/if}
 
-        <div class="field is-grouped bottom-buttons">
-            <p class="control">
-                <button
-                    class="button is-primary"
-                    on:click={() => dispatch('close')}
-                >
-                    Accept
-                </button>
-            </p>
-            <p class="control">
-                <button class="button is-danger" on:click={reset}
-                    >Reset to defaults</button
-                >
-            </p>
-        </div>
+            <div class="field">
+                <p class="control checkbox-control">
+                    <input
+                        id="enable-compilation-satistics"
+                        type="checkbox"
+                        bind:checked={compilerStatistics}
+                    />
+                    <label for="enable-compilation-satistics"
+                        >Compilation statistics</label
+                    >
+                </p>
+            </div>
+
+            {#if hasStdFlag(stdFlags, '-s')}
+                <div class="field">
+                    <p class="control checkbox-control">
+                        <input
+                            id="enable-solving-satistics"
+                            type="checkbox"
+                            bind:checked={solvingStatistics}
+                        />
+                        <label for="enable-solving-satistics"
+                            >Solving statistics</label
+                        >
+                    </p>
+                </div>
+            {/if}
+
+            <div class="field">
+                <p class="control checkbox-control">
+                    <input
+                        id="enable-timing-information"
+                        type="checkbox"
+                        bind:checked={outputTime}
+                    />
+                    <label for="enable-timing-information"
+                        >Timing information</label
+                    >
+                </p>
+            </div>
+
+            <div class="field is-grouped bottom-buttons">
+                <p class="control">
+                    <button class="button is-primary"> Accept </button>
+                </p>
+                <p class="control">
+                    <button
+                        type="button"
+                        class="button is-danger"
+                        on:click={reset}>Reset to defaults</button
+                    >
+                </p>
+            </div>
+        </form>
     </div>
 {/if}
 

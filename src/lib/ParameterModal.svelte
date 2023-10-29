@@ -1,5 +1,5 @@
 <script>
-    import { createEventDispatcher } from 'svelte';
+    import { createEventDispatcher, tick } from 'svelte';
     import Modal from './Modal.svelte';
     const dispatch = createEventDispatcher();
 
@@ -10,10 +10,18 @@
     let dataTab = true;
     let selectedFiles = [];
     let parameterValues = [];
+    let focusInput;
 
     $: createParameterValues(parameters);
     $: hasDataFiles = dataFiles.length > 0;
     $: dataTabActive = hasDataFiles && dataTab;
+
+    async function setFocus() {
+        await tick();
+        if (focusInput) {
+            focusInput.focus();
+        }
+    }
 
     function createParameterValues(parameters) {
         parameterValues = Object.keys(parameters)
@@ -39,7 +47,13 @@
     }
 </script>
 
-<Modal {active} title="Model parameters" on:cancel={() => dispatch('cancel')}>
+<Modal
+    {active}
+    title="Model parameters"
+    on:activate={setFocus}
+    on:submit={accept}
+    on:cancel={() => dispatch('cancel')}
+>
     {#if hasDataFiles}
         <div class="tabs">
             <ul>
@@ -60,24 +74,40 @@
     {/if}
     {#if dataTabActive}
         <div class="select is-fullwidth is-multiple">
-            <select multiple size="8" bind:value={selectedFiles}>
+            <select
+                bind:this={focusInput}
+                multiple
+                size={Math.min(8, dataFiles.length)}
+                bind:value={selectedFiles}
+            >
                 {#each dataFiles as dataFile}
                     <option value={dataFile}>{dataFile}</option>
                 {/each}
             </select>
         </div>
     {:else}
-        {#each parameterValues as param}
+        {#each parameterValues as param, i}
             <div class="param">
                 <span>{param.name} = </span>
-                <input class="input" bind:value={param.value} />
+                {#if i === 0}
+                    <input
+                        class="input"
+                        bind:this={focusInput}
+                        bind:value={param.value}
+                    />
+                {:else}
+                    <input class="input" bind:value={param.value} />
+                {/if}
             </div>
         {/each}
     {/if}
-
     <div slot="footer">
-        <button class="button is-primary" on:click={accept}> OK </button>
-        <button class="button" on:click={() => dispatch('cancel')}>
+        <button class="button is-primary">OK</button>
+        <button
+            type="button"
+            class="button"
+            on:click={() => dispatch('cancel')}
+        >
             Cancel
         </button>
     </div>
