@@ -1,12 +1,19 @@
 <script>
-    import { createEventDispatcher } from 'svelte';
+    import { createEventDispatcher, tick } from 'svelte';
     import Modal from './Modal.svelte';
     export let active = false;
 
     const dispatch = createEventDispatcher();
     let fileInput;
     let files;
+    let element;
 
+    async function setFocus() {
+        await tick();
+        if (element) {
+            element.focus();
+        }
+    }
     async function uploaded() {
         const promises = [];
         for (const file of files) {
@@ -26,64 +33,76 @@
     }
 </script>
 
-<Modal {active} title="Create new file" on:cancel={() => dispatch('cancel')}>
+<Modal
+    {active}
+    title="Create new file"
+    on:activate={setFocus}
+    on:cancel={() => dispatch('cancel')}
+>
     <aside class="menu">
         <p class="menu-label">Model</p>
         <ul class="menu-list">
             <li>
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-missing-attribute -->
-                <!-- svelte-ignore a11y-no-static-element-interactions-->
-                <a on:click={() => dispatch('new', { type: '.mzn' })}
-                    >Model file (.mzn)</a
+                <button
+                    type="button"
+                    class="button is-text"
+                    bind:this={element}
+                    on:click={() => dispatch('new', { type: '.mzn' })}
                 >
+                    Model file (.mzn)
+                </button>
             </li>
             <li>
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-missing-attribute -->
-                <!-- svelte-ignore a11y-no-static-element-interactions-->
-                <a on:click={() => dispatch('new', { type: '.mzc.mzn' })}
-                    >Solution checker model (.mzc.mzn)</a
+                <button
+                    type="button"
+                    class="button is-text"
+                    on:click={() => dispatch('new', { type: '.mzc.mzn' })}
                 >
+                    Solution checker model (.mzc.mzn)
+                </button>
             </li>
         </ul>
         <p class="menu-label">Data</p>
         <ul class="menu-list">
             <li>
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-missing-attribute -->
-                <!-- svelte-ignore a11y-no-static-element-interactions-->
-                <a on:click={() => dispatch('new', { type: '.dzn' })}
-                    >Data file (.dzn)</a
+                <button
+                    type="button"
+                    class="button is-text"
+                    on:click={() => dispatch('new', { type: '.dzn' })}
                 >
+                    Data file (.dzn)
+                </button>
             </li>
             <li>
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-missing-attribute -->
-                <!-- svelte-ignore a11y-no-static-element-interactions-->
-                <a on:click={() => dispatch('new', { type: '.json' })}
-                    >JSON data file (.json)</a
+                <button
+                    type="button"
+                    class="button is-text"
+                    on:click={() => dispatch('new', { type: '.json' })}
                 >
+                    JSON data file (.json)
+                </button>
             </li>
         </ul>
         <p class="menu-label">Visualisation</p>
         <ul class="menu-list">
             <li>
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-missing-attribute -->
-                <!-- svelte-ignore a11y-no-static-element-interactions-->
-                <a on:click={() => dispatch('new', { type: '.html' })}
-                    >Custom visualisation (.html)</a
+                <button
+                    type="button"
+                    class="button is-text"
+                    on:click={() => dispatch('new', { type: '.html' })}
                 >
+                    Custom visualisation (.html)
+                </button>
             </li>
         </ul>
         <p class="menu-label">Import</p>
         <ul class="menu-list">
             <li>
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-missing-attribute -->
-                <!-- svelte-ignore a11y-no-static-element-interactions-->
-                <a on:click={() => fileInput.click()}>Upload file(s)</a>
+                <button
+                    type="button"
+                    class="button is-text"
+                    on:click={() => fileInput.click()}>Upload file(s)</button
+                >
             </li>
         </ul>
     </aside>
@@ -102,5 +121,12 @@
 <style>
     .is-hidden {
         display: none;
+    }
+
+    .menu-list .button {
+        text-decoration: none;
+        display: block;
+        width: 100%;
+        text-align: left;
     }
 </style>

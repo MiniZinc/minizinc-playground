@@ -22,19 +22,38 @@
 <Modal
     {active}
     title="Select model to run"
+    on:submit={accept}
     on:cancel={() => dispatch('cancel')}
 >
-    <div class="select is-fullwidth">
-        <select bind:value={selectedModel}>
+    <div class="select is-fullwidth is-multiple">
+        <select
+            bind:value={selectedModel}
+            size={Math.min(8, modelFiles.length)}
+        >
             {#each modelFiles as modelFile}
                 <option value={modelFile}>{modelFile}</option>
             {/each}
         </select>
     </div>
     <div slot="footer">
-        <button class="button is-primary" on:click={accept}> OK </button>
-        <button class="button" on:click={() => dispatch('cancel')}>
+        <button class="button is-primary"> OK </button>
+        <button
+            type="button"
+            class="button"
+            on:click={() => dispatch('cancel')}
+        >
             Cancel
         </button>
     </div>
 </Modal>
+
+<style>
+    .select.is-multiple select {
+        height: auto;
+        padding: 0;
+    }
+
+    .select.is-multiple option {
+        padding: 0.5em 1em;
+    }
+</style>
