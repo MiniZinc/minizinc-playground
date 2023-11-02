@@ -142,7 +142,7 @@
 
         <h5 class="title is-5">Solving options</h5>
 
-        <form on:submit={() => dispatch('close')}>
+        <form on:submit|preventDefault={() => dispatch('close')}>
             <div class="field is-grouped">
                 <p class="control checkbox-control">
                     <input
