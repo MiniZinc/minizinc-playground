@@ -46,7 +46,7 @@
         finishTime = null;
     }
 
-    export function addVisualisation(html, userData) {
+    export function addVisualisation(key, html, userData) {
         let makeReady;
         const ready = new Promise((res, rej) => {
             makeReady = res;
@@ -93,7 +93,6 @@
         const contents =
             new XMLSerializer().serializeToString(doc.doctype) +
             doc.documentElement.outerHTML;
-        console.log(contents);
         const url = URL.createObjectURL(
             new Blob([contents], {
                 type: 'text/html; charset=utf-8',
@@ -102,6 +101,7 @@
         visualisations = [
             ...visualisations,
             {
+                key,
                 url,
                 extraUrls,
                 makeReady,
@@ -113,13 +113,18 @@
     }
 
     export function addSolution(solution, time) {
-        for (let i = 0; i < visualisations.length; i++) {
+        for (const key in solution) {
+            const vis = visualisations.find((x) => x.key === key);
+            if (!vis) {
+                console.error(`Did not find visualisation for ${key}`);
+                continue;
+            }
             const payload = {
                 time,
-                data: solution ? solution[i] : null,
+                data: solution[key],
             };
-            visualisations[i].solutions.push(payload);
-            sendMessage({ event: 'solution', payload }, visualisations[i]);
+            vis.solutions.push(payload);
+            sendMessage({ event: 'solution', payload }, vis);
         }
         numSolutions++;
     }

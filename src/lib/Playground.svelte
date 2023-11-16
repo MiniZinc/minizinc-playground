@@ -42,6 +42,7 @@
     export let showSolverDropdown = true;
     export let edgeMiniZinc = false;
     export let autoClearOutput = false;
+    export let showTabs = true;
     export let canEditTabs = true;
     export let compilationEnabled = true;
     export let project;
@@ -684,7 +685,7 @@
     }
 
     async function processVisMessage(value, time) {
-        if (value.type === 'trace' && value.section === 'vis_json') {
+        if (value.type === 'trace' && value.section.startsWith('mzn_vis_')) {
             if (!hasVisualisation) {
                 hasVisualisation = true;
                 visualisationOpen = true;
@@ -710,7 +711,11 @@
                 );
                 return;
             }
-            visualisation.addVisualisation(html, value.message.userData);
+            visualisation.addVisualisation(
+                value.section,
+                html,
+                value.message.userData
+            );
             return;
         }
         if (hasVisualisation) {
@@ -720,7 +725,12 @@
             switch (value.type) {
                 case 'solution':
                     visualisation.addSolution(
-                        value.output.vis_json,
+                        value.sections
+                            .filter((s) => s.startsWith('mzn_vis_'))
+                            .reduce(
+                                (acc, x) => ({ ...acc, [x]: value.output[x] }),
+                                {}
+                            ),
                         'time' in value ? value.time : time
                     );
                     break;
@@ -1239,21 +1249,25 @@
                     showPanels={splitterShowPanel}
                 >
                     <div class="panel stack" slot="panelA">
-                        <div class="top">
-                            <Tabs
-                                {files}
-                                {currentIndex}
-                                readonly={!canEditTabs}
-                                on:selectTab={(e) => selectTab(e.detail.index)}
-                                on:reorder={(e) =>
-                                    reorder(e.detail.src, e.detail.dest)}
-                                on:newFile={() => (newFileRequested = true)}
-                                on:rename={rename}
-                                on:close={(e) =>
-                                    (deleteFileRequested = e.detail.index)}
-                                on:manageFiles={() => (managingFiles = true)}
-                            />
-                        </div>
+                        {#if showTabs}
+                            <div class="top">
+                                <Tabs
+                                    {files}
+                                    {currentIndex}
+                                    readonly={!canEditTabs}
+                                    on:selectTab={(e) =>
+                                        selectTab(e.detail.index)}
+                                    on:reorder={(e) =>
+                                        reorder(e.detail.src, e.detail.dest)}
+                                    on:newFile={() => (newFileRequested = true)}
+                                    on:rename={rename}
+                                    on:close={(e) =>
+                                        (deleteFileRequested = e.detail.index)}
+                                    on:manageFiles={() =>
+                                        (managingFiles = true)}
+                                />
+                            </div>
+                        {/if}
                         <div class="grow">
                             {#if state}
                                 <Editor {state} bind:this={editor} />
@@ -1401,8 +1415,10 @@
             >
                 Delete
             </button>
-            <button type="button" class="button" on:click={() => (deleteFileRequested = null)}
-                >Cancel</button
+            <button
+                type="button"
+                class="button"
+                on:click={() => (deleteFileRequested = null)}>Cancel</button
             >
         </div>
     </Modal>

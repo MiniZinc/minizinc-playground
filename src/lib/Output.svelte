@@ -50,16 +50,20 @@
 
     function getUserSections(output) {
         const messages = output.flatMap((run) => run.output);
-        const sections = new Set([
-            ...messages
-                .filter((m) => m.type === 'solution' || m.type === 'checker')
-                .flatMap((m) =>
-                    m.sections.filter((s) => m.output[s].length > 0)
-                ),
-            ...messages.filter((m) => m.type === 'trace').map((m) => m.section),
-        ]);
-        sections.delete('raw'); // Exclude raw section
-        sections.delete('vis_json'); // Exclude vis_json section
+        const sections = new Set(
+            [
+                ...messages
+                    .filter(
+                        (m) => m.type === 'solution' || m.type === 'checker'
+                    )
+                    .flatMap((m) =>
+                        m.sections.filter((s) => m.output[s].length > 0)
+                    ),
+                ...messages
+                    .filter((m) => m.type === 'trace')
+                    .map((m) => m.section),
+            ].filter((s) => s !== 'raw' && !s.startsWith('mzn_vis_'))
+        );
         const result = [...sections.values()];
         result.sort();
         hiddenSections = hiddenSections.filter((s) => sections.has(s));
@@ -327,8 +331,8 @@
                         {#each run.output as msg}
                             {#if msg.type === 'solution'}
                                 {#each msg.sections as section}
-                                    {#if hiddenSections.indexOf(section) === -1 && section !== 'vis_json'}
-                                        {#if section === 'json' || section.endsWith('_json')}
+                                    {#if hiddenSections.indexOf(section) === -1 && !section.startsWith('mzn_vis_')}
+                                        {#if typeof msg.output[section] !== 'string'}
                                             <pre>{JSON.stringify(
                                                     msg.output[section],
                                                     null,
@@ -368,8 +372,8 @@
                                     <br />
                                 {/if}
                             {:else if msg.type === 'trace'}
-                                {#if hiddenSections.indexOf(msg.section) === -1 && msg.section !== 'vis_json'}
-                                    {#if msg.section === 'json' || msg.section.endsWith('_json')}
+                                {#if hiddenSections.indexOf(msg.section) === -1 && !msg.section.startsWith('mzn_vis_')}
+                                    {#if typeof msg.message !== 'string'}
                                         <pre>{JSON.stringify(
                                                 msg.message,
                                                 null,
