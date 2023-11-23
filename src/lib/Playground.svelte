@@ -37,6 +37,7 @@
 
     import * as MiniZincLatest from 'https://cdn.jsdelivr.net/npm/minizinc/dist/minizinc.mjs';
     import * as MiniZincEdge from 'https://cdn.jsdelivr.net/npm/minizinc@edge/dist/minizinc.mjs';
+    import { browserDarkMode, screenMobile } from './mediaQueries';
 
     export let showVersionSwitcher = true;
     export let showSolverDropdown = true;
@@ -115,16 +116,6 @@
         onMount(() => {
             loadSolvers();
             resolve();
-
-            const query = window.matchMedia('(prefers-color-scheme: dark)');
-            const setColorScheme = () => {
-                browserDark = window.matchMedia(
-                    '(prefers-color-scheme: dark)',
-                ).matches;
-            };
-            setColorScheme();
-            query.addEventListener('change', setColorScheme);
-            return () => query.removeEventListener('change', setColorScheme);
         });
     });
 
@@ -895,8 +886,7 @@
         edgeMiniZinc = e.detail.item === minizincVersions.edge;
     }
 
-    let browserDark = false;
-    $: darkMode = { dark: true, light: false, auto: browserDark }[theme];
+    $: darkMode = { dark: true, light: false, auto: $browserDarkMode }[theme];
 
     function setTheme(dark) {
         if (currentFile) {
@@ -963,12 +953,7 @@
                 <div class="navbar-brand">
                     <slot name="navbar-before-run-buttons" />
                     <div class="navbar-item is-expanded">
-                        <div
-                            class="field navbar-run-buttons"
-                            class:has-addons={compilationEnabled ||
-                                showVersionSwitcher ||
-                                showSolverDropdown}
-                        >
+                        <div class="field navbar-run-buttons has-addons">
                             <div class="control">
                                 {#if isRunning}
                                     <button
@@ -995,8 +980,8 @@
                                     </button>
                                 {/if}
                             </div>
-                            {#if compilationEnabled}
-                                <div class="control is-hidden-mobile">
+                            {#if !$screenMobile && compilationEnabled}
+                                <div class="control">
                                     <button
                                         class="button"
                                         title="Compile the current file and show the resultant FlatZinc"
@@ -1007,8 +992,8 @@
                                     </button>
                                 </div>
                             {/if}
-                            {#if showVersionSwitcher}
-                                <div class="control is-hidden-mobile">
+                            {#if !$screenMobile && showVersionSwitcher}
+                                <div class="control">
                                     <Dropdown
                                         items={versionItems}
                                         currentItem={edgeMiniZinc
@@ -1025,10 +1010,8 @@
                             {/if}
                             <slot name="navbar-run-buttons" />
 
-                            {#if showSolverDropdown && solvers.length > 0}
-                                <div
-                                    class="control is-expanded is-hidden-tablet"
-                                >
+                            {#if $screenMobile && showSolverDropdown && solvers.length > 0}
+                                <div class="control is-expanded">
                                     <div class="select is-fullwidth">
                                         <select bind:value={currentSolverIndex}>
                                             {#each solvers as solver, i}
@@ -1104,145 +1087,148 @@
                     <div class="navbar-start is-hidden-tablet" />
                     <div class="navbar-end">
                         <slot name="navbar-before-share-buttons" />
-                        <div class="navbar-item is-hidden-mobile">
-                            <div class="field has-addons">
-                                {#if showShareButton}
-                                    <div class="control">
-                                        <button
-                                            class="button is-primary"
-                                            title="Share"
-                                            disabled={busyState !== 0}
-                                            on:click={() =>
-                                                (shareUrl = getShareUrl(
-                                                    window.location.href,
-                                                ))}
-                                        >
-                                            <span class="icon">
-                                                <Fa icon={faShareNodes} />
-                                            </span>
-                                        </button>
-                                    </div>
-                                {/if}
-                                {#if showDownloadButton}
-                                    <div class="control">
-                                        <button
-                                            class="button"
-                                            title="Download project"
-                                            on:click={() => downloadProject()}
-                                            disabled={generatingProject ||
-                                                busyState !== 0}
-                                        >
-                                            <span class="icon">
-                                                <Fa icon={faDownload} />
-                                            </span>
-                                        </button>
-                                    </div>
-                                {/if}
-                                {#if externalPlaygroundURL}
-                                    <div class="control">
-                                        <button
-                                            class="button is-primary"
-                                            title="Open in playground"
-                                            disabled={busyState !== 0}
-                                            on:click={openInExternalPlayground}
-                                        >
-                                            <span class="icon">
-                                                <Fa
-                                                    icon={faArrowUpRightFromSquare}
-                                                />
-                                            </span>
-                                        </button>
-                                    </div>
-                                {/if}
-                                <slot name="navbar-share-buttons" />
-                            </div>
-                        </div>
-
-                        {#if compilationEnabled && !isRunning && canCompile}
-                            <!-- svelte-ignore a11y-invalid-attribute -->
-                            <a
-                                class="navbar-item is-hidden-tablet mobile-menu-item"
-                                href="javascript:void(0);"
-                                on:click={() => {
-                                    compile();
-                                    menuActive = false;
-                                }}
-                            >
-                                <span class="icon">
-                                    <Fa icon={faHammer} />
-                                </span>
-                                <span>Compile current file</span>
-                            </a>
-                        {/if}
-                        {#if canEditSolverSettings && showSolverDropdown && solvers.length > 0}
-                            <!-- svelte-ignore a11y-invalid-attribute -->
-                            <a
-                                class="navbar-item is-hidden-tablet mobile-menu-item"
-                                href="javascript:void(0);"
-                                on:click={() => {
-                                    toggleSolverConfig();
-                                    menuActive = false;
-                                }}
-                            >
-                                <span class="icon">
-                                    <Fa icon={faCog} />
-                                </span>
-                                <span>Solver configuration</span>
-                            </a>
-                        {/if}
-                        {#if showVersionSwitcher && !isRunning}
-                            <!-- svelte-ignore a11y-invalid-attribute -->
-                            <a
-                                class="navbar-item is-hidden-tablet mobile-menu-item"
-                                href="javascript:void(0);"
-                                on:click={() => {
-                                    edgeMiniZinc = !edgeMiniZinc;
-                                    menuActive = false;
-                                }}
-                            >
-                                <span class="icon">
-                                    <Fa icon={faShuffle} />
-                                </span>
-                                <span
-                                    >Switch to the {edgeMiniZinc
-                                        ? 'latest'
-                                        : 'edge'} version of MiniZinc</span
+                        {#if $screenMobile}
+                            {#if compilationEnabled && !isRunning && canCompile}
+                                <!-- svelte-ignore a11y-invalid-attribute -->
+                                <a
+                                    class="navbar-item mobile-menu-item"
+                                    href="javascript:void(0);"
+                                    on:click={() => {
+                                        compile();
+                                        menuActive = false;
+                                    }}
                                 >
-                            </a>
-                        {/if}
-                        {#if showShareButton && busyState === 0}
-                            <!-- svelte-ignore a11y-invalid-attribute -->
-                            <a
-                                class="navbar-item is-hidden-tablet mobile-menu-item"
-                                href="javascript:void(0);"
-                                on:click={() => {
-                                    shareUrl = getShareUrl(
-                                        window.location.href,
-                                    );
-                                    menuActive = false;
-                                }}
-                            >
-                                <span class="icon">
-                                    <Fa icon={faShareNodes} />
-                                </span>
-                                <span>Share this project</span>
-                            </a>
-                        {/if}
-                        {#if externalPlaygroundURL && busyState === 0}
-                            <!-- svelte-ignore a11y-invalid-attribute -->
-                            <a
-                                class="navbar-item is-hidden-tablet mobile-menu-item"
-                                href="javascript:void(0);"
-                                on:click={() => {
-                                    openInExternalPlayground();
-                                    menuActive = false;
-                                }}
-                            >
-                                <span class="icon">
-                                    <Fa icon={faArrowUpRightFromSquare} />
-                                </span>
-                                <span>Open in MiniZinc Playground</span>
-                            </a>
+                                    <span class="icon">
+                                        <Fa icon={faHammer} />
+                                    </span>
+                                    <span>Compile current file</span>
+                                </a>
+                            {/if}
+                            {#if canEditSolverSettings && showSolverDropdown && solvers.length > 0}
+                                <!-- svelte-ignore a11y-invalid-attribute -->
+                                <a
+                                    class="navbar-item mobile-menu-item"
+                                    href="javascript:void(0);"
+                                    on:click={() => {
+                                        toggleSolverConfig();
+                                        menuActive = false;
+                                    }}
+                                >
+                                    <span class="icon">
+                                        <Fa icon={faCog} />
+                                    </span>
+                                    <span>Solver configuration</span>
+                                </a>
+                            {/if}
+                            {#if showVersionSwitcher && !isRunning}
+                                <!-- svelte-ignore a11y-invalid-attribute -->
+                                <a
+                                    class="navbar-item mobile-menu-item"
+                                    href="javascript:void(0);"
+                                    on:click={() => {
+                                        edgeMiniZinc = !edgeMiniZinc;
+                                        menuActive = false;
+                                    }}
+                                >
+                                    <span class="icon">
+                                        <Fa icon={faShuffle} />
+                                    </span>
+                                    <span
+                                        >Switch to the {edgeMiniZinc
+                                            ? 'latest'
+                                            : 'edge'} version of MiniZinc</span
+                                    >
+                                </a>
+                            {/if}
+                            {#if showShareButton && busyState === 0}
+                                <!-- svelte-ignore a11y-invalid-attribute -->
+                                <a
+                                    class="navbar-item mobile-menu-item"
+                                    href="javascript:void(0);"
+                                    on:click={() => {
+                                        shareUrl = getShareUrl(
+                                            window.location.href,
+                                        );
+                                        menuActive = false;
+                                    }}
+                                >
+                                    <span class="icon">
+                                        <Fa icon={faShareNodes} />
+                                    </span>
+                                    <span>Share this project</span>
+                                </a>
+                            {/if}
+                            {#if externalPlaygroundURL && busyState === 0}
+                                <!-- svelte-ignore a11y-invalid-attribute -->
+                                <a
+                                    class="navbar-item mobile-menu-item"
+                                    href="javascript:void(0);"
+                                    on:click={() => {
+                                        openInExternalPlayground();
+                                        menuActive = false;
+                                    }}
+                                >
+                                    <span class="icon">
+                                        <Fa icon={faArrowUpRightFromSquare} />
+                                    </span>
+                                    <span>Open in MiniZinc Playground</span>
+                                </a>
+                            {/if}
+                        {:else}
+                            <div class="navbar-item">
+                                <div class="field has-addons">
+                                    {#if showShareButton}
+                                        <div class="control">
+                                            <button
+                                                class="button is-primary"
+                                                title="Share"
+                                                disabled={busyState !== 0}
+                                                on:click={() =>
+                                                    (shareUrl = getShareUrl(
+                                                        window.location.href,
+                                                    ))}
+                                            >
+                                                <span class="icon">
+                                                    <Fa icon={faShareNodes} />
+                                                </span>
+                                            </button>
+                                        </div>
+                                    {/if}
+                                    {#if showDownloadButton}
+                                        <div class="control">
+                                            <button
+                                                class="button"
+                                                title="Download project"
+                                                on:click={() =>
+                                                    downloadProject()}
+                                                disabled={generatingProject ||
+                                                    busyState !== 0}
+                                            >
+                                                <span class="icon">
+                                                    <Fa icon={faDownload} />
+                                                </span>
+                                            </button>
+                                        </div>
+                                    {/if}
+                                    {#if externalPlaygroundURL}
+                                        <div class="control">
+                                            <button
+                                                class="button is-primary"
+                                                title="Open in playground"
+                                                disabled={busyState !== 0}
+                                                on:click={openInExternalPlayground}
+                                            >
+                                                <span class="icon">
+                                                    <Fa
+                                                        icon={faArrowUpRightFromSquare}
+                                                    />
+                                                </span>
+                                            </button>
+                                        </div>
+                                    {/if}
+                                    <slot name="navbar-share-buttons" />
+                                </div>
+                            </div>
                         {/if}
                         <slot name="navbar-after-share-buttons" />
                     </div>
