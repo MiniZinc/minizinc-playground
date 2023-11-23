@@ -3,7 +3,7 @@ MiniZinc Playground
 
 Write and run MiniZinc models entirely within your browser.
 
-Try it out at https://minizinc.dev/solve.
+Try it out at https://play.minizinc.dev.
 
 The playground is a [Svelte](https://svelte.dev) app which uses the
 [WebAssembly build of MiniZinc](https://github.com/minizinc/minizinc-js) to run MiniZinc locally in the browser.
