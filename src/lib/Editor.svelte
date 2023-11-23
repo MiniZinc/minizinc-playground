@@ -12,7 +12,6 @@
         view = new EditorView({
             parent: div,
         });
-        view.focus();
     });
 
     $: if (view && state && view.state !== state) {
