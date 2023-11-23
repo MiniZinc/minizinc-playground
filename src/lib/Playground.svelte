@@ -60,6 +60,7 @@
     export let showOutputRightControls = true;
     export let theme = 'auto';
     export let hideOutputOnStartup = true;
+    export let autoFocus = true;
 
     let busyState = 0;
     let allSolvers = [];
@@ -92,7 +93,7 @@
                 await MiniZinc.init();
                 const [mznVersion] =
                     /version \d+\.\d+\.\d+(?:, build .*)?$/m.exec(
-                        await MiniZinc.version()
+                        await MiniZinc.version(),
                     );
                 const key = edgeMiniZinc ? 'edge' : 'latest';
                 minizincVersions = {
@@ -118,7 +119,7 @@
             const query = window.matchMedia('(prefers-color-scheme: dark)');
             const setColorScheme = () => {
                 browserDark = window.matchMedia(
-                    '(prefers-color-scheme: dark)'
+                    '(prefers-color-scheme: dark)',
                 ).matches;
             };
             setColorScheme();
@@ -133,12 +134,12 @@
         edgeMiniZinc = project.minizincVersion === 'edge';
         await mounted;
         files = [];
-        openFiles(project.files);
+        openFiles(project.files, autoFocus);
         currentIndex = project.tab || 0;
         if (project.solverId) {
             await loadSolvers();
             currentSolverIndex = solvers.findIndex(
-                (s) => s.id === project.solverId
+                (s) => s.id === project.solverId,
             );
         }
         if (project.solverConfig) {
@@ -209,7 +210,7 @@
         await loadSolvers();
         if (currentSolverIndex < 0 || currentSolverIndex >= solvers.length) {
             const idx = solvers.findIndex(
-                (s) => s.extraInfo && s.extraInfo.isDefault
+                (s) => s.extraInfo && s.extraInfo.isDefault,
             );
             if (idx !== -1) {
                 currentSolverIndex = idx;
@@ -228,7 +229,7 @@
         showSolverConfig = !showSolverConfig;
     }
 
-    async function selectTab(index) {
+    async function selectTab(index, focus = true) {
         if (editor) {
             if (currentIndex < files.length) {
                 currentFile.state = editor.getState();
@@ -245,13 +246,15 @@
         currentIndex = index;
         await tick();
         if (editor && currentFile) {
-            editor.focus();
+            if (focus) {
+                editor.focus();
+            }
             if (currentFile.scrollTop !== undefined) {
                 editor.getView().requestMeasure({
                     read(view) {
                         view.scrollDOM.scrollTo(
                             currentFile.scrollLeft,
-                            currentFile.scrollTop
+                            currentFile.scrollTop,
                         );
                     },
                 });
@@ -278,7 +281,7 @@
         newFileRequested = false;
     }
 
-    function openFiles(toOpen) {
+    function openFiles(toOpen, focus = true) {
         let toAdd = [];
         for (const file of toOpen) {
             const dot = file.name.endsWith('.mzc.mzn')
@@ -297,7 +300,7 @@
                 suffix,
                 checkCode,
                 darkMode,
-                file.readOnly
+                file.readOnly,
             );
             toAdd.push({
                 ...file,
@@ -311,7 +314,7 @@
             });
         }
         files = [...files, ...toAdd];
-        selectTab(files.length - 1);
+        selectTab(files.length - 1, focus);
         newFileRequested = false;
     }
 
@@ -345,7 +348,7 @@
                               extensions: getExtensions(
                                   '.mzn',
                                   checkCode,
-                                  darkMode
+                                  darkMode,
                               ),
                           }),
                       },
@@ -368,7 +371,7 @@
         if ('readOnly' in opts) {
             enqueueEffect(
                 file,
-                opts.readOnly ? readOnlyEffect : editableEffect
+                opts.readOnly ? readOnlyEffect : editableEffect,
             );
         }
         files = [...files.slice(0, index), file, ...files.slice(index + 1)];
@@ -449,12 +452,12 @@
         if (addChecker) {
             const modelFileName = modelFile.name.substring(
                 0,
-                modelFile.name.length - 4
+                modelFile.name.length - 4,
             );
             const checker = files.find(
                 (f) =>
                     f.name === `${modelFileName}.mzc` ||
-                    f.name === `${modelFileName}.mzc.mzn`
+                    f.name === `${modelFileName}.mzc.mzn`,
             );
             if (checker) {
                 fileList.push(checker.name);
@@ -467,13 +470,13 @@
             model.addFile(
                 file.name,
                 file.state.doc.toString(),
-                fileList.indexOf(file.name) !== -1
+                fileList.indexOf(file.name) !== -1,
             );
         }
         try {
             const { input } = await model.interface({
                 options: solverConfig.getCompilationConfiguration(
-                    currentSolver.id
+                    currentSolver.id,
                 ),
             });
             if (Object.keys(input).length > 0) {
@@ -538,7 +541,7 @@
             model.addFile(currentFile.name, currentFile.state.doc.toString());
             const fileList = [currentFile.name];
             const options = solverConfig.getSolvingConfiguration(
-                currentSolver.id
+                currentSolver.id,
             );
             await runWith(model, fileList, options);
             return;
@@ -698,7 +701,7 @@
             } else {
                 try {
                     html = await MiniZinc.readStdlibFileContents(
-                        value.message.url
+                        value.message.url,
                     );
                 } catch (e) {
                     console.error(e);
@@ -707,14 +710,14 @@
             }
             if (html === null) {
                 console.error(
-                    `Failed to get visualisation file ${value.message.url}`
+                    `Failed to get visualisation file ${value.message.url}`,
                 );
                 return;
             }
             visualisation.addVisualisation(
                 value.section,
                 html,
-                value.message.userData
+                value.message.userData,
             );
             return;
         }
@@ -729,15 +732,15 @@
                             .filter((s) => s.startsWith('mzn_vis_'))
                             .reduce(
                                 (acc, x) => ({ ...acc, [x]: value.output[x] }),
-                                {}
+                                {},
                             ),
-                        'time' in value ? value.time : time
+                        'time' in value ? value.time : time,
                     );
                     break;
                 case 'status':
                     visualisation.status(
                         value.status,
-                        'time' in value ? value.time : time
+                        'time' in value ? value.time : time,
                     );
                     break;
                 case 'exit':
@@ -793,7 +796,7 @@
                     openTab: project.tab,
                     selectedBuiltinConfigId: solverId,
                     selectedBuiltinConfigVersion: 'default',
-                })
+                }),
             );
             const blob = await zip.generateAsync({ type: 'blob' });
             FileSaver.saveAs(blob, 'Project.zip');
@@ -852,7 +855,7 @@
             const name = model.addString(text);
             const errors = await model.check({
                 options: solverConfig.getCompilationConfiguration(
-                    currentSolver.id
+                    currentSolver.id,
                 ),
             });
             if (view.state.doc.toString() !== text) {
@@ -862,7 +865,7 @@
             addErrors(
                 text,
                 errors.filter((e) => e.location.filename === name),
-                view
+                view,
             );
         } catch (e) {
             console.error(e);
@@ -900,7 +903,7 @@
             currentFile.state = editor.getState();
         }
         files.forEach((file) =>
-            enqueueEffect(file, dark ? darkThemeEffect : lightThemeEffect)
+            enqueueEffect(file, dark ? darkThemeEffect : lightThemeEffect),
         );
         applyEffects(currentFile);
     }
@@ -921,12 +924,12 @@
         const fileList = [cfg.modelFile];
         const modelFileName = cfg.modelFile.substring(
             0,
-            cfg.modelFile.length - 4
+            cfg.modelFile.length - 4,
         );
         const checker = files.find(
             (f) =>
                 f.name === `${modelFileName}.mzc` ||
-                f.name === `${modelFileName}.mzc.mzn`
+                f.name === `${modelFileName}.mzc.mzn`,
         );
         if (checker) {
             fileList.push(checker.name);
@@ -941,14 +944,14 @@
             model.addFile(
                 file.name,
                 file.state.doc.toString(),
-                fileList.indexOf(file.name) !== -1
+                fileList.indexOf(file.name) !== -1,
             );
         }
         runWith(
             model,
             fileList,
             cfg.options ||
-                solverConfig.getSolvingConfiguration(currentSolver.id)
+                solverConfig.getSolvingConfiguration(currentSolver.id),
         );
     }
 </script>
@@ -960,7 +963,12 @@
                 <div class="navbar-brand">
                     <slot name="navbar-before-run-buttons" />
                     <div class="navbar-item is-expanded">
-                        <div class="field has-addons navbar-run-buttons">
+                        <div
+                            class="field navbar-run-buttons"
+                            class:has-addons={compilationEnabled ||
+                                showVersionSwitcher ||
+                                showSolverDropdown}
+                        >
                             <div class="control">
                                 {#if isRunning}
                                     <button
@@ -1106,7 +1114,7 @@
                                             disabled={busyState !== 0}
                                             on:click={() =>
                                                 (shareUrl = getShareUrl(
-                                                    window.location.href
+                                                    window.location.href,
                                                 ))}
                                         >
                                             <span class="icon">
@@ -1209,7 +1217,7 @@
                                 href="javascript:void(0);"
                                 on:click={() => {
                                     shareUrl = getShareUrl(
-                                        window.location.href
+                                        window.location.href,
                                     );
                                     menuActive = false;
                                 }}
