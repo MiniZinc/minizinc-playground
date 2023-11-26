@@ -127,14 +127,33 @@
         files = [];
         openFiles(project.files, autoFocus);
         currentIndex = project.tab || 0;
+        await loadSolvers();
         if (project.solverId) {
-            await loadSolvers();
             currentSolverIndex = solvers.findIndex(
                 (s) => s.id === project.solverId,
             );
+        } else {
+            currentSolverIndex =
+                solvers.findIndex(
+                    (s) => s.extraInfo && s.extraInfo.isDefault,
+                ) || 0;
         }
         if (project.solverConfig) {
             solverConfig.load(project.solverConfig);
+        } else {
+            solverConfig.reset();
+        }
+    }
+
+    async function importFiles(e) {
+        const offset = files.length;
+        openFiles(e.files);
+        if (e.tab !== undefined && e.tab !== null && e.tab >= 0) {
+            selectTab(offset + e.tab);
+        }
+        if (e.solverId) {
+            await loadSolvers();
+            currentSolverIndex = solvers.findIndex((s) => s.id === e.solverId);
         }
     }
 
@@ -1388,7 +1407,7 @@
         active={newFileRequested}
         on:cancel={() => (newFileRequested = false)}
         on:new={(e) => newFile(e.detail.type)}
-        on:open={(e) => openFiles(e.detail.files)}
+        on:open={(e) => importFiles(e.detail)}
     />
 
     <Modal

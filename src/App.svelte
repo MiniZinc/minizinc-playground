@@ -1,6 +1,7 @@
 <script>
     import { onMount } from 'svelte';
     import Playground from './lib/Playground.svelte';
+    import { loadFromUrl } from './lib/loadFromUrl';
 
     let playground;
     let project = {
@@ -42,7 +43,7 @@
             Array(6)
                 .fill(0)
                 .map(
-                    () => alphabet[Math.floor(Math.random() * alphabet.length)]
+                    () => alphabet[Math.floor(Math.random() * alphabet.length)],
                 )
                 .join('');
         let id = genId();
@@ -64,7 +65,7 @@
         return p;
     }
 
-    function hashChange() {
+    async function hashChange() {
         if (currentSession && playground.hasFiles()) {
             const project = playground.getProject();
             settings.sessions[currentSession] = project;
@@ -73,14 +74,14 @@
         if (window.location.hash.startsWith('#project=')) {
             try {
                 const json = decodeURIComponent(
-                    window.location.hash.substring(9)
+                    window.location.hash.substring(9),
                 );
                 project = migrateProject(JSON.parse(json));
                 currentSession = newSession();
                 window.history.replaceState(
                     undefined,
                     undefined,
-                    `#session=${currentSession}`
+                    `#session=${currentSession}`,
                 );
                 return;
             } catch (e) {
@@ -91,7 +92,7 @@
         if (window.location.hash.startsWith('#code=')) {
             try {
                 const contents = decodeURIComponent(
-                    window.location.hash.substring(6)
+                    window.location.hash.substring(6),
                 );
                 project = {
                     files: [
@@ -106,8 +107,27 @@
                 window.history.replaceState(
                     undefined,
                     undefined,
-                    `#session=${currentSession}`
+                    `#session=${currentSession}`,
                 );
+                return;
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        if (window.location.hash.startsWith('#url=')) {
+            try {
+                const url = decodeURIComponent(
+                    window.location.hash.substring(5),
+                );
+                project = await loadFromUrl(url);
+                currentSession = newSession();
+                window.history.replaceState(
+                    undefined,
+                    undefined,
+                    `#session=${currentSession}`,
+                );
+                return;
             } catch (e) {
                 console.error(e);
             }
@@ -118,7 +138,7 @@
             window.history.replaceState(
                 undefined,
                 undefined,
-                `#session=${newSession()}`
+                `#session=${newSession()}`,
             );
         }
 
