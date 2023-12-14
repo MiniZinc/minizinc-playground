@@ -37,7 +37,7 @@
         return stdFlags.indexOf(f) !== -1;
     }
 
-    function reset() {
+    export function reset() {
         enableTimeLimit = false;
         timeLimit = 1;
 
