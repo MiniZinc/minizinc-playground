@@ -1,6 +1,6 @@
 <script>
     import { createEventDispatcher, tick } from 'svelte';
-    import Fa from 'svelte-fa/src/fa.svelte';
+    import Fa from 'svelte-fa';
     import { faEraser, faTrash } from '@fortawesome/free-solid-svg-icons';
     import ErrorOutput from './ErrorOutput.svelte';
     const dispatch = createEventDispatcher();
@@ -21,13 +21,13 @@
     let showErrors = true;
 
     $: hasStatistics = output.some((run) =>
-        run.output.some((m) => m.type === 'statistics')
+        run.output.some((m) => m.type === 'statistics'),
     );
     $: hasStderr = output.some((run) =>
-        run.output.some((m) => m.type === 'stderr')
+        run.output.some((m) => m.type === 'stderr'),
     );
     $: hasTiming = output.some((run) =>
-        run.output.some((m) => m.type === 'time')
+        run.output.some((m) => m.type === 'time'),
     );
     $: hasWarnings = output.some((run) =>
         run.output.some(
@@ -35,8 +35,8 @@
                 m.type === 'warning' ||
                 (m.type === 'checker' &&
                     m.messages &&
-                    m.messages.some((m) => m.type === 'warning'))
-        )
+                    m.messages.some((m) => m.type === 'warning')),
+        ),
     );
     $: hasErrors = output.some((run) =>
         run.output.some(
@@ -44,8 +44,8 @@
                 m.type === 'error' ||
                 (m.type === 'checker' &&
                     m.messages &&
-                    m.messages.some((m) => m.type === 'error'))
-        )
+                    m.messages.some((m) => m.type === 'error')),
+        ),
     );
 
     function getUserSections(output) {
@@ -54,15 +54,15 @@
             [
                 ...messages
                     .filter(
-                        (m) => m.type === 'solution' || m.type === 'checker'
+                        (m) => m.type === 'solution' || m.type === 'checker',
                     )
                     .flatMap((m) =>
-                        m.sections.filter((s) => m.output[s].length > 0)
+                        m.sections.filter((s) => m.output[s].length > 0),
                     ),
                 ...messages
                     .filter((m) => m.type === 'trace')
                     .map((m) => m.section),
-            ].filter((s) => s !== 'raw' && !s.startsWith('mzn_vis_'))
+            ].filter((s) => s !== 'raw' && !s.startsWith('mzn_vis_')),
         );
         const result = [...sections.values()];
         result.sort();
@@ -316,7 +316,7 @@
         {/if}
     </div>
     <div class="grow">
-        <div bind:this={outputElement} class="output-window">
+        <div bind:this={outputElement} class="output-window-contents">
             {#each output as run}
                 <details open>
                     <summary>
@@ -336,7 +336,7 @@
                                             <pre>{JSON.stringify(
                                                     msg.output[section],
                                                     null,
-                                                    2
+                                                    2,
                                                 )}</pre>
                                             <br />
                                         {:else if section !== 'raw'}
@@ -367,7 +367,7 @@
                                 {#if showTiming}
                                     <pre
                                         class="mzn-time">% time elapsed: {formatRuntime(
-                                            msg.time
+                                            msg.time,
                                         )}</pre>
                                     <br />
                                 {/if}
@@ -377,7 +377,7 @@
                                         <pre>{JSON.stringify(
                                                 msg.message,
                                                 null,
-                                                2
+                                                2,
                                             )}</pre>
                                         <br />
                                     {:else}
@@ -424,7 +424,7 @@
                                 {/if}
                                 <pre
                                     class="mzn-runtime">Finished in {formatRuntime(
-                                        msg.runTime
+                                        msg.runTime,
                                     )}.</pre>
                             {/if}
                         {/each}
@@ -450,7 +450,7 @@
         flex: 0 0 auto;
         display: flex;
         padding: 0.5rem;
-        border-bottom: solid 1px var(--mzn-playground-border);
+        border-bottom: solid 1px var(--bulma-border);
     }
 
     .stack > .top.is-empty {
@@ -466,7 +466,7 @@
     }
 
     .grow {
-        background-color: var(--mzn-playground-input-background-color);
+        background-color: var(--bulma-scheme-main-bis);
     }
 
     .spacer {
@@ -480,7 +480,12 @@
     .output-window {
         height: 100%;
         overflow: auto;
-        padding: 0.5rem;
+    }
+
+    .output-window-contents {
+        height: 100%;
+        overflow: auto;
+        padding: 1rem;
     }
 
     details {

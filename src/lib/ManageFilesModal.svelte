@@ -1,7 +1,7 @@
 <script>
     import { createEventDispatcher } from 'svelte';
     import Modal from './Modal.svelte';
-    import Fa from 'svelte-fa/src/fa.svelte';
+    import Fa from 'svelte-fa';
     import {
         faEye,
         faEyeSlash,

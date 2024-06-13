@@ -2,7 +2,7 @@
     import Editor from './Editor.svelte';
     import SplitPanel from './SplitPanel.svelte';
     import Tabs from './Tabs.svelte';
-    import Fa from 'svelte-fa/src/fa.svelte';
+    import Fa from 'svelte-fa';
     import {
         faPlay,
         faStop,
@@ -965,357 +965,424 @@
     }
 </script>
 
-<div class="mzn-playground" class:is-dark={darkMode}>
-    <div class="stack">
-        <div class="top">
-            <nav class="navbar">
-                <div class="navbar-brand">
-                    <slot name="navbar-before-run-buttons" />
-                    <div class="navbar-item is-expanded">
-                        <div class="field navbar-run-buttons has-addons">
-                            <div class="control">
-                                {#if isRunning}
-                                    <button
-                                        class="button is-danger"
-                                        title="Cancel solving"
-                                        on:click={stop}
-                                    >
-                                        <span>Stop</span>
-                                        <span class="icon">
-                                            <Fa icon={faStop} />
-                                        </span>
-                                    </button>
-                                {:else}
-                                    <button
-                                        class="button is-primary"
-                                        title="Run the current file"
-                                        on:click={run}
-                                        disabled={!canRun}
-                                    >
-                                        <span>Run</span>
-                                        <span class="icon">
-                                            <Fa icon={faPlay} />
-                                        </span>
-                                    </button>
-                                {/if}
-                            </div>
-                            {#if !$screenMobile && compilationEnabled}
+<div class="mzn-playground">
+    <div class="mzn-playground-wrapper" class:is-dark={darkMode}>
+        <div class="stack">
+            <div class="top">
+                <nav class="navbar">
+                    <div class="navbar-brand">
+                        <slot name="navbar-before-run-buttons" />
+                        <div class="navbar-item is-expanded">
+                            <div class="field navbar-run-buttons has-addons">
                                 <div class="control">
-                                    <button
-                                        class="button"
-                                        title="Compile the current file and show the resultant FlatZinc"
-                                        on:click={compile}
-                                        disabled={isRunning || !canCompile}
-                                    >
-                                        <span>Compile</span>
-                                    </button>
-                                </div>
-                            {/if}
-                            {#if !$screenMobile && showVersionSwitcher}
-                                <div class="control">
-                                    <Dropdown
-                                        items={versionItems}
-                                        currentItem={edgeMiniZinc
-                                            ? minizincVersions.edge
-                                            : minizincVersions.latest}
-                                        on:selectItem={selectVersion}
-                                        disabled={isRunning}
-                                    >
-                                        <span slot="item" let:item>
-                                            {item.label} ({item.detail})
-                                        </span>
-                                    </Dropdown>
-                                </div>
-                            {/if}
-                            <slot name="navbar-run-buttons" />
-
-                            {#if $screenMobile && showSolverDropdown && solvers.length > 0}
-                                <div class="control is-expanded">
-                                    <div class="select is-fullwidth">
-                                        <select bind:value={currentSolverIndex}>
-                                            {#each solvers as solver, i}
-                                                <option value={i}>
-                                                    {solver.name}
-                                                    {solver.version}
-                                                </option>
-                                            {/each}
-                                        </select>
-                                    </div>
-                                </div>
-                            {/if}
-                        </div>
-                    </div>
-                    <slot name="navbar-after-run-buttons" />
-                    {#if showSolverDropdown && solvers.length > 0}
-                        <div class="navbar-item is-hidden-mobile">
-                            <div class="field has-addons">
-                                <div class="control">
-                                    <button class="button is-static">
-                                        Solver:
-                                    </button>
-                                </div>
-                                <div class="control is-expanded">
-                                    <div class="select is-fullwidth">
-                                        <select bind:value={currentSolverIndex}>
-                                            {#each solvers as solver, i}
-                                                <option value={i}>
-                                                    {solver.name}
-                                                    {solver.version}
-                                                </option>
-                                            {/each}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                {#if canEditSolverSettings}
-                                    <div class="control">
+                                    {#if isRunning}
+                                        <button
+                                            class="button is-danger"
+                                            title="Cancel solving"
+                                            on:click={stop}
+                                        >
+                                            <span>Stop</span>
+                                            <span class="icon">
+                                                <Fa icon={faStop} />
+                                            </span>
+                                        </button>
+                                    {:else}
                                         <button
                                             class="button is-primary"
-                                            on:click={toggleSolverConfig}
+                                            title="Run the current file"
+                                            on:click={run}
+                                            disabled={!canRun}
                                         >
+                                            <span>Run</span>
                                             <span class="icon">
-                                                <Fa icon={faCog} />
+                                                <Fa icon={faPlay} />
                                             </span>
+                                        </button>
+                                    {/if}
+                                </div>
+                                {#if !$screenMobile && compilationEnabled}
+                                    <div class="control">
+                                        <button
+                                            class="button"
+                                            title="Compile the current file and show the resultant FlatZinc"
+                                            on:click={compile}
+                                            disabled={isRunning || !canCompile}
+                                        >
+                                            <span>Compile</span>
                                         </button>
                                     </div>
                                 {/if}
+                                {#if !$screenMobile && showVersionSwitcher}
+                                    <div class="control">
+                                        <Dropdown
+                                            items={versionItems}
+                                            currentItem={edgeMiniZinc
+                                                ? minizincVersions.edge
+                                                : minizincVersions.latest}
+                                            on:selectItem={selectVersion}
+                                            disabled={isRunning}
+                                        >
+                                            <span slot="item" let:item>
+                                                {item.label} ({item.detail})
+                                            </span>
+                                        </Dropdown>
+                                    </div>
+                                {/if}
+                                <slot name="navbar-run-buttons" />
+
+                                {#if $screenMobile && showSolverDropdown && solvers.length > 0}
+                                    <div class="control is-expanded">
+                                        <div class="select is-fullwidth">
+                                            <select
+                                                bind:value={currentSolverIndex}
+                                            >
+                                                {#each solvers as solver, i}
+                                                    <option value={i}>
+                                                        {solver.name}
+                                                        {solver.version}
+                                                    </option>
+                                                {/each}
+                                            </select>
+                                        </div>
+                                    </div>
+                                {/if}
                             </div>
                         </div>
-                    {/if}
-                    <slot name="navbar-after-solver-selector" />
-                    <!-- svelte-ignore a11y-missing-attribute -->
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <!-- svelte-ignore a11y-interactive-supports-focus -->
-                    <a
-                        role="button"
-                        class="navbar-burger"
-                        class:is-active={menuActive}
-                        aria-label="menu"
-                        aria-expanded={menuActive}
-                        on:click={() => {
-                            menuActive = !menuActive;
-                            showSolverConfig = false;
-                        }}
-                    >
-                        <span aria-hidden="true" />
-                        <span aria-hidden="true" />
-                        <span aria-hidden="true" />
-                    </a>
-                </div>
-                <div class="navbar-menu" class:is-active={menuActive}>
-                    <div class="navbar-start is-hidden-tablet" />
-                    <div class="navbar-end">
-                        <slot name="navbar-before-share-buttons" />
-                        {#if $screenMobile}
-                            {#if compilationEnabled && !isRunning && canCompile}
-                                <!-- svelte-ignore a11y-invalid-attribute -->
-                                <a
-                                    class="navbar-item mobile-menu-item"
-                                    href="javascript:void(0);"
-                                    on:click={() => {
-                                        compile();
-                                        menuActive = false;
-                                    }}
-                                >
-                                    <span class="icon">
-                                        <Fa icon={faHammer} />
-                                    </span>
-                                    <span>Compile current file</span>
-                                </a>
-                            {/if}
-                            {#if canEditSolverSettings && showSolverDropdown && solvers.length > 0}
-                                <!-- svelte-ignore a11y-invalid-attribute -->
-                                <a
-                                    class="navbar-item mobile-menu-item"
-                                    href="javascript:void(0);"
-                                    on:click={() => {
-                                        toggleSolverConfig();
-                                        menuActive = false;
-                                    }}
-                                >
-                                    <span class="icon">
-                                        <Fa icon={faCog} />
-                                    </span>
-                                    <span>Solver configuration</span>
-                                </a>
-                            {/if}
-                            {#if showVersionSwitcher && !isRunning}
-                                <!-- svelte-ignore a11y-invalid-attribute -->
-                                <a
-                                    class="navbar-item mobile-menu-item"
-                                    href="javascript:void(0);"
-                                    on:click={() => {
-                                        edgeMiniZinc = !edgeMiniZinc;
-                                        menuActive = false;
-                                    }}
-                                >
-                                    <span class="icon">
-                                        <Fa icon={faShuffle} />
-                                    </span>
-                                    <span
-                                        >Switch to the {edgeMiniZinc
-                                            ? 'latest'
-                                            : 'edge'} version of MiniZinc</span
-                                    >
-                                </a>
-                            {/if}
-                            {#if showShareButton && busyState === 0}
-                                <!-- svelte-ignore a11y-invalid-attribute -->
-                                <a
-                                    class="navbar-item mobile-menu-item"
-                                    href="javascript:void(0);"
-                                    on:click={() => {
-                                        shareUrl = getShareUrl(
-                                            window.location.href,
-                                        );
-                                        menuActive = false;
-                                    }}
-                                >
-                                    <span class="icon">
-                                        <Fa icon={faShareNodes} />
-                                    </span>
-                                    <span>Share this project</span>
-                                </a>
-                            {/if}
-                            {#if externalPlaygroundURL && busyState === 0}
-                                <!-- svelte-ignore a11y-invalid-attribute -->
-                                <a
-                                    class="navbar-item mobile-menu-item"
-                                    href="javascript:void(0);"
-                                    on:click={() => {
-                                        openInExternalPlayground();
-                                        menuActive = false;
-                                    }}
-                                >
-                                    <span class="icon">
-                                        <Fa icon={faArrowUpRightFromSquare} />
-                                    </span>
-                                    <span>Open in MiniZinc Playground</span>
-                                </a>
-                            {/if}
-                        {:else}
-                            <div class="navbar-item">
+                        <slot name="navbar-after-run-buttons" />
+                        {#if showSolverDropdown && solvers.length > 0}
+                            <div class="navbar-item is-hidden-mobile">
                                 <div class="field has-addons">
-                                    {#if showShareButton}
+                                    <div class="control">
+                                        <button class="button is-static">
+                                            Solver:
+                                        </button>
+                                    </div>
+                                    <div class="control is-expanded">
+                                        <div class="select is-fullwidth">
+                                            <select
+                                                bind:value={currentSolverIndex}
+                                            >
+                                                {#each solvers as solver, i}
+                                                    <option value={i}>
+                                                        {solver.name}
+                                                        {solver.version}
+                                                    </option>
+                                                {/each}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {#if canEditSolverSettings}
                                         <div class="control">
                                             <button
                                                 class="button is-primary"
-                                                title="Share"
-                                                disabled={busyState !== 0}
-                                                on:click={() =>
-                                                    (shareUrl = getShareUrl(
-                                                        window.location.href,
-                                                    ))}
+                                                on:click={toggleSolverConfig}
                                             >
                                                 <span class="icon">
-                                                    <Fa icon={faShareNodes} />
+                                                    <Fa icon={faCog} />
                                                 </span>
                                             </button>
                                         </div>
                                     {/if}
-                                    {#if showDownloadButton}
-                                        <div class="control">
-                                            <button
-                                                class="button"
-                                                title="Download project"
-                                                on:click={() =>
-                                                    downloadProject()}
-                                                disabled={generatingProject ||
-                                                    busyState !== 0}
-                                            >
-                                                <span class="icon">
-                                                    <Fa icon={faDownload} />
-                                                </span>
-                                            </button>
-                                        </div>
-                                    {/if}
-                                    {#if externalPlaygroundURL}
-                                        <div class="control">
-                                            <button
-                                                class="button is-primary"
-                                                title="Open in playground"
-                                                disabled={busyState !== 0}
-                                                on:click={openInExternalPlayground}
-                                            >
-                                                <span class="icon">
-                                                    <Fa
-                                                        icon={faArrowUpRightFromSquare}
-                                                    />
-                                                </span>
-                                            </button>
-                                        </div>
-                                    {/if}
-                                    <slot name="navbar-share-buttons" />
                                 </div>
                             </div>
                         {/if}
-                        <slot name="navbar-after-share-buttons" />
+                        <slot name="navbar-after-solver-selector" />
+                        <!-- svelte-ignore a11y-missing-attribute -->
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-interactive-supports-focus -->
+                        <a
+                            role="button"
+                            class="navbar-burger"
+                            class:is-active={menuActive}
+                            aria-label="menu"
+                            aria-expanded={menuActive}
+                            on:click={() => {
+                                menuActive = !menuActive;
+                                showSolverConfig = false;
+                            }}
+                        >
+                            <span aria-hidden="true" />
+                            <span aria-hidden="true" />
+                            <span aria-hidden="true" />
+                        </a>
                     </div>
-                </div>
-            </nav>
-        </div>
-        <div class="grow main-panel">
-            <div class="left">
-                <SplitPanel
-                    direction={splitterDirection}
-                    bind:split={splitterSize}
-                    showPanels={splitterShowPanel}
-                >
-                    <div class="panel stack" slot="panelA">
-                        {#if showTabs}
-                            <div class="top">
-                                <Tabs
-                                    {files}
-                                    {currentIndex}
-                                    readonly={!canEditTabs}
-                                    on:selectTab={(e) =>
-                                        selectTab(e.detail.index)}
-                                    on:reorder={(e) =>
-                                        reorder(e.detail.src, e.detail.dest)}
-                                    on:newFile={() => (newFileRequested = true)}
-                                    on:rename={rename}
-                                    on:close={(e) =>
-                                        (deleteFileRequested = e.detail.index)}
-                                    on:manageFiles={() =>
-                                        (managingFiles = true)}
-                                />
-                            </div>
-                        {/if}
-                        <div class="grow">
-                            {#if state}
-                                <Editor {state} bind:this={editor} />
+                    <div class="navbar-menu" class:is-active={menuActive}>
+                        <div class="navbar-start is-hidden-tablet" />
+                        <div class="navbar-end">
+                            <slot name="navbar-before-share-buttons" />
+                            {#if $screenMobile}
+                                {#if compilationEnabled && !isRunning && canCompile}
+                                    <!-- svelte-ignore a11y-invalid-attribute -->
+                                    <a
+                                        class="navbar-item mobile-menu-item"
+                                        href="javascript:void(0);"
+                                        on:click={() => {
+                                            compile();
+                                            menuActive = false;
+                                        }}
+                                    >
+                                        <span class="icon">
+                                            <Fa icon={faHammer} />
+                                        </span>
+                                        <span>Compile current file</span>
+                                    </a>
+                                {/if}
+                                {#if canEditSolverSettings && showSolverDropdown && solvers.length > 0}
+                                    <!-- svelte-ignore a11y-invalid-attribute -->
+                                    <a
+                                        class="navbar-item mobile-menu-item"
+                                        href="javascript:void(0);"
+                                        on:click={() => {
+                                            toggleSolverConfig();
+                                            menuActive = false;
+                                        }}
+                                    >
+                                        <span class="icon">
+                                            <Fa icon={faCog} />
+                                        </span>
+                                        <span>Solver configuration</span>
+                                    </a>
+                                {/if}
+                                {#if showVersionSwitcher && !isRunning}
+                                    <!-- svelte-ignore a11y-invalid-attribute -->
+                                    <a
+                                        class="navbar-item mobile-menu-item"
+                                        href="javascript:void(0);"
+                                        on:click={() => {
+                                            edgeMiniZinc = !edgeMiniZinc;
+                                            menuActive = false;
+                                        }}
+                                    >
+                                        <span class="icon">
+                                            <Fa icon={faShuffle} />
+                                        </span>
+                                        <span
+                                            >Switch to the {edgeMiniZinc
+                                                ? 'latest'
+                                                : 'edge'} version of MiniZinc</span
+                                        >
+                                    </a>
+                                {/if}
+                                {#if showShareButton && busyState === 0}
+                                    <!-- svelte-ignore a11y-invalid-attribute -->
+                                    <a
+                                        class="navbar-item mobile-menu-item"
+                                        href="javascript:void(0);"
+                                        on:click={() => {
+                                            shareUrl = getShareUrl(
+                                                window.location.href,
+                                            );
+                                            menuActive = false;
+                                        }}
+                                    >
+                                        <span class="icon">
+                                            <Fa icon={faShareNodes} />
+                                        </span>
+                                        <span>Share this project</span>
+                                    </a>
+                                {/if}
+                                {#if externalPlaygroundURL && busyState === 0}
+                                    <!-- svelte-ignore a11y-invalid-attribute -->
+                                    <a
+                                        class="navbar-item mobile-menu-item"
+                                        href="javascript:void(0);"
+                                        on:click={() => {
+                                            openInExternalPlayground();
+                                            menuActive = false;
+                                        }}
+                                    >
+                                        <span class="icon">
+                                            <Fa
+                                                icon={faArrowUpRightFromSquare}
+                                            />
+                                        </span>
+                                        <span>Open in MiniZinc Playground</span>
+                                    </a>
+                                {/if}
+                            {:else}
+                                <div class="navbar-item">
+                                    <div class="field has-addons">
+                                        {#if showShareButton}
+                                            <div class="control">
+                                                <button
+                                                    class="button is-primary"
+                                                    title="Share"
+                                                    disabled={busyState !== 0}
+                                                    on:click={() =>
+                                                        (shareUrl = getShareUrl(
+                                                            window.location
+                                                                .href,
+                                                        ))}
+                                                >
+                                                    <span class="icon">
+                                                        <Fa
+                                                            icon={faShareNodes}
+                                                        />
+                                                    </span>
+                                                </button>
+                                            </div>
+                                        {/if}
+                                        {#if showDownloadButton}
+                                            <div class="control">
+                                                <button
+                                                    class="button"
+                                                    title="Download project"
+                                                    on:click={() =>
+                                                        downloadProject()}
+                                                    disabled={generatingProject ||
+                                                        busyState !== 0}
+                                                >
+                                                    <span class="icon">
+                                                        <Fa icon={faDownload} />
+                                                    </span>
+                                                </button>
+                                            </div>
+                                        {/if}
+                                        {#if externalPlaygroundURL}
+                                            <div class="control">
+                                                <button
+                                                    class="button is-primary"
+                                                    title="Open in playground"
+                                                    disabled={busyState !== 0}
+                                                    on:click={openInExternalPlayground}
+                                                >
+                                                    <span class="icon">
+                                                        <Fa
+                                                            icon={faArrowUpRightFromSquare}
+                                                        />
+                                                    </span>
+                                                </button>
+                                            </div>
+                                        {/if}
+                                        <slot name="navbar-share-buttons" />
+                                    </div>
+                                </div>
                             {/if}
+                            <slot name="navbar-after-share-buttons" />
                         </div>
                     </div>
-                    <div class="panel stack" slot="panelB">
-                        {#if hasVisualisation}
-                            <div class="top">
-                                <div class="tabs is-boxed">
-                                    <ul>
-                                        <li
-                                            class:is-active={!visualisationOpen}
+                </nav>
+            </div>
+            <div class="grow main-panel">
+                <div class="left">
+                    <SplitPanel
+                        direction={splitterDirection}
+                        bind:split={splitterSize}
+                        showPanels={splitterShowPanel}
+                    >
+                        <div class="panel stack" slot="panelA">
+                            {#if showTabs}
+                                <div class="top">
+                                    <Tabs
+                                        {files}
+                                        {currentIndex}
+                                        readonly={!canEditTabs}
+                                        on:selectTab={(e) =>
+                                            selectTab(e.detail.index)}
+                                        on:reorder={(e) =>
+                                            reorder(
+                                                e.detail.src,
+                                                e.detail.dest,
+                                            )}
+                                        on:newFile={() =>
+                                            (newFileRequested = true)}
+                                        on:rename={rename}
+                                        on:close={(e) =>
+                                            (deleteFileRequested =
+                                                e.detail.index)}
+                                        on:manageFiles={() =>
+                                            (managingFiles = true)}
+                                    />
+                                </div>
+                            {/if}
+                            <div class="grow">
+                                {#if state}
+                                    <Editor {state} bind:this={editor} />
+                                {/if}
+                            </div>
+                        </div>
+                        <div class="panel stack" slot="panelB">
+                            {#if hasVisualisation}
+                                <div class="top">
+                                    <div class="tabs is-boxed">
+                                        <ul>
+                                            <li
+                                                class:is-active={!visualisationOpen}
+                                            >
+                                                <!-- svelte-ignore a11y-invalid-attribute -->
+                                                <!-- svelte-ignore a11y-no-static-element-interactions-->
+                                                <a
+                                                    href="javascript:void(0);"
+                                                    on:click={() => {
+                                                        visualisationOpen = false;
+                                                    }}>Output</a
+                                                >
+                                            </li>
+                                            <li
+                                                class:is-active={visualisationOpen}
+                                            >
+                                                <!-- svelte-ignore a11y-invalid-attribute -->
+                                                <!-- svelte-ignore a11y-no-static-element-interactions-->
+                                                <a
+                                                    href="javascript:void(0);"
+                                                    on:click={() => {
+                                                        visualisationOpen = true;
+                                                    }}>Visualisation</a
+                                                >
+                                            </li>
+                                            {#if canSwitchOrientation}
+                                                <li class="tab-end">
+                                                    <button
+                                                        class="button is-small"
+                                                        title="Switch orientation"
+                                                        on:click={switchOrientation}
+                                                    >
+                                                        <span class="icon"
+                                                            ><Fa
+                                                                icon={faRotate}
+                                                            /></span
+                                                        >
+                                                    </button>
+                                                </li>
+                                            {/if}
+                                        </ul>
+                                    </div>
+                                </div>
+                            {/if}
+                            <div class="grow">
+                                <div
+                                    class="tab-window"
+                                    class:visible={visualisationOpen}
+                                >
+                                    <Visualisation
+                                        bind:this={visualisation}
+                                        {files}
+                                        on:solve={(e) => visReSolve(e.detail)}
+                                    />
+                                </div>
+                                <div
+                                    class="tab-window"
+                                    class:visible={!hasVisualisation ||
+                                        !visualisationOpen}
+                                >
+                                    <Output
+                                        {output}
+                                        on:clear={() => (output = [])}
+                                        on:goto={(e) =>
+                                            gotoLocation(e.detail.location)}
+                                        bind:autoClearOutput
+                                        {showClearOutput}
+                                        {showAutoClearOutput}
+                                        showSectionToggles={showOutputSectionToggles}
+                                        showRightControls={showOutputRightControls}
+                                        isTab={hasVisualisation}
+                                    >
+                                        <p
+                                            class="control"
+                                            slot="before-right-controls"
                                         >
-                                            <!-- svelte-ignore a11y-invalid-attribute -->
-                                            <!-- svelte-ignore a11y-no-static-element-interactions-->
-                                            <a
-                                                href="javascript:void(0);"
-                                                on:click={() => {
-                                                    visualisationOpen = false;
-                                                }}>Output</a
-                                            >
-                                        </li>
-                                        <li class:is-active={visualisationOpen}>
-                                            <!-- svelte-ignore a11y-invalid-attribute -->
-                                            <!-- svelte-ignore a11y-no-static-element-interactions-->
-                                            <a
-                                                href="javascript:void(0);"
-                                                on:click={() => {
-                                                    visualisationOpen = true;
-                                                }}>Visualisation</a
-                                            >
-                                        </li>
-                                        {#if canSwitchOrientation}
-                                            <li class="tab-end">
+                                            {#if canSwitchOrientation && !hasVisualisation}
                                                 <button
                                                     class="button is-small"
                                                     title="Switch orientation"
@@ -1327,174 +1394,126 @@
                                                         /></span
                                                     >
                                                 </button>
-                                            </li>
-                                        {/if}
-                                    </ul>
+                                            {/if}
+                                        </p>
+                                    </Output>
                                 </div>
                             </div>
-                        {/if}
-                        <div class="grow">
-                            <div
-                                class="tab-window"
-                                class:visible={visualisationOpen}
-                            >
-                                <Visualisation
-                                    bind:this={visualisation}
-                                    {files}
-                                    on:solve={(e) => visReSolve(e.detail)}
-                                />
-                            </div>
-                            <div
-                                class="tab-window"
-                                class:visible={!hasVisualisation ||
-                                    !visualisationOpen}
-                            >
-                                <Output
-                                    {output}
-                                    on:clear={() => (output = [])}
-                                    on:goto={(e) =>
-                                        gotoLocation(e.detail.location)}
-                                    bind:autoClearOutput
-                                    {showClearOutput}
-                                    {showAutoClearOutput}
-                                    showSectionToggles={showOutputSectionToggles}
-                                    showRightControls={showOutputRightControls}
-                                    isTab={hasVisualisation}
-                                >
-                                    <p
-                                        class="control"
-                                        slot="before-right-controls"
-                                    >
-                                        {#if canSwitchOrientation && !hasVisualisation}
-                                            <button
-                                                class="button is-small"
-                                                title="Switch orientation"
-                                                on:click={switchOrientation}
-                                            >
-                                                <span class="icon"
-                                                    ><Fa
-                                                        icon={faRotate}
-                                                    /></span
-                                                >
-                                            </button>
-                                        {/if}
-                                    </p>
-                                </Output>
-                            </div>
                         </div>
-                    </div>
-                </SplitPanel>
-            </div>
-            <SolverConfig
-                active={showSolverConfig}
-                bind:this={solverConfig}
-                stdFlags={currentStdFlags}
-                on:close={() => (showSolverConfig = false)}
-            />
-        </div>
-    </div>
-
-    <ManageFilesModal
-        active={managingFiles}
-        {files}
-        on:close={() => (managingFiles = false)}
-        on:delete={(e) => (deleteFileRequested = e.detail.index)}
-        on:modifyFile={(e) => modifyFile(e.detail.index, e.detail.options)}
-        on:newFile={() => (newFileRequested = true)}
-    />
-
-    <NewFileModal
-        active={newFileRequested}
-        on:cancel={() => (newFileRequested = false)}
-        on:new={(e) => newFile(e.detail.type)}
-        on:open={(e) => importFiles(e.detail)}
-    />
-
-    <Modal
-        active={deleteFileRequested !== null}
-        title="Delete file"
-        on:cancel={() => (deleteFileRequested = null)}
-    >
-        <p>
-            Are you sure you wish to delete <code
-                >{files[deleteFileRequested].name}</code
-            >?
-        </p>
-        <p>This cannot be undone.</p>
-        <div slot="footer">
-            <button
-                class="button is-danger"
-                on:click={() => closeFile(deleteFileRequested)}
-            >
-                Delete
-            </button>
-            <button
-                type="button"
-                class="button"
-                on:click={() => (deleteFileRequested = null)}>Cancel</button
-            >
-        </div>
-    </Modal>
-
-    <ModelModal
-        active={needsModel}
-        {modelFiles}
-        on:accept={(e) => getModelResolve(e.detail)}
-        on:cancel={() => getModelResolve(false)}
-    />
-
-    <ParameterModal
-        active={needsData}
-        {dataFiles}
-        parameters={parameterModalParameters}
-        on:accept={(e) => getModelResolve(e.detail)}
-        on:cancel={() => getModelResolve(false)}
-    />
-
-    <Modal
-        active={shareUrl}
-        title="Share this project"
-        on:cancel={() => (shareUrl = null)}
-    >
-        <div class="field has-addons">
-            <p class="control is-expanded">
-                <input
-                    bind:this={shareUrlInput}
-                    class="input"
-                    type="text"
-                    value={shareUrl}
-                    on:click={() => shareUrlInput.select()}
-                    readonly
+                    </SplitPanel>
+                </div>
+                <SolverConfig
+                    active={showSolverConfig}
+                    bind:this={solverConfig}
+                    stdFlags={currentStdFlags}
+                    on:close={() => (showSolverConfig = false)}
                 />
+            </div>
+        </div>
+
+        <ManageFilesModal
+            active={managingFiles}
+            {files}
+            on:close={() => (managingFiles = false)}
+            on:delete={(e) => (deleteFileRequested = e.detail.index)}
+            on:modifyFile={(e) => modifyFile(e.detail.index, e.detail.options)}
+            on:newFile={() => (newFileRequested = true)}
+        />
+
+        <NewFileModal
+            active={newFileRequested}
+            on:cancel={() => (newFileRequested = false)}
+            on:new={(e) => newFile(e.detail.type)}
+            on:open={(e) => importFiles(e.detail)}
+        />
+
+        <Modal
+            active={deleteFileRequested !== null}
+            title="Delete file"
+            on:cancel={() => (deleteFileRequested = null)}
+        >
+            <p>
+                Are you sure you wish to delete <code
+                    >{files[deleteFileRequested].name}</code
+                >?
             </p>
-            <p class="control">
+            <p>This cannot be undone.</p>
+            <div slot="footer">
+                <button
+                    class="button is-danger"
+                    on:click={() => closeFile(deleteFileRequested)}
+                >
+                    Delete
+                </button>
                 <button
                     type="button"
                     class="button"
-                    class:is-primary={!copiedShareUrl}
-                    class:is-success={copiedShareUrl}
-                    on:click={copyShareUrl}
+                    on:click={() => (deleteFileRequested = null)}>Cancel</button
                 >
-                    <span class="icon"><Fa icon={faClipboard} /></span>
+            </div>
+        </Modal>
+
+        <ModelModal
+            active={needsModel}
+            {modelFiles}
+            on:accept={(e) => getModelResolve(e.detail)}
+            on:cancel={() => getModelResolve(false)}
+        />
+
+        <ParameterModal
+            active={needsData}
+            {dataFiles}
+            parameters={parameterModalParameters}
+            on:accept={(e) => getModelResolve(e.detail)}
+            on:cancel={() => getModelResolve(false)}
+        />
+
+        <Modal
+            active={shareUrl}
+            title="Share this project"
+            on:cancel={() => (shareUrl = null)}
+        >
+            <div class="field has-addons">
+                <p class="control is-expanded">
+                    <input
+                        bind:this={shareUrlInput}
+                        class="input"
+                        type="text"
+                        value={shareUrl}
+                        on:click={() => shareUrlInput.select()}
+                        readonly
+                    />
+                </p>
+                <p class="control">
+                    <button
+                        type="button"
+                        class="button"
+                        class:is-primary={!copiedShareUrl}
+                        class:is-success={copiedShareUrl}
+                        on:click={copyShareUrl}
+                    >
+                        <span class="icon"><Fa icon={faClipboard} /></span>
+                    </button>
+                </p>
+            </div>
+            <div slot="footer">
+                <button
+                    class="button is-primary"
+                    on:click={() => (shareUrl = null)}
+                >
+                    Done
                 </button>
-            </p>
-        </div>
-        <div slot="footer">
-            <button
-                class="button is-primary"
-                on:click={() => (shareUrl = null)}
-            >
-                Done
-            </button>
-        </div>
-    </Modal>
+            </div>
+        </Modal>
+    </div>
 </div>
 
 <style>
     .mzn-playground {
         height: 100%;
     }
-    .stack {
+    .stack,
+    .mzn-playground-wrapper {
         display: flex;
         flex-direction: column;
         height: 100%;

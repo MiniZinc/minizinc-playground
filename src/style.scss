@@ -1,86 +1,39 @@
-$primary: #1491eb;
-$navbar-breakpoint: 769px;
-$pre-font-size: 1em;
-$pre-code-font-size: 1em;
+@use 'sass:meta';
 
 .mzn-playground {
-    @import "./bulma";
-
-    --mzn-playground-border: hsl(0, 0%, 86%);
-    --mzn-playground-input-background-color: hsl(0, 0%, 100%);
-    --mzn-playground-splitter: #EEE;
-
-    --mzn-playground-gray: gray;
-    --mzn-playground-blue: blue;
-    --mzn-playground-red: red;
-    --mzn-playground-yellow: #d1d100;
+    @include meta.load-css('./bulma-loader');
 }
 
-.mzn-playground.is-dark {
-    $background: hsl(0, 0%, 8%);
-    $border: hsl(0, 0%, 29%);
-    $scheme-main: hsl(0, 0%, 16%);
-    $scheme-main-bis: hsl(0, 0%, 18%);
-    $scheme-main-ter: hsl(0, 0%, 20%);
-    $text: hsl(0, 100%, 96%);
-    $text-strong: hsl(0, 100%, 100%);
-    $link: #6294ff;
-    $link-hover: hsl(0, 0%, 71%);
-    $link-hover-border: hsl(0, 0%, 29%);
-    $link-focus: hsl(0, 0%, 79%);
-    $link-focus-border: hsl(229, 53%,  47%);
-    $link-active: hsl(0, 0%, 79%);
-    $link-active-border: hsl(0, 0%, 71%);
-    $label-color: hsl(0, 0%, 71%);
-    $input-background-color: hsl(0, 0%, 12%);
-    $button-background-color: hsl(0, 0%, 12%);
-    $dropdown-item-hover-color: $text;
-    $dropdown-item-hover-background-color: hsl(0, 0%, 12%);
-    $dropdown-item-active-color: $text-strong;
-    
-    $tag-background-color: hsl(0, 0%, 96%);
+.mzn-playground-wrapper {
+    @extend :root;
+    @extend .mzn-playground-theme-setup;
 
-    @import "./bulma";
+    box-sizing: border-box;
+    line-height: var(--bulma-body-line-height);
+    font-family: var(--bulma-body-family);
 
-    --mzn-playground-border: hsl(0, 0%, 29%);
-    --mzn-playground-input-background-color: hsl(0, 0%, 12%);
-    --mzn-playground-splitter: hsl(0, 0%, 29%);
+    background-color: var(--bulma-body-background-color);
+    font-size: var(--bulma-body-size);
+    min-width: var(--bulma-body-min-width);
 
-    --mzn-playground-gray: gray;
-    --mzn-playground-blue: #33beff;
-    --mzn-playground-red: red;
-    --mzn-playground-yellow: #d1d100;
+    color: var(--bulma-body-color);
+    font-size: var(--bulma-body-font-size);
+    font-weight: var(--bulma-body-weight);
 
-    .delete {
-        background-color: hsl(0, 0%, 20%);
-        &::before, &::after {
-            background-color: $text;
-        }
-        
-        &:hover, &:focus {
-            background-color: hsl(0, 0%, 16%);
-        }
-        &:active {
-            background-color: hsl(0, 0%, 20%);
-        }
+    svg.svelte-fa {
+        height: 1em;
+        width: 1em;
     }
-    
-    * {
-        scrollbar-width: thin;
-        scrollbar-color: hsl(0, 0%, 24%) hsl(0, 0%, 16%);
-        &::-webkit-scrollbar {
-            width: 8px;
-        }
-        &::-webkit-scrollbar-track {
-            background: hsl(0, 0%, 16%);
-        }
-        &::-webkit-scrollbar-thumb {
-            background-color: hsl(0, 0%, 24%);
-        }
-    }
-}
 
-.mzn-playground, .mzn-playground.is-dark {
+    .field:not(:last-child) {
+        margin-bottom: var(--bulma-block-spacing);
+    }
+
+    .navbar-item,
+    .navbar-link {
+        padding: 0.5rem;
+    }
+
     .output-window pre {
         padding: 0;
         background: none;
@@ -111,5 +64,41 @@ $pre-code-font-size: 1em;
 
     .mzn-link {
         text-decoration: underline !important;
+    }
+
+    .button {
+        --bulma-button-outer-shadow-a: 0;
+        &.is-primary,
+        &.is-danger {
+            color: #ffffff;
+        }
+    }
+
+    --mzn-playground-gray: gray;
+    --mzn-playground-blue: blue;
+    --mzn-playground-red: red;
+    --mzn-playground-yellow: #d1d100;
+}
+
+.mzn-playground-wrapper.is-dark {
+    @extend .mzn-playground-theme-dark-setup;
+
+    --mzn-playground-gray: gray;
+    --mzn-playground-blue: #33beff;
+    --mzn-playground-red: red;
+    --mzn-playground-yellow: #d1d100;
+
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: hsl(0, 0%, 24%) hsl(0, 0%, 16%);
+        &::-webkit-scrollbar {
+            width: 8px;
+        }
+        &::-webkit-scrollbar-track {
+            background: hsl(0, 0%, 16%);
+        }
+        &::-webkit-scrollbar-thumb {
+            background-color: hsl(0, 0%, 24%);
+        }
     }
 }

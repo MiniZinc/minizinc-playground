@@ -1,6 +1,6 @@
 <script>
     import { createEventDispatcher, tick } from 'svelte';
-    import Fa from 'svelte-fa/src/fa.svelte';
+    import Fa from 'svelte-fa';
     import { faXmark } from '@fortawesome/free-solid-svg-icons';
 
     export let active = false;

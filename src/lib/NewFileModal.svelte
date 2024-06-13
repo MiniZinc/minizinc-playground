@@ -101,7 +101,6 @@
                 <li>
                     <button
                         type="button"
-                        class="button is-text"
                         bind:this={element}
                         on:click={() => dispatch('new', { type: '.mzn' })}
                     >
@@ -111,7 +110,6 @@
                 <li>
                     <button
                         type="button"
-                        class="button is-text"
                         on:click={() => dispatch('new', { type: '.mzc.mzn' })}
                     >
                         Solution checker model (.mzc.mzn)
@@ -123,7 +121,6 @@
                 <li>
                     <button
                         type="button"
-                        class="button is-text"
                         on:click={() => dispatch('new', { type: '.dzn' })}
                     >
                         Data file (.dzn)
@@ -132,7 +129,6 @@
                 <li>
                     <button
                         type="button"
-                        class="button is-text"
                         on:click={() => dispatch('new', { type: '.json' })}
                     >
                         JSON data file (.json)
@@ -144,7 +140,6 @@
                 <li>
                     <button
                         type="button"
-                        class="button is-text"
                         on:click={() => dispatch('new', { type: '.html' })}
                     >
                         Custom visualisation (.html)
@@ -154,17 +149,13 @@
             <p class="menu-label">Import</p>
             <ul class="menu-list">
                 <li>
-                    <button
-                        type="button"
-                        class="button is-text"
-                        on:click={() => fileInput.click()}
+                    <button type="button" on:click={() => fileInput.click()}
                         >Upload file(s)</button
                     >
                 </li>
                 <li>
                     <button
                         type="button"
-                        class="button is-text"
                         on:click={() => (importingFromUrl = true)}
                         >Import from URL</button
                     >
@@ -188,12 +179,6 @@
         display: none;
     }
 
-    .menu-list .button {
-        text-decoration: none;
-        display: block;
-        width: 100%;
-        text-align: left;
-    }
     .error {
         padding: 0.5rem;
         border-radius: 0.5rem;
