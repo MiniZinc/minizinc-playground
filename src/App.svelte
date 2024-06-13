@@ -26,7 +26,6 @@
 
     const alphabet =
         'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let currentSession;
     function newSession() {
         const MAX_SESSIONS = 5;
         if (Object.keys(settings.sessions).length >= MAX_SESSIONS) {
@@ -66,9 +65,9 @@
     }
 
     async function hashChange() {
-        if (currentSession && playground.hasFiles()) {
+        if (sessionStorage.mznPlaygroundSession && playground.hasFiles()) {
             const project = playground.getProject();
-            settings.sessions[currentSession] = project;
+            settings.sessions[sessionStorage.mznPlaygroundSession] = project;
         }
 
         if (window.location.hash.startsWith('#project=')) {
@@ -77,12 +76,7 @@
                     window.location.hash.substring(9),
                 );
                 project = migrateProject(JSON.parse(json));
-                currentSession = newSession();
-                window.history.replaceState(
-                    undefined,
-                    undefined,
-                    `#session=${currentSession}`,
-                );
+                sessionStorage.mznPlaygroundSession = newSession();
                 return;
             } catch (e) {
                 console.error(e);
@@ -103,12 +97,7 @@
                         },
                     ],
                 };
-                currentSession = newSession();
-                window.history.replaceState(
-                    undefined,
-                    undefined,
-                    `#session=${currentSession}`,
-                );
+                sessionStorage.mznPlaygroundSession = newSession();
                 return;
             } catch (e) {
                 console.error(e);
@@ -121,39 +110,23 @@
                     window.location.hash.substring(5),
                 );
                 project = await loadFromUrl(url);
-                currentSession = newSession();
-                window.history.replaceState(
-                    undefined,
-                    undefined,
-                    `#session=${currentSession}`,
-                );
+                sessionStorage.mznPlaygroundSession = newSession();
                 return;
             } catch (e) {
                 console.error(e);
             }
         }
 
-        if (!window.location.hash.startsWith('#session=')) {
-            // Start new session
-            window.history.replaceState(
-                undefined,
-                undefined,
-                `#session=${newSession()}`,
-            );
-        }
-
-        const id = window.location.hash.substring(9);
-        if (
-            id !== currentSession &&
-            settings.sessions &&
-            settings.sessions[id]
-        ) {
+        if (sessionStorage.mznPlaygroundSession) {
             try {
-                project = migrateProject(settings.sessions[id]);
-                currentSession = id;
+                project = migrateProject(
+                    settings.sessions[sessionStorage.mznPlaygroundSession],
+                );
             } catch (e) {
                 console.error(e);
             }
+        } else {
+            sessionStorage.mznPlaygroundSession = newSession();
         }
 
         if (project.files.length === 0) {
@@ -167,14 +140,13 @@
                 ],
             };
         }
-        currentSession = id;
     }
 
     onMount(() => hashChange());
 
     function beforeUnload() {
         const project = playground.getProject();
-        settings.sessions[currentSession] = {
+        settings.sessions[sessionStorage.mznPlaygroundSession] = {
             ...project,
             timestamp: Date.now(),
         };
