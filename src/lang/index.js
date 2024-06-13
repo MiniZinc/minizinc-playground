@@ -117,13 +117,13 @@ const lightTheme = createTheme({
 const darkTheme = createTheme({
     variant: 'dark',
     settings: {
-        background: '#222',
+        background: 'var(--bulma-scheme-main-bis)',
         foreground: '#F6F6F6',
         caret: '#EEE',
         selection: '#036dd626',
-        gutterBackground: '#333',
-        gutterForeground: '#999',
-        lineHighlight: '#90909020',
+        gutterBackground: 'var(--bulma-scheme-main-ter)',
+        gutterForeground: 'var(--bulma-text)',
+        lineHighlight: '#90909014',
     },
     styles: [
         {

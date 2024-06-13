@@ -1,7 +1,7 @@
 <script>
     import { createEventDispatcher } from 'svelte';
     import Tab from './Tab.svelte';
-    import Fa from 'svelte-fa/src/fa.svelte';
+    import Fa from 'svelte-fa';
     import { faPlus, faFolderTree } from '@fortawesome/free-solid-svg-icons';
     import { flip } from 'svelte/animate';
 

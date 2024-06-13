@@ -9,7 +9,7 @@
 </script>
 
 <script>
-    import Fa from 'svelte-fa/src/fa.svelte';
+    import Fa from 'svelte-fa';
     import { faForwardFast } from '@fortawesome/free-solid-svg-icons';
     import { createEventDispatcher } from 'svelte';
 
@@ -361,7 +361,7 @@
         flex: 0 0 auto;
         display: flex;
         padding: 0.5rem;
-        border-bottom: solid 1px var(--mzn-playground-border);
+        border-bottom: solid 1px var(--bulma-border);
     }
 
     .top > .field {
@@ -374,7 +374,7 @@
         display: grid;
         grid-auto-rows: auto;
         gap: 1px;
-        background: var(--mzn-playground-border);
+        background: var(--bulma-border);
     }
 
     .vis-window {

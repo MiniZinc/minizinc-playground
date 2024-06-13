@@ -1,0 +1,15 @@
+@use './bulma' as bulma with (
+    $primary: #1491eb,
+    $navbar-breakpoint: 769px,
+    $pre-font-size: 1em,
+    $pre-code-font-size: 1em
+);
+
+.mzn-playground-theme-setup {
+    @include bulma.theme-light-light-theme;
+    @include bulma.theme-setup-setup-theme;
+}
+
+.mzn-playground-theme-dark-setup {
+    @include bulma.theme-dark-dark-theme;
+}

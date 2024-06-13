@@ -1,7 +1,7 @@
 <script>
     import { faXmark } from '@fortawesome/free-solid-svg-icons';
     import { createEventDispatcher } from 'svelte';
-    import Fa from 'svelte-fa/src/fa.svelte';
+    import Fa from 'svelte-fa';
     import { fly } from 'svelte/transition';
 
     const dispatch = createEventDispatcher();
@@ -140,9 +140,8 @@
             <span class="icon"><Fa icon={faXmark} /></span>
         </button>
 
-        <h5 class="title is-5">Solving options</h5>
-
         <form on:submit|preventDefault={() => dispatch('close')}>
+            <h5 class="title is-5">Solving options</h5>
             <div class="field is-grouped">
                 <p class="control checkbox-control">
                     <input
@@ -285,13 +284,16 @@
         flex: 0 0 30%;
         min-width: 300px;
         max-width: 450px;
-        border-top: solid 1px var(--mzn-playground-border);
-        border-left: solid 1px var(--mzn-playground-border);
+        border-top: solid 1px var(--bulma-border);
+        border-left: solid 1px var(--bulma-border);
     }
     .exit-button {
         position: absolute;
         top: 0;
         right: 0;
+    }
+    .title {
+        margin-bottom: 1rem;
     }
     .checkbox-control {
         display: flex;

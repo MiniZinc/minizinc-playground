@@ -1,35 +1,17 @@
-@import "../node_modules/bulma/sass/utilities/_all";
-@import '../node_modules/bulma/sass/base/_all';
-@import "../node_modules/bulma/sass/elements/button";
-@import "../node_modules/bulma/sass/elements/icon";
-@import "../node_modules/bulma/sass/elements/table";
-@import "../node_modules/bulma/sass/elements/other";
-@import "../node_modules/bulma/sass/form/_all";
-@import "../node_modules/bulma/sass/components/dropdown";
-@import "../node_modules/bulma/sass/components/menu";
-@import "../node_modules/bulma/sass/components/modal";
-@import "../node_modules/bulma/sass/components/navbar";
-@import "../node_modules/bulma/sass/components/panel";
-@import "../node_modules/bulma/sass/components/tabs";
-@import "../node_modules/bulma/sass/helpers/visibility";
-
-& {
-    /** Apply these here since we can't apply to body */
-    box-sizing: border-box;
-    line-height: $body-line-height;
-    font-family: $body-family;
-
-    background-color: $body-background-color;
-    font-size: $body-size;
-    min-width: $body-min-width;
-
-    font-family: $body-family;
-    color: $body-color;
-    font-size: $body-font-size;
-    font-weight: $body-weight;
-    line-height: $body-line-height;
-
-    .navbar-item, .navbar-link {
-        padding: 0.5rem;
-    }
-}
+@forward "node_modules/bulma/sass/utilities";
+@forward 'node_modules/bulma/sass/themes/light' as theme-light-*;
+@forward 'node_modules/bulma/sass/themes/dark' as theme-dark-*;
+@forward 'node_modules/bulma/sass/themes/setup' as theme-setup-*;
+@forward 'node_modules/bulma/sass/base';
+@forward "node_modules/bulma/sass/elements/button";
+@forward "node_modules/bulma/sass/elements/delete";
+@forward "node_modules/bulma/sass/elements/icon";
+@forward "node_modules/bulma/sass/elements/table";
+@forward "node_modules/bulma/sass/form";
+@forward "node_modules/bulma/sass/components/dropdown";
+@forward "node_modules/bulma/sass/components/menu";
+@forward "node_modules/bulma/sass/components/modal";
+@forward "node_modules/bulma/sass/components/navbar";
+@forward "node_modules/bulma/sass/components/panel";
+@forward "node_modules/bulma/sass/components/tabs";
+@forward "node_modules/bulma/sass/helpers/visibility";
