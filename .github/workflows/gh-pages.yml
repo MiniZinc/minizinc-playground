@@ -65,12 +65,12 @@ jobs:
     needs: [build-for-deployment]
     steps:
       - name: Fetch main build
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: playground-main
           path: ${{ github.workspace }}/dist
       - name: Fetch develop build
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: playground-develop
           path: ${{ github.workspace }}/dist/develop
