@@ -64,12 +64,25 @@
         return p;
     }
 
+    let ignoreHashChange = false;
     async function hashChange() {
-        if (window.location.hash.startsWith('#project=')) {
+        const hash = window.location.hash;
+        if (hash.length > 0) {
+            ignoreHashChange = true;
+            window.history.replaceState(
+                undefined,
+                undefined,
+                window.location.pathname + window.location.search,
+            );
+            ignoreHashChange = false;
+        }
+        if (ignoreHashChange) {
+            return;
+        }
+
+        if (hash.startsWith('#project=')) {
             try {
-                const json = decodeURIComponent(
-                    window.location.hash.substring(9),
-                );
+                const json = decodeURIComponent(hash.substring(9));
                 openProject(newSession(), {
                     ...JSON.parse(json),
                     timestamp: Date.now(),
@@ -80,11 +93,9 @@
             }
         }
 
-        if (window.location.hash.startsWith('#code=')) {
+        if (hash.startsWith('#code=')) {
             try {
-                const contents = decodeURIComponent(
-                    window.location.hash.substring(6),
-                );
+                const contents = decodeURIComponent(hash.substring(6));
                 openProject(newSession(), {
                     files: [
                         {
@@ -101,11 +112,9 @@
             }
         }
 
-        if (window.location.hash.startsWith('#url=')) {
+        if (hash.startsWith('#url=')) {
             try {
-                const url = decodeURIComponent(
-                    window.location.hash.substring(5),
-                );
+                const url = decodeURIComponent(hash.substring(5));
                 openProject(newSession(), await loadFromUrl(url));
                 return;
             } catch (e) {
