@@ -76,24 +76,24 @@ export function addErrors(text, msgs, view) {
             from: lineCharToPos(
                 msg.location.firstLine,
                 msg.location.firstColumn,
-                text
+                text,
             ),
             to:
                 lineCharToPos(
                     msg.location.lastLine,
                     msg.location.lastColumn,
-                    text
+                    text,
                 ) + 1,
             msg: `${msg.type === 'error' ? 'Error' : 'Warning'}: ${msg.what}: ${
                 msg.message
             }`,
             type: msg.type,
-        })
+        }),
     );
     if (!view.state.field(underlineField, false)) {
         effects.push(
             // @ts-ignore
-            StateEffect.appendConfig.of([underlineField])
+            StateEffect.appendConfig.of([underlineField]),
         );
     }
     view.dispatch({ effects: [clearUnderlines.of(null), ...effects] });

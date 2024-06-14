@@ -1,5 +1,4 @@
-MiniZinc Playground
-===================
+# MiniZinc Playground
 
 Write and run MiniZinc models entirely within your browser.
 

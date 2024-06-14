@@ -48,7 +48,7 @@ const MiniZincIDE = (() => {
                     ...message,
                     id,
                 },
-                '*'
+                '*',
             );
         });
     }
@@ -85,7 +85,7 @@ const MiniZincIDE = (() => {
                     payload: idx,
                 },
             },
-            '*'
+            '*',
         );
     }
     function solve(modelFile, dataFiles, options) {
@@ -96,7 +96,7 @@ const MiniZincIDE = (() => {
                 dataFiles,
                 options,
             },
-            '*'
+            '*',
         );
     }
     function getNumSolutions() {
