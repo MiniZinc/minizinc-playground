@@ -24,7 +24,7 @@ jobs:
       - name: Build application
         run: npm run build
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: playground
           path: dist/
@@ -55,7 +55,7 @@ jobs:
         env:
           BASE_PATH: ${{ matrix.base_path }}
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: playground-${{ matrix.branch }}
           path: dist/
