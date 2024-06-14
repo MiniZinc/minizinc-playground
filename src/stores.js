@@ -43,7 +43,7 @@ export const settings = writable(
                 ignoreChanges = false;
             }
         });
-    }
+    },
 );
 settings.subscribe(($settings) => {
     if (ignoreChanges) {

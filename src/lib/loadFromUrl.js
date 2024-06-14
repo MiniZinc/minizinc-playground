@@ -23,7 +23,7 @@ export async function loadFromUrl(url) {
     const response = await fetch(new URL(src));
     if (!response.ok) {
         throw new Error(
-            `Request failed (${response.status} ${response.statusText})`
+            `Request failed (${response.status} ${response.statusText})`,
         );
     }
     if (name.endsWith('.mzp')) {
@@ -42,7 +42,7 @@ export async function loadFromUrl(url) {
             const res = await fetch(new URL(file, src));
             if (!res.ok) {
                 throw new Error(
-                    `Request failed (${res.status} ${res.statusText})`
+                    `Request failed (${res.status} ${res.statusText})`,
                 );
             }
             const contents = await res.text();

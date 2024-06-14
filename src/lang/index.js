@@ -157,10 +157,10 @@ const theme = new Compartment();
 const editable = new Compartment();
 
 export const readOnlyEffect = editable.reconfigure(
-    EditorView.editable.of(false)
+    EditorView.editable.of(false),
 );
 export const editableEffect = editable.reconfigure(
-    EditorView.editable.of(true)
+    EditorView.editable.of(true),
 );
 export const lightThemeEffect = theme.reconfigure(lightTheme);
 export const darkThemeEffect = theme.reconfigure(darkTheme);
