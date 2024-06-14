@@ -62,9 +62,10 @@ export async function loadFromUrl(url) {
             files,
             tab,
             solverId,
+            timestamp: Date.now(),
         };
     } else {
         const contents = await response.text();
-        return { files: [{ name, contents }] };
+        return { files: [{ name, contents }], timestamp: Date.now() };
     }
 }

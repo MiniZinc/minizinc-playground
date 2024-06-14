@@ -33,7 +33,7 @@
     import SolverConfig from './SolverConfig.svelte';
     import Dropdown from './Dropdown.svelte';
     import { addErrors, lineCharToPos } from '../lang/underline';
-    import { onMount, tick } from 'svelte';
+    import { createEventDispatcher, onMount, tick } from 'svelte';
 
     import * as MiniZincLatest from 'https://cdn.jsdelivr.net/npm/minizinc/dist/minizinc.mjs';
     import * as MiniZincEdge from 'https://cdn.jsdelivr.net/npm/minizinc@edge/dist/minizinc.mjs';
@@ -47,6 +47,9 @@
     export let canEditTabs = true;
     export let compilationEnabled = true;
     export let project;
+    /**
+     * @type {any[] | null}
+     */
     export let enabledSolvers = null;
     export let canEditSolverSettings = true;
     export let showShareButton = true;
@@ -62,6 +65,8 @@
     export let theme = 'auto';
     export let hideOutputOnStartup = true;
     export let autoFocus = true;
+
+    const dispatch = createEventDispatcher();
 
     let busyState = 0;
     let allSolvers = [];
@@ -963,6 +968,17 @@
                 solverConfig.getSolvingConfiguration(currentSolver.id),
         );
     }
+
+    $: dispatch('solversChanged', { solvers });
+
+    export function isDefaultSolver() {
+        return currentSolverIndex ===
+            (solvers.findIndex((s) => s.extraInfo && s.extraInfo.isDefault) || 0);
+    }
+
+    export function isDefaultSolverConfig() {
+        return solverConfig.isDefault();
+    }
 </script>
 
 <div class="mzn-playground">
@@ -971,7 +987,10 @@
             <div class="top">
                 <nav class="navbar">
                     <div class="navbar-brand">
-                        <slot name="navbar-before-run-buttons" />
+                        <slot
+                            name="navbar-before-run-buttons"
+                            isMobile={$screenMobile}
+                        />
                         <div class="navbar-item is-expanded">
                             <div class="field navbar-run-buttons has-addons">
                                 <div class="control">
@@ -1028,7 +1047,10 @@
                                         </Dropdown>
                                     </div>
                                 {/if}
-                                <slot name="navbar-run-buttons" />
+                                <slot
+                                    name="navbar-run-buttons"
+                                    isMobile={$screenMobile}
+                                />
 
                                 {#if $screenMobile && showSolverDropdown && solvers.length > 0}
                                     <div class="control is-expanded">
@@ -1048,7 +1070,10 @@
                                 {/if}
                             </div>
                         </div>
-                        <slot name="navbar-after-run-buttons" />
+                        <slot
+                            name="navbar-after-run-buttons"
+                            isMobile={$screenMobile}
+                        />
                         {#if showSolverDropdown && solvers.length > 0}
                             <div class="navbar-item is-hidden-mobile">
                                 <div class="field has-addons">
@@ -1087,7 +1112,10 @@
                                 </div>
                             </div>
                         {/if}
-                        <slot name="navbar-after-solver-selector" />
+                        <slot
+                            name="navbar-after-solver-selector"
+                            isMobile={$screenMobile}
+                        />
                         <!-- svelte-ignore a11y-missing-attribute -->
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <!-- svelte-ignore a11y-interactive-supports-focus -->
@@ -1110,7 +1138,6 @@
                     <div class="navbar-menu" class:is-active={menuActive}>
                         <div class="navbar-start is-hidden-tablet" />
                         <div class="navbar-end">
-                            <slot name="navbar-before-share-buttons" />
                             {#if $screenMobile}
                                 {#if compilationEnabled && !isRunning && canCompile}
                                     <!-- svelte-ignore a11y-invalid-attribute -->
@@ -1164,6 +1191,10 @@
                                         >
                                     </a>
                                 {/if}
+                                <slot
+                                    name="navbar-before-share-buttons"
+                                    isMobile={$screenMobile}
+                                />
                                 {#if showShareButton && busyState === 0}
                                     <!-- svelte-ignore a11y-invalid-attribute -->
                                     <a
@@ -1201,6 +1232,10 @@
                                     </a>
                                 {/if}
                             {:else}
+                                <slot
+                                    name="navbar-before-share-buttons"
+                                    isMobile={$screenMobile}
+                                />
                                 <div class="navbar-item">
                                     <div class="field has-addons">
                                         {#if showShareButton}
@@ -1255,11 +1290,17 @@
                                                 </button>
                                             </div>
                                         {/if}
-                                        <slot name="navbar-share-buttons" />
+                                        <slot
+                                            name="navbar-share-buttons"
+                                            isMobile={$screenMobile}
+                                        />
                                     </div>
                                 </div>
                             {/if}
-                            <slot name="navbar-after-share-buttons" />
+                            <slot
+                                name="navbar-after-share-buttons"
+                                isMobile={$screenMobile}
+                            />
                         </div>
                     </div>
                 </nav>
@@ -1505,6 +1546,7 @@
                 </button>
             </div>
         </Modal>
+        <slot />
     </div>
 </div>
 

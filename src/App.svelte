@@ -1,43 +1,43 @@
 <script>
     import { onMount } from 'svelte';
     import Playground from './lib/Playground.svelte';
+    import RecentProjectsModal from './lib/RecentProjectsModal.svelte';
     import { loadFromUrl } from './lib/loadFromUrl';
+    import Fa from 'svelte-fa';
+    import { faClockRotateLeft } from '@fortawesome/free-solid-svg-icons';
+    import { settings } from './stores';
 
     let playground;
     let project = {
         files: [],
     };
-
-    let settings = {
-        autoClearOutput: false,
-        splitterDirection: 'vertical',
-        splitterSize: 75,
-        sessions: {},
-    };
-    try {
-        const savedSettings = localStorage.getItem('mznPlayground');
-        if (savedSettings && savedSettings.length > 0) {
-            settings = { ...settings, ...JSON.parse(savedSettings) };
+    let timestamp = null;
+    let openRecent = false;
+    let solvers = [];
+    $: recentProjects = getRecentProjects(solvers, $settings);
+    function getRecentProjects(solvers, $settings) {
+        if (!playground || !$settings) {
+            return [];
         }
-    } catch (e) {
-        console.error(e);
+        return Object.entries($settings.sessions)
+            .map(([key, value]) => {
+                const solver = solvers.find((s) => s.id === value.solverId);
+                return {
+                    key,
+                    files: value.files,
+                    timestamp: value.timestamp,
+                    solver: solver ? solver.name : '<unknown solver>',
+                };
+            })
+            .filter((p) => p.key !== sessionStorage.mznPlaygroundSession)
+            .sort((a, b) => b.timestamp - a.timestamp);
     }
+
     const defaultModel = '% Use this editor as a MiniZinc scratch book\n';
 
     const alphabet =
         'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     function newSession() {
-        const MAX_SESSIONS = 5;
-        if (Object.keys(settings.sessions).length >= MAX_SESSIONS) {
-            const sessions = Object.keys(settings.sessions).map((key) => ({
-                key,
-                value: settings.sessions[key],
-            }));
-            sessions.sort((a, b) => b.value.timestamp - a.value.timestamp);
-            settings.sessions = sessions
-                .slice(0, MAX_SESSIONS - 1)
-                .reduce((acc, x) => ({ ...acc, [x.key]: x.value }), {});
-        }
         const genId = () =>
             Array(6)
                 .fill(0)
@@ -46,7 +46,7 @@
                 )
                 .join('');
         let id = genId();
-        while (id in settings.sessions) {
+        while (id in $settings.sessions) {
             id = genId();
         }
         return id;
@@ -65,18 +65,15 @@
     }
 
     async function hashChange() {
-        if (sessionStorage.mznPlaygroundSession && playground.hasFiles()) {
-            const project = playground.getProject();
-            settings.sessions[sessionStorage.mznPlaygroundSession] = project;
-        }
-
         if (window.location.hash.startsWith('#project=')) {
             try {
                 const json = decodeURIComponent(
                     window.location.hash.substring(9),
                 );
-                project = migrateProject(JSON.parse(json));
-                sessionStorage.mznPlaygroundSession = newSession();
+                openProject(newSession(), {
+                    ...JSON.parse(json),
+                    timestamp: Date.now(),
+                });
                 return;
             } catch (e) {
                 console.error(e);
@@ -88,7 +85,7 @@
                 const contents = decodeURIComponent(
                     window.location.hash.substring(6),
                 );
-                project = {
+                openProject(newSession(), {
                     files: [
                         {
                             name: 'Playground.mzn',
@@ -96,8 +93,8 @@
                             anchor: contents.length,
                         },
                     ],
-                };
-                sessionStorage.mznPlaygroundSession = newSession();
+                    timestamp: Date.now(),
+                });
                 return;
             } catch (e) {
                 console.error(e);
@@ -109,28 +106,26 @@
                 const url = decodeURIComponent(
                     window.location.hash.substring(5),
                 );
-                project = await loadFromUrl(url);
-                sessionStorage.mznPlaygroundSession = newSession();
+                openProject(newSession(), await loadFromUrl(url));
                 return;
             } catch (e) {
                 console.error(e);
             }
         }
 
-        if (sessionStorage.mznPlaygroundSession) {
-            try {
-                project = migrateProject(
-                    settings.sessions[sessionStorage.mznPlaygroundSession],
-                );
-            } catch (e) {
-                console.error(e);
-            }
-        } else {
-            sessionStorage.mznPlaygroundSession = newSession();
+        if (
+            sessionStorage.mznPlaygroundSession &&
+            $settings.sessions[sessionStorage.mznPlaygroundSession]
+        ) {
+            openProject(
+                sessionStorage.mznPlaygroundSession,
+                $settings.sessions[sessionStorage.mznPlaygroundSession],
+            );
+            return;
         }
 
         if (project.files.length === 0) {
-            project = {
+            openProject(newSession(), {
                 files: [
                     {
                         name: 'Playground.mzn',
@@ -138,32 +133,132 @@
                         anchor: defaultModel.length,
                     },
                 ],
-            };
+                timestamp: Date.now(),
+            });
         }
     }
 
     onMount(() => hashChange());
 
-    function beforeUnload() {
-        const project = playground.getProject();
-        settings.sessions[sessionStorage.mznPlaygroundSession] = {
-            ...project,
-            timestamp: Date.now(),
-        };
-        localStorage.setItem('mznPlayground', JSON.stringify(settings));
+    function saveProject() {
+        if (sessionStorage.mznPlaygroundSession && playground.hasFiles()) {
+            try {
+                const project = playground.getProject();
+
+                if (
+                    !(
+                        sessionStorage.mznPlaygroundSession in
+                        $settings.sessions
+                    ) &&
+                    playground.isDefaultSolver() &&
+                    playground.isDefaultSolverConfig() &&
+                    project.files.length === 1 &&
+                    project.files[0].name === 'Playground.mzn' &&
+                    project.files[0].contents === defaultModel
+                ) {
+                    // No need to save
+                    return;
+                }
+
+                timestamp = Date.now();
+                $settings.sessions[sessionStorage.mznPlaygroundSession] = {
+                    ...project,
+                    timestamp,
+                };
+            } catch (e) {
+                console.error(e);
+            }
+        }
     }
+
+    function openProject(key, proj) {
+        saveProject();
+        try {
+            const toLoad = migrateProject(proj);
+            sessionStorage.mznPlaygroundSession = key;
+            project = toLoad;
+            timestamp = proj.timestamp;
+        } catch (e) {
+            console.error(e);
+        }
+        openRecent = false;
+        recentProjects = getRecentProjects(solvers, $settings);
+    }
+
+    function forkOnExternalChange($settings) {
+        if (
+            timestamp !== null &&
+            sessionStorage.mznPlaygroundSession in $settings.sessions &&
+            $settings.sessions[sessionStorage.mznPlaygroundSession].timestamp >
+                timestamp
+        ) {
+            sessionStorage.mznPlaygroundSession = newSession();
+            recentProjects = getRecentProjects(solvers, $settings);
+        }
+    }
+    $: forkOnExternalChange($settings);
 </script>
 
-<svelte:window on:beforeunload={beforeUnload} on:hashchange={hashChange} />
+<svelte:document
+    on:visibilitychange={() => {
+        if (document.hidden) {
+            saveProject();
+        }
+    }}
+/>
+<svelte:window on:beforeunload={saveProject} on:hashchange={hashChange} />
 
 <div class="playground-app">
     <Playground
         bind:this={playground}
         {project}
-        bind:autoClearOutput={settings.autoClearOutput}
-        bind:splitterDirection={settings.splitterDirection}
-        bind:splitterSize={settings.splitterSize}
-    />
+        bind:autoClearOutput={$settings.autoClearOutput}
+        bind:splitterDirection={$settings.splitterDirection}
+        bind:splitterSize={$settings.splitterSize}
+        on:solversChanged={(e) => (solvers = e.detail.solvers)}
+    >
+        <svelte:fragment slot="navbar-before-share-buttons" let:isMobile>
+            {#if isMobile}
+                <!-- svelte-ignore a11y-invalid-attribute -->
+                <a
+                    class="navbar-item mobile-menu-item"
+                    href="javascript:void(0);"
+                    on:click={() => (openRecent = true)}
+                >
+                    <span class="icon">
+                        <Fa icon={faClockRotateLeft} />
+                    </span>
+                    <span>Open recent project</span>
+                </a>
+            {:else}
+                <div class="navbar-item">
+                    <div class="field">
+                        <div class="control">
+                            <button
+                                class="button"
+                                title="Open recent project"
+                                on:click={() => (openRecent = true)}
+                            >
+                                <span class="icon">
+                                    <Fa icon={faClockRotateLeft} />
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {/if}
+        </svelte:fragment>
+        <RecentProjectsModal
+            projects={recentProjects}
+            active={openRecent}
+            on:cancel={() => (openRecent = false)}
+            on:accept={(e) =>
+                openProject(
+                    e.detail.project.key,
+                    $settings.sessions[e.detail.project.key],
+                )}
+        />
+    </Playground>
 </div>
 
 <style>
