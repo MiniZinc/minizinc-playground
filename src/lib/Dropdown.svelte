@@ -6,6 +6,9 @@
     const dispatch = createEventDispatcher();
 
     export let items = [];
+    /**
+     * @type {any | null}
+     */
     export let currentItem = null;
 
     export let active = false;

@@ -9,27 +9,28 @@
     export let active;
     export let stdFlags = [];
 
-    let enableTimeLimit = false;
-    let timeLimit = 1;
+    const defaultConfig = {
+        enableTimeLimit: false,
+        timeLimit: 1,
+        allSolutions: false,
+        verboseCompilation: false,
+        verboseSolving: false,
+        compilerStatistics: false,
+        solvingStatistics: false,
+        outputTime: false,
+        freeSearch: false,
+    };
 
-    let allSolutions = false;
+    let config = {
+        ...defaultConfig,
+    };
 
-    let verboseCompilation = false;
-    let verboseSolving = false;
-
-    let compilerStatistics = false;
-    let solvingStatistics = false;
-
-    let outputTime = false;
-
-    let freeSearch = false;
-
-    $: validateTimeLimit(timeLimit);
+    $: validateTimeLimit(config.timeLimit);
 
     function validateTimeLimit(t) {
         const ms = t * 1000;
         if (ms !== Math.floor(ms)) {
-            timeLimit = Math.floor(ms) / 1000;
+            config.timeLimit = Math.floor(ms) / 1000;
         }
     }
 
@@ -37,83 +38,57 @@
         return stdFlags.indexOf(f) !== -1;
     }
 
+    export function isDefault() {
+        for (const key in config) {
+            if (defaultConfig[key] !== config[key]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     export function reset() {
-        enableTimeLimit = false;
-        timeLimit = 1;
-
-        allSolutions = false;
-
-        verboseCompilation = false;
-        verboseSolving = false;
-
-        compilerStatistics = false;
-        solvingStatistics = false;
-
-        outputTime = false;
-
-        freeSearch = false;
+        config = { ...defaultConfig };
     }
 
     export function load(settings) {
-        enableTimeLimit = settings.enableTimeLimit;
-        timeLimit = settings.timeLimit;
-
-        allSolutions = settings.allSolutions;
-
-        verboseCompilation = settings.verboseCompilation;
-        verboseSolving = settings.verboseSolving;
-
-        compilerStatistics = settings.compilerStatistics;
-        solvingStatistics = settings.solvingStatistics;
-
-        outputTime = settings.outputTime;
-
-        freeSearch = settings.freeSearch;
+        const cfg = { ...defaultConfig };
+        for (const key in defaultConfig) {
+            if (key in settings) {
+                cfg[key] = settings[key];
+            }
+        }
+        config = cfg;
     }
 
     export function save() {
-        return {
-            enableTimeLimit,
-            timeLimit,
-
-            allSolutions,
-
-            verboseCompilation,
-            verboseSolving,
-
-            compilerStatistics,
-            solvingStatistics,
-
-            outputTime,
-
-            freeSearch,
-        };
+        return { ...config };
     }
 
     export function getSolvingConfiguration(solver) {
         const options = { solver };
-        if (enableTimeLimit && timeLimit > 0) {
-            options['time-limit'] = timeLimit * 1000;
+        if (config.enableTimeLimit && config.timeLimit > 0) {
+            options['time-limit'] = config.timeLimit * 1000;
         }
-        if (allSolutions && hasStdFlag(stdFlags, '-a')) {
+        if (config.allSolutions && hasStdFlag(stdFlags, '-a')) {
             options['all-satisfaction'] = true;
         }
-        if (verboseCompilation) {
+        if (config.verboseCompilation) {
             options['verbose-compilation'] = true;
         }
-        if (verboseSolving && hasStdFlag(stdFlags, '-v')) {
+        if (config.verboseSolving && hasStdFlag(stdFlags, '-v')) {
             options['verbose-solving'] = true;
         }
-        if (compilerStatistics) {
+        if (config.compilerStatistics) {
             options['compiler-statistics'] = true;
         }
-        if (solvingStatistics && hasStdFlag(stdFlags, '-s')) {
+        if (config.solvingStatistics && hasStdFlag(stdFlags, '-s')) {
             options['solver-statistics'] = true;
         }
-        if (outputTime) {
+        if (config.outputTime) {
             options['output-time'] = true;
         }
-        if (freeSearch && hasStdFlag(stdFlags, '-f')) {
+        if (config.freeSearch && hasStdFlag(stdFlags, '-f')) {
             options['free-search'] = true;
         }
         return options;
@@ -121,10 +96,10 @@
 
     export function getCompilationConfiguration(solver) {
         const options = { solver };
-        if (verboseCompilation) {
+        if (config.verboseCompilation) {
             options['verbose-compilation'] = true;
         }
-        if (compilerStatistics) {
+        if (config.compilerStatistics) {
             options['compiler-statistics'] = true;
         }
         return options;
@@ -147,7 +122,7 @@
                     <input
                         id="enable-timelimit"
                         type="checkbox"
-                        bind:checked={enableTimeLimit}
+                        bind:checked={config.enableTimeLimit}
                     />
                     <label for="enable-timelimit">Time limit (s)</label>
                 </p>
@@ -157,8 +132,8 @@
                         type="number"
                         step="1"
                         min={0}
-                        disabled={!enableTimeLimit}
-                        bind:value={timeLimit}
+                        disabled={!config.enableTimeLimit}
+                        bind:value={config.timeLimit}
                     />
                 </p>
             </div>
@@ -169,7 +144,7 @@
                         <input
                             id="enable-all-solutions"
                             type="checkbox"
-                            bind:checked={allSolutions}
+                            bind:checked={config.allSolutions}
                         />
                         <label for="enable-all-solutions">
                             All solutions (for satisfication problems)
@@ -184,7 +159,7 @@
                         <input
                             id="enable-free-search"
                             type="checkbox"
-                            bind:checked={freeSearch}
+                            bind:checked={config.freeSearch}
                         />
                         <label for="enable-free-search">Free search</label>
                     </p>
@@ -198,7 +173,7 @@
                     <input
                         id="enable-verbose-compile"
                         type="checkbox"
-                        bind:checked={verboseCompilation}
+                        bind:checked={config.verboseCompilation}
                     />
                     <label for="enable-verbose-compile"
                         >Verbose compilation</label
@@ -212,7 +187,7 @@
                         <input
                             id="enable-verbose-solve"
                             type="checkbox"
-                            bind:checked={verboseSolving}
+                            bind:checked={config.verboseSolving}
                         />
                         <label for="enable-verbose-solve">Verbose solving</label
                         >
@@ -225,7 +200,7 @@
                     <input
                         id="enable-compilation-satistics"
                         type="checkbox"
-                        bind:checked={compilerStatistics}
+                        bind:checked={config.compilerStatistics}
                     />
                     <label for="enable-compilation-satistics"
                         >Compilation statistics</label
@@ -239,7 +214,7 @@
                         <input
                             id="enable-solving-satistics"
                             type="checkbox"
-                            bind:checked={solvingStatistics}
+                            bind:checked={config.solvingStatistics}
                         />
                         <label for="enable-solving-satistics"
                             >Solving statistics</label
@@ -253,7 +228,7 @@
                     <input
                         id="enable-timing-information"
                         type="checkbox"
-                        bind:checked={outputTime}
+                        bind:checked={config.outputTime}
                     />
                     <label for="enable-timing-information"
                         >Timing information</label
