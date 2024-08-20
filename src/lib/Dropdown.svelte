@@ -5,6 +5,10 @@
 
     const dispatch = createEventDispatcher();
 
+    /**
+     * @type {string | null}
+     */
+    export let title = null;
     export let items = [];
     /**
      * @type {any | null}
@@ -30,7 +34,7 @@
 
 <svelte:body on:click={bodyClick} />
 
-<div class="dropdown" class:is-active={active} bind:this={element}>
+<div class="dropdown" class:is-active={active} bind:this={element} {title}>
     <div class="dropdown-trigger">
         <button class="button" on:click={() => (active = !active)} {disabled}>
             <span>
