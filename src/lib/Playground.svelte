@@ -972,8 +972,11 @@
     $: dispatch('solversChanged', { solvers });
 
     export function isDefaultSolver() {
-        return currentSolverIndex ===
-            (solvers.findIndex((s) => s.extraInfo && s.extraInfo.isDefault) || 0);
+        return (
+            currentSolverIndex ===
+            (solvers.findIndex((s) => s.extraInfo && s.extraInfo.isDefault) ||
+                0)
+        );
     }
 
     export function isDefaultSolverConfig() {
@@ -1040,6 +1043,7 @@
                                                 : minizincVersions.latest}
                                             on:selectItem={selectVersion}
                                             disabled={isRunning}
+                                            title="Configure MiniZinc version"
                                         >
                                             <span slot="item" let:item>
                                                 {item.label} ({item.detail})
@@ -1102,6 +1106,7 @@
                                             <button
                                                 class="button is-primary"
                                                 on:click={toggleSolverConfig}
+                                                title="Solver configuration"
                                             >
                                                 <span class="icon">
                                                     <Fa icon={faCog} />
