@@ -14,7 +14,8 @@
         "format:check": "prettier -c .",
         "format": "prettier -w .",
         "build": "vite build",
-        "preview": "vite preview"
+        "preview": "vite preview",
+        "dev": "vite"
     },
     "devDependencies": {
         "@lezer/generator": "^1.7.1",
