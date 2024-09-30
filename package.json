@@ -39,7 +39,7 @@
         "jszip": "^3.10.1",
         "lodash": "^4.17.21",
         "split.js": "^1.6.5",
-        "svelte-fa": "^4.0.2",
+        "svelte-fa": "^4.0.3",
         "thememirror": "^2.0.1"
     }
 }
