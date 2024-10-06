@@ -27,6 +27,7 @@
         "vite": "^5.4.8"
     },
     "dependencies": {
+        "@codemirror/commands": "^6.6.2",
         "@codemirror/lang-html": "^6.4.9",
         "@codemirror/lang-json": "^6.0.1",
         "@fortawesome/fontawesome-svg-core": "^6.6.0",
