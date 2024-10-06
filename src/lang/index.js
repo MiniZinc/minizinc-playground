@@ -1,8 +1,8 @@
 import { parser } from './minizinc.grammar';
 import { basicSetup } from 'codemirror';
-import { Compartment, EditorState } from '@codemirror/state';
+import { Compartment } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
-import { indentWithTab } from '@codemirror/commands';
+import { indentLess, indentMore } from '@codemirror/commands';
 import { createTheme } from 'thememirror';
 import {
     LRLanguage,
@@ -168,7 +168,29 @@ export const darkThemeEffect = theme.reconfigure(darkTheme);
 export function getExtensions(suffix, codeCheck, darkMode, readOnly = false) {
     const extensions = [
         basicSetup,
-        keymap.of([indentWithTab]),
+        keymap.of([
+            {
+                key: 'Tab',
+                preventDefault: true,
+                run: ({ state, dispatch }) => {
+                    if (state.selection.ranges.some((r) => !r.empty)) {
+                        return indentMore({ state, dispatch });
+                    }
+                    dispatch(
+                        state.update(state.replaceSelection('  '), {
+                            scrollIntoView: true,
+                            userEvent: 'input',
+                        }),
+                    );
+                    return true;
+                },
+            },
+            {
+                key: 'Shift-Tab',
+                preventDefault: true,
+                run: indentLess,
+            },
+        ]),
         theme.of(darkMode ? darkTheme : lightTheme),
         EditorView.theme({
             '&': { height: '100%' },
