@@ -176,11 +176,16 @@ export function getExtensions(suffix, codeCheck, darkMode, readOnly = false) {
                     if (state.selection.ranges.some((r) => !r.empty)) {
                         return indentMore({ state, dispatch });
                     }
+                    const pos = state.selection.main.from;
+                    const col = pos - state.doc.lineAt(pos).from;
                     dispatch(
-                        state.update(state.replaceSelection('  '), {
-                            scrollIntoView: true,
-                            userEvent: 'input',
-                        }),
+                        state.update(
+                            state.replaceSelection(col % 2 === 0 ? '  ' : ' '),
+                            {
+                                scrollIntoView: true,
+                                userEvent: 'input',
+                            },
+                        ),
                     );
                     return true;
                 },
