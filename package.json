@@ -23,7 +23,7 @@
         "minizinc": "^4.3.5",
         "prettier": "^3.3.3",
         "sass": "^1.80.6",
-        "svelte": "^5.1.9",
+        "svelte": "^5.1.13",
         "vite": "^5.4.10"
     },
     "dependencies": {
