@@ -19,12 +19,12 @@
     },
     "devDependencies": {
         "@lezer/generator": "^1.7.1",
-        "@sveltejs/vite-plugin-svelte": "^4.0.0",
+        "@sveltejs/vite-plugin-svelte": "^4.0.1",
         "minizinc": "^4.3.5",
         "prettier": "^3.3.3",
-        "sass": "^1.80.6",
-        "svelte": "^5.1.13",
-        "vite": "^5.4.10"
+        "sass": "^1.81.0",
+        "svelte": "^5.2.2",
+        "vite": "^5.4.11"
     },
     "dependencies": {
         "@codemirror/commands": "^6.7.1",
