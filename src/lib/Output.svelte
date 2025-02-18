@@ -219,7 +219,7 @@
                     {section}
                 </button>
             {/each}
-            <div class="spacer" />
+            <div class="spacer"></div>
             {#if hasStatistics}
                 <button
                     class="button is-small section-toggle"

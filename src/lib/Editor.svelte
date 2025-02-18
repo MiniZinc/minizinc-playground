@@ -46,7 +46,7 @@
     }
 </script>
 
-<div class="mzn-editor" bind:this={div} />
+<div class="mzn-editor" bind:this={div}></div>
 
 <style>
     .mzn-editor {
