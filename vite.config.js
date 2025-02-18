@@ -44,23 +44,14 @@ function lezer() {
 }
 
 const libraryBuild = {
-    lib: {
-        entry: 'src/embed.js',
-        name: 'MiniZincPlayground',
-    },
-    rollupOptions: {
-        output: {
-            globals: (g) => g,
-        },
-    },
+    lib: { entry: 'src/embed.js', name: 'MiniZincPlayground' },
+    rollupOptions: { output: { globals: (g) => g } },
 };
 
 const buildConfigs = {
     library: libraryBuild,
     'library-external-svelte': {
-        lib: {
-            ...libraryBuild.lib,
-        },
+        lib: { ...libraryBuild.lib },
         rollupOptions: {
             ...libraryBuild.rollupOptions,
             external: ['svelte', /svelte\/.*/],
@@ -69,9 +60,16 @@ const buildConfigs = {
     },
 };
 
+const svelteLibOptions = {
+    compilerOptions: { compatibility: { componentApi: 4 } },
+};
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
     build: buildConfigs[mode],
     base: process.env.BASE_PATH,
-    plugins: [lezer(), svelte()],
+    plugins: [
+        lezer(),
+        svelte({ ...(mode in buildConfigs ? svelteLibOptions : {}) }),
+    ],
 }));
