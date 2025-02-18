@@ -340,7 +340,7 @@
                     title="Visualisation"
                     bind:this={vis.element}
                     on:load={(e) => vis.makeReady(e.target)}
-                />
+                ></iframe>
             {/each}
         </div>
     </div>

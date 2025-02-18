@@ -1135,13 +1135,13 @@
                                 showSolverConfig = false;
                             }}
                         >
-                            <span aria-hidden="true" />
-                            <span aria-hidden="true" />
-                            <span aria-hidden="true" />
+                            <span aria-hidden="true"></span>
+                            <span aria-hidden="true"></span>
+                            <span aria-hidden="true"></span>
                         </a>
                     </div>
                     <div class="navbar-menu" class:is-active={menuActive}>
-                        <div class="navbar-start is-hidden-tablet" />
+                        <div class="navbar-start is-hidden-tablet"></div>
                         <div class="navbar-end">
                             {#if $screenMobile}
                                 {#if compilationEnabled && !isRunning && canCompile}

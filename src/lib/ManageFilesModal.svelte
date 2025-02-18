@@ -22,20 +22,22 @@
         .filter(
             (f) =>
                 f.file.name.endsWith('.mzn') &&
-                !f.file.name.endsWith('.mzc.mzn')
+                !f.file.name.endsWith('.mzc.mzn'),
         )
         .sort((a, b) => a.file.name.localeCompare(b.file.name));
 
     $: data = indexed
         .filter(
-            (f) => f.file.name.endsWith('.dzn') || f.file.name.endsWith('.json')
+            (f) =>
+                f.file.name.endsWith('.dzn') || f.file.name.endsWith('.json'),
         )
         .sort((a, b) => a.file.name.localeCompare(b.file.name));
 
     $: checkers = indexed
         .filter(
             (f) =>
-                f.file.name.endsWith('.mzc') || f.file.name.endsWith('.mzc.mzn')
+                f.file.name.endsWith('.mzc') ||
+                f.file.name.endsWith('.mzc.mzn'),
         )
         .sort((a, b) => a.file.name.localeCompare(b.file.name));
 
@@ -45,7 +47,7 @@
                 !f.file.name.endsWith('.mzn') &&
                 !f.file.name.endsWith('.mzc') &&
                 !f.file.name.endsWith('.dzn') &&
-                !f.file.name.endsWith('.json')
+                !f.file.name.endsWith('.json'),
         )
         .sort((a, b) => a.file.name.localeCompare(b.file.name));
 
@@ -65,96 +67,98 @@
     {#each sections as section}
         <p>{section.label}</p>
         <table class="table is-fullwidth">
-            {#each section.files as { file, index }}
-                <tr>
-                    <td>{file.name}</td>
-                    <td>
-                        <div class="tool-buttons">
-                            <div class="field is-grouped">
-                                <p class="control">
-                                    <button
-                                        class="button is-small"
-                                        title="Click to {file.hidden
-                                            ? 'show'
-                                            : 'hide'} this file"
-                                        class:is-primary={!file.hidden}
-                                        class:is-light={file.hidden}
-                                        type="button"
-                                        on:click={() =>
-                                            dispatch('modifyFile', {
-                                                index,
-                                                options: {
-                                                    hidden: !file.hidden,
-                                                },
-                                            })}
-                                    >
-                                        <span class="icon">
-                                            <Fa
-                                                icon={file.hidden
-                                                    ? faEyeSlash
-                                                    : faEye}
-                                            />
-                                        </span>
-                                    </button>
-                                </p>
-                                <p class="control">
-                                    {#if file.name.endsWith('.mzc')}
-                                        <button
-                                            class="button is-small is-light"
-                                            title="Compiled checkers are read only"
-                                            type="button"
-                                            disabled
-                                        >
-                                            <span class="icon">
-                                                <Fa icon={faLock} />
-                                            </span>
-                                        </button>
-                                    {:else}
+            <tbody>
+                {#each section.files as { file, index }}
+                    <tr>
+                        <td>{file.name}</td>
+                        <td>
+                            <div class="tool-buttons">
+                                <div class="field is-grouped">
+                                    <p class="control">
                                         <button
                                             class="button is-small"
-                                            title="Click to {file.readOnly
-                                                ? 'unlock'
-                                                : 'lock'} this file for editing"
-                                            class:is-primary={!file.readOnly}
-                                            class:is-light={file.readOnly}
+                                            title="Click to {file.hidden
+                                                ? 'show'
+                                                : 'hide'} this file"
+                                            class:is-primary={!file.hidden}
+                                            class:is-light={file.hidden}
                                             type="button"
                                             on:click={() =>
                                                 dispatch('modifyFile', {
                                                     index,
                                                     options: {
-                                                        readOnly:
-                                                            !file.readOnly,
+                                                        hidden: !file.hidden,
                                                     },
                                                 })}
                                         >
                                             <span class="icon">
                                                 <Fa
-                                                    icon={file.readOnly
-                                                        ? faLock
-                                                        : faLockOpen}
+                                                    icon={file.hidden
+                                                        ? faEyeSlash
+                                                        : faEye}
                                                 />
                                             </span>
                                         </button>
-                                    {/if}
-                                </p>
-                                <p class="control">
-                                    <button
-                                        class="button is-small is-danger"
-                                        title="Delete this file"
-                                        type="button"
-                                        on:click={() =>
-                                            dispatch('delete', { index })}
-                                    >
-                                        <span class="icon">
-                                            <Fa icon={faTrash} />
-                                        </span>
-                                    </button>
-                                </p>
+                                    </p>
+                                    <p class="control">
+                                        {#if file.name.endsWith('.mzc')}
+                                            <button
+                                                class="button is-small is-light"
+                                                title="Compiled checkers are read only"
+                                                type="button"
+                                                disabled
+                                            >
+                                                <span class="icon">
+                                                    <Fa icon={faLock} />
+                                                </span>
+                                            </button>
+                                        {:else}
+                                            <button
+                                                class="button is-small"
+                                                title="Click to {file.readOnly
+                                                    ? 'unlock'
+                                                    : 'lock'} this file for editing"
+                                                class:is-primary={!file.readOnly}
+                                                class:is-light={file.readOnly}
+                                                type="button"
+                                                on:click={() =>
+                                                    dispatch('modifyFile', {
+                                                        index,
+                                                        options: {
+                                                            readOnly:
+                                                                !file.readOnly,
+                                                        },
+                                                    })}
+                                            >
+                                                <span class="icon">
+                                                    <Fa
+                                                        icon={file.readOnly
+                                                            ? faLock
+                                                            : faLockOpen}
+                                                    />
+                                                </span>
+                                            </button>
+                                        {/if}
+                                    </p>
+                                    <p class="control">
+                                        <button
+                                            class="button is-small is-danger"
+                                            title="Delete this file"
+                                            type="button"
+                                            on:click={() =>
+                                                dispatch('delete', { index })}
+                                        >
+                                            <span class="icon">
+                                                <Fa icon={faTrash} />
+                                            </span>
+                                        </button>
+                                    </p>
+                                </div>
                             </div>
-                        </div>
-                    </td>
-                </tr>
-            {/each}
+                        </td>
+                    </tr>
+                {/each}
+            </tbody>
         </table>
     {/each}
 
@@ -172,9 +176,7 @@
     </div>
 
     <div slot="footer">
-        <button class="button is-primary">
-            Accept
-        </button>
+        <button class="button is-primary"> Accept </button>
     </div>
 </Modal>
 
