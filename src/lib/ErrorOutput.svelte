@@ -16,7 +16,7 @@
     }
 </script>
 
-{#if msg.stack}
+{#if msg.stack && msg.stack.length > 0}
     {#each msg.stack as entry, i}
         {#if i === 0 || entry.location.filename !== msg.stack[i - 1].location.filename || entry.location.firstLine !== msg.stack[i - 1].location.firstLine}
             <!-- svelte-ignore a11y-missing-attribute -->
@@ -63,7 +63,10 @@
 {:else}
     <pre>Warning:</pre>
 {/if}
-<pre>{msg.what}: {msg.message}</pre>
+{#if msg.what}
+    <pre>{msg.what}: </pre>
+{/if}
+<pre>{msg.message}</pre>
 {#if msg.cycle}
     {#each msg.cycle as it}
         <pre> {it}</pre>
