@@ -21,10 +21,10 @@
         "@lezer/generator": "^1.7.2",
         "@sveltejs/vite-plugin-svelte": "^5.0.3",
         "minizinc": "^4.4.0",
-        "prettier": "^3.5.1",
+        "prettier": "^3.5.2",
         "sass": "^1.85.0",
         "svelte": "^5.20.2",
-        "vite": "^6.1.0"
+        "vite": "^6.1.1"
     },
     "dependencies": {
         "@codemirror/commands": "^6.8.0",
