@@ -650,10 +650,17 @@
         minizinc.on('stderr', addOutput);
         try {
             const fzn = await minizinc;
+            const stem = name.substring(0, name.indexOf('.'));
+            let fznFile = `${stem}.fzn`;
+            let i = 1;
+            while (files.find(f => f.name === fznFile)) {
+                fznFile = `${stem}-${i}.fzn`;
+                i++;
+            }
             files = [
                 ...files,
                 {
-                    name: `${name.substring(0, name.indexOf('.'))}.fzn`,
+                    name: fznFile,
                     state: EditorState.create({
                         extensions: getExtensions('.fzn', checkCode, darkMode),
                         doc: fzn,
