@@ -27,20 +27,20 @@
         "vite": "^6.1.0"
     },
     "dependencies": {
-        "@codemirror/commands": "^6.8.0",
+        "@codemirror/commands": "^6.8.1",
         "@codemirror/lang-html": "^6.4.9",
         "@codemirror/lang-json": "^6.0.1",
         "@fortawesome/fontawesome-svg-core": "^6.7.2",
         "@fortawesome/free-solid-svg-icons": "^6.7.2",
         "@lezer/highlight": "^1.2.1",
         "@lezer/lr": "^1.4.2",
-        "bulma": "^1.0.3",
+        "bulma": "^1.0.4",
         "codemirror": "^6.0.1",
         "file-saver": "^2.0.5",
         "jszip": "^3.10.1",
         "lodash": "^4.17.21",
         "split.js": "^1.6.5",
-        "svelte-fa": "^4.0.3",
+        "svelte-fa": "^4.0.4",
         "thememirror": "^2.0.1"
     }
 }
