@@ -3,10 +3,10 @@
 
     import { onMount, tick } from 'svelte';
 
-    export let state;
+    let { state: editorState } = $props();
 
-    let div;
-    let view;
+    let div = $state();
+    let view = $state();
 
     onMount(() => {
         view = new EditorView({
@@ -14,9 +14,11 @@
         });
     });
 
-    $: if (view && state && view.state !== state) {
-        view.setState(state);
-    }
+    $effect(() => {
+        if (view && editorState && view.state !== editorState) {
+            view.setState(editorState);
+        }
+    });
 
     export function getView() {
         if (view) {

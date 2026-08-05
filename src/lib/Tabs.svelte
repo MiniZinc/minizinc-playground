@@ -5,9 +5,15 @@
     import { faPlus, faFolderTree } from '@fortawesome/free-solid-svg-icons';
     import { flip } from 'svelte/animate';
 
-    export let files = [];
-    export let currentIndex = 0;
-    export let readonly = false;
+    /**
+     * @typedef {Object} Props
+     * @property {any} [files]
+     * @property {number} [currentIndex]
+     * @property {boolean} [readonly]
+     */
+
+    /** @type {Props} */
+    let { files = [], currentIndex = 0, readonly = false } = $props();
 
     const dispatch = createEventDispatcher();
 
@@ -49,19 +55,21 @@
         dispatch('close', { index });
     }
 
-    $: tabs = files
-        .map((f, index) => {
-            const dot = f.name.endsWith('.mzc.mzn')
-                ? f.name.length - 8
-                : f.name.lastIndexOf('.');
-            return {
-                ...f,
-                stem: f.name.substring(0, dot),
-                suffix: f.name.substring(dot),
-                index,
-            };
-        })
-        .filter((f) => !f.hidden);
+    let tabs = $derived(
+        files
+            .map((f, index) => {
+                const dot = f.name.endsWith('.mzc.mzn')
+                    ? f.name.length - 8
+                    : f.name.lastIndexOf('.');
+                return {
+                    ...f,
+                    stem: f.name.substring(0, dot),
+                    suffix: f.name.substring(dot),
+                    index,
+                };
+            })
+            .filter((f) => !f.hidden),
+    );
 </script>
 
 <div class="tabs is-boxed">
@@ -71,9 +79,9 @@
                 animate:flip={{ duration: 200 }}
                 class:is-active={currentIndex === file.index}
                 draggable={true}
-                on:dragstart={(e) => onDragStart(e, file.index)}
-                on:dragover={onDragOver}
-                on:drop={(e) => onDrop(e, file.index)}
+                ondragstart={(e) => onDragStart(e, file.index)}
+                ondragover={onDragOver}
+                ondrop={(e) => onDrop(e, file.index)}
             >
                 <Tab
                     name={file.stem}
@@ -89,10 +97,10 @@
 
         {#if !readonly}
             <li>
-                <!-- svelte-ignore a11y-missing-attribute -->
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-no-static-element-interactions-->
-                <a title="Add new file" on:click={() => dispatch('newFile')}>
+                <!-- svelte-ignore a11y_missing_attribute -->
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <!-- svelte-ignore a11y_no_static_element_interactions-->
+                <a title="Add new file" onclick={() => dispatch('newFile')}>
                     <span class="icon add-icon">
                         <Fa icon={faPlus} />
                     </span>
@@ -102,7 +110,7 @@
                 <button
                     class="button is-small"
                     title="Manage files"
-                    on:click={() => dispatch('manageFiles')}
+                    onclick={() => dispatch('manageFiles')}
                 >
                     <span class="icon">
                         <Fa icon={faFolderTree} />

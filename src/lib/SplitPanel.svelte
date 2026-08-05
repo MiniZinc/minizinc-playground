@@ -1,18 +1,29 @@
 <script>
-    import { onMount } from 'svelte';
+    import { onMount, untrack } from 'svelte';
     import Split from 'split.js';
 
-    export let direction = 'horizontal';
-    export let split = 50;
-    export let showPanels = 'all';
+    let {
+        direction = 'horizontal',
+        split = $bindable(50),
+        showPanels = 'all',
+        panelA: panelASnippet,
+        panelB: panelBSnippet,
+    } = $props();
 
-    let panelA;
-    let panelB;
+    let panelA = $state();
+    let panelB = $state();
 
     let instance = null;
 
-    $: init(direction, showPanels);
-    $: resize(split);
+    $effect(() => {
+        const currentDirection = direction;
+        const currentPanels = showPanels;
+        untrack(() => init(currentDirection, currentPanels));
+    });
+    $effect(() => {
+        const currentSplit = split;
+        untrack(() => resize(currentSplit));
+    });
 
     function init(direction, showPanels) {
         cleanup();
@@ -58,7 +69,7 @@
         class:no-splitter={showPanels !== 'all'}
         class:is-hidden={!showPanel('a', showPanels)}
     >
-        <slot name="panelA" />
+        {@render panelASnippet?.()}
     </div>
     <div
         bind:this={panelB}
@@ -66,7 +77,7 @@
         class:no-splitter={showPanels !== 'all'}
         class:is-hidden={!showPanel('b', showPanels)}
     >
-        <slot name="panelB" />
+        {@render panelBSnippet?.()}
     </div>
 </div>
 

@@ -1,20 +1,24 @@
 <script>
+    import { run } from 'svelte/legacy';
+
     import { createEventDispatcher, tick } from 'svelte';
     import Modal from './Modal.svelte';
     const dispatch = createEventDispatcher();
 
-    export let active = false;
-    export let parameters;
-    export let dataFiles;
+    /**
+     * @typedef {Object} Props
+     * @property {boolean} [active]
+     * @property {any} parameters
+     * @property {any} dataFiles
+     */
 
-    let dataTab = true;
-    let selectedFiles = [];
-    let parameterValues = [];
-    let focusInput;
+    /** @type {Props} */
+    let { active = false, parameters, dataFiles } = $props();
 
-    $: createParameterValues(parameters);
-    $: hasDataFiles = dataFiles.length > 0;
-    $: dataTabActive = hasDataFiles && dataTab;
+    let dataTab = $state(true);
+    let selectedFiles = $state([]);
+    let parameterValues = $state([]);
+    let focusInput = $state();
 
     async function setFocus() {
         await tick();
@@ -29,7 +33,7 @@
             .map((p) =>
                 parameters[p] === undefined
                     ? { name: p, value: '' }
-                    : { name: p, value: parameters[p] }
+                    : { name: p, value: parameters[p] },
             );
     }
 
@@ -40,11 +44,16 @@
             dispatch('accept', {
                 parameters: parameterValues.reduce(
                     (acc, param) => ({ ...acc, [param.name]: param.value }),
-                    {}
+                    {},
                 ),
             });
         }
     }
+    run(() => {
+        createParameterValues(parameters);
+    });
+    let hasDataFiles = $derived(dataFiles.length > 0);
+    let dataTabActive = $derived(hasDataFiles && dataTab);
 </script>
 
 <Modal
@@ -58,16 +67,16 @@
         <div class="tabs">
             <ul>
                 <li class:is-active={!dataTab}>
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <!-- svelte-ignore a11y-missing-attribute -->
-                    <!-- svelte-ignore a11y-no-static-element-interactions-->
-                    <a on:click={() => (dataTab = false)}>Enter parameters</a>
+                    <!-- svelte-ignore a11y_click_events_have_key_events -->
+                    <!-- svelte-ignore a11y_missing_attribute -->
+                    <!-- svelte-ignore a11y_no_static_element_interactions-->
+                    <a onclick={() => (dataTab = false)}>Enter parameters</a>
                 </li>
                 <li class:is-active={dataTab}>
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <!-- svelte-ignore a11y-missing-attribute -->
-                    <!-- svelte-ignore a11y-no-static-element-interactions-->
-                    <a on:click={() => (dataTab = true)}>Select data file</a>
+                    <!-- svelte-ignore a11y_click_events_have_key_events -->
+                    <!-- svelte-ignore a11y_missing_attribute -->
+                    <!-- svelte-ignore a11y_no_static_element_interactions-->
+                    <a onclick={() => (dataTab = true)}>Select data file</a>
                 </li>
             </ul>
         </div>
@@ -101,16 +110,18 @@
             </div>
         {/each}
     {/if}
-    <div slot="footer">
-        <button class="button is-primary">OK</button>
-        <button
-            type="button"
-            class="button"
-            on:click={() => dispatch('cancel')}
-        >
-            Cancel
-        </button>
-    </div>
+    {#snippet footer()}
+        <div>
+            <button class="button is-primary">OK</button>
+            <button
+                type="button"
+                class="button"
+                onclick={() => dispatch('cancel')}
+            >
+                Cancel
+            </button>
+        </div>
+    {/snippet}
 </Modal>
 
 <style>

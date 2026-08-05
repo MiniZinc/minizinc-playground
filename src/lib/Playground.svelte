@@ -33,59 +33,101 @@
     import SolverConfig from './SolverConfig.svelte';
     import Dropdown from './Dropdown.svelte';
     import { addErrors, lineCharToPos } from '../lang/underline';
-    import { createEventDispatcher, onMount, tick } from 'svelte';
+    import { createEventDispatcher, onMount, tick, untrack } from 'svelte';
 
     import * as MiniZincLatest from 'https://cdn.jsdelivr.net/npm/minizinc/dist/minizinc.mjs';
     import * as MiniZincEdge from 'https://cdn.jsdelivr.net/npm/minizinc@edge/dist/minizinc.mjs';
     import { browserDarkMode, screenMobile } from './mediaQueries';
 
-    export let showVersionSwitcher = true;
-    export let showSolverDropdown = true;
-    export let edgeMiniZinc = false;
-    export let autoClearOutput = false;
-    export let showTabs = true;
-    export let canEditTabs = true;
-    export let compilationEnabled = true;
-    export let project;
     /**
-     * @type {any[] | null}
+     * @typedef {Object} Props
+     * @property {boolean} [showVersionSwitcher]
+     * @property {boolean} [showSolverDropdown]
+     * @property {boolean} [edgeMiniZinc]
+     * @property {boolean} [autoClearOutput]
+     * @property {boolean} [showTabs]
+     * @property {boolean} [canEditTabs]
+     * @property {boolean} [compilationEnabled]
+     * @property {any} project
+     * @property {any[] | null} [enabledSolvers]
+     * @property {boolean} [canEditSolverSettings]
+     * @property {boolean} [showShareButton]
+     * @property {boolean} [showDownloadButton]
+     * @property {any} [externalPlaygroundURL]
+     * @property {string} [splitterDirection]
+     * @property {number} [splitterSize]
+     * @property {boolean} [canSwitchOrientation]
+     * @property {boolean} [showClearOutput]
+     * @property {boolean} [showAutoClearOutput]
+     * @property {boolean} [showOutputSectionToggles]
+     * @property {boolean} [showOutputRightControls]
+     * @property {string} [theme]
+     * @property {boolean} [hideOutputOnStartup]
+     * @property {boolean} [autoFocus]
+     * @property {import('svelte').Snippet<[any]>} [navbarBeforeRunButtons]
+     * @property {import('svelte').Snippet<[any]>} [navbarRunButtons]
+     * @property {import('svelte').Snippet<[any]>} [navbarAfterRunButtons]
+     * @property {import('svelte').Snippet<[any]>} [navbarAfterSolverSelector]
+     * @property {import('svelte').Snippet<[any]>} [navbarBeforeShareButtons]
+     * @property {import('svelte').Snippet<[any]>} [navbarShareButtons]
+     * @property {import('svelte').Snippet<[any]>} [navbarAfterShareButtons]
+     * @property {import('svelte').Snippet} [children]
      */
-    export let enabledSolvers = null;
-    export let canEditSolverSettings = true;
-    export let showShareButton = true;
-    export let showDownloadButton = true;
-    export let externalPlaygroundURL = null;
-    export let splitterDirection = 'vertical';
-    export let splitterSize = 75;
-    export let canSwitchOrientation = true;
-    export let showClearOutput = true;
-    export let showAutoClearOutput = true;
-    export let showOutputSectionToggles = true;
-    export let showOutputRightControls = true;
-    export let theme = 'auto';
-    export let hideOutputOnStartup = true;
-    export let autoFocus = true;
+
+    /** @type {Props} */
+    let {
+        showVersionSwitcher = true,
+        showSolverDropdown = true,
+        edgeMiniZinc = $bindable(false),
+        autoClearOutput = $bindable(false),
+        showTabs = true,
+        canEditTabs = true,
+        compilationEnabled = true,
+        project,
+        enabledSolvers = null,
+        canEditSolverSettings = true,
+        showShareButton = true,
+        showDownloadButton = true,
+        externalPlaygroundURL = null,
+        splitterDirection = $bindable('vertical'),
+        splitterSize = $bindable(75),
+        canSwitchOrientation = true,
+        showClearOutput = true,
+        showAutoClearOutput = true,
+        showOutputSectionToggles = true,
+        showOutputRightControls = true,
+        theme = 'auto',
+        hideOutputOnStartup = true,
+        autoFocus = true,
+        navbarBeforeRunButtons,
+        navbarRunButtons,
+        navbarAfterRunButtons,
+        navbarAfterSolverSelector,
+        navbarBeforeShareButtons,
+        navbarShareButtons,
+        navbarAfterShareButtons,
+        children,
+    } = $props();
 
     const dispatch = createEventDispatcher();
 
-    let busyState = 0;
-    let allSolvers = [];
+    let busyCount = $state(0);
+    let allSolvers = $state([]);
     let solversLoaded;
     /**
      * @type typeof MiniZincLatest
      */
     let MiniZinc;
 
-    let minizincVersions = {
+    let minizincVersions = $state({
         latest: { label: 'Latest', detail: 'stable' },
         edge: { label: 'Edge', detail: 'development' },
-    };
-    $: versionItems = [minizincVersions.latest, minizincVersions.edge];
+    });
 
     function loadSolvers(e) {
         const toLoad = edgeMiniZinc ? MiniZincEdge : MiniZincLatest;
         if (MiniZinc !== toLoad) {
-            busyState++;
+            busyCount++;
             const pendingLoad = solversLoaded;
             solversLoaded = new Promise(async (resolve, _reject) => {
                 if (pendingLoad) {
@@ -108,14 +150,12 @@
                 };
                 allSolvers = await MiniZinc.solvers();
                 await tick();
-                busyState--;
+                busyCount--;
                 resolve();
             });
         }
         return solversLoaded;
     }
-
-    $: loadSolvers(edgeMiniZinc);
 
     const mounted = new Promise((resolve, _reject) => {
         onMount(() => {
@@ -123,8 +163,6 @@
             resolve();
         });
     });
-
-    $: loadProject(project);
 
     export async function loadProject(project) {
         edgeMiniZinc = project.minizincVersion === 'edge';
@@ -166,61 +204,31 @@
         return files.length > 0;
     }
 
-    let editor;
-    let files = [];
+    let editor = $state();
+    let files = $state([]);
 
-    let menuActive = false;
+    let menuActive = $state(false);
 
-    let currentIndex = 0;
-    let solverConfig;
+    let currentIndex = $state(0);
+    let solverConfig = $state();
 
-    let newFileRequested = false;
-    let deleteFileRequested = null;
-    let managingFiles = false;
+    let newFileRequested = $state(false);
+    let deleteFileRequested = $state(null);
+    let managingFiles = $state(false);
 
-    let needsModel = false;
-    let needsData = null;
+    let needsModel = $state(false);
+    let needsData = $state(null);
 
-    $: visibleFileCount = files.filter((f) => !f.hidden).length;
-    $: state = currentFile ? currentFile.state : null;
-    $: canRun =
-        busyState === 0 && currentSolver && (isModel || isData || isFzn);
-    $: canCompile = busyState === 0 && currentSolver && (isModel || isData);
+    let hasRun = $state(false);
 
-    let hasRun = false;
-    $: splitterShowPanel = !hideOutputOnStartup || hasRun ? 'all' : 'a';
-
-    let output = [];
-    let minizinc = null;
-    $: isRunning = minizinc !== null;
-
-    $: currentFile = currentIndex < files.length ? files[currentIndex] : null;
-    $: isModel =
-        currentFile &&
-        currentFile.name.endsWith('.mzn') &&
-        !currentFile.name.endsWith('.mzc.mzn');
-    $: isData =
-        currentFile &&
-        (currentFile.name.endsWith('.dzn') ||
-            currentFile.name.endsWith('.json'));
-    $: isFzn = currentFile && currentFile.name.endsWith('.fzn');
-
-    $: modelFiles = files
-        .filter((f) => f.name.endsWith('.mzn') && !f.name.endsWith('.mzc.mzn'))
-        .map((f) => f.name);
-    $: dataFiles = files
-        .filter((f) => f.name.endsWith('.dzn') || f.name.endsWith('.json'))
-        .map((f) => f.name);
+    let output = $state([]);
+    let minizinc = $state(null);
 
     let parameterModalDataFiles = [];
-    let parameterModalParameters = {};
+    let parameterModalParameters = $state({});
 
-    $: solvers = enabledSolvers
-        ? allSolvers.filter((s) => enabledSolvers.indexOf(s.id) !== -1)
-        : allSolvers;
-    let currentSolverIndex = -1;
+    let currentSolverIndex = $state(-1);
 
-    $: enforceValidSolver(solvers, currentSolverIndex);
     async function enforceValidSolver(_solvers, _currentSolverIndex) {
         await loadSolvers();
         if (currentSolverIndex < 0 || currentSolverIndex >= solvers.length) {
@@ -233,13 +241,7 @@
         }
     }
 
-    $: currentSolver =
-        currentSolverIndex >= 0 && currentSolverIndex < solvers.length
-            ? solvers[currentSolverIndex]
-            : null;
-    $: currentStdFlags = currentSolver ? currentSolver.stdFlags : [];
-
-    let showSolverConfig = false;
+    let showSolverConfig = $state(false);
     function toggleSolverConfig() {
         showSolverConfig = !showSolverConfig;
     }
@@ -419,7 +421,6 @@
         file.effects = file.effects ? [...file.effects, effect] : [effect];
     }
 
-    $: applyEffects(currentFile);
     async function applyEffects(file) {
         if (editor && file && file.effects && file.effects.length > 0) {
             await tick();
@@ -431,15 +432,15 @@
         }
     }
 
-    let getModelResolve = null;
+    let getModelResolve = $state(null);
     async function getModel(addChecker) {
-        busyState++;
+        busyCount++;
         currentFile.state = editor.getState();
         let modelFile = isModel ? currentFile : null;
         if (!modelFile) {
             if (modelFiles.length === 0) {
                 // No models to run
-                busyState--;
+                busyCount--;
                 return false;
             } else if (modelFiles.length === 1) {
                 // Only one model, so use it
@@ -452,7 +453,7 @@
                     });
                     if (!result) {
                         // Cancelled
-                        busyState--;
+                        busyCount--;
                         return false;
                     }
                     modelFile = files.find((f) => f.name === result.modelFile);
@@ -517,7 +518,7 @@
                     });
                     if (!result) {
                         // Cancelled
-                        busyState--;
+                        busyCount--;
                         return false;
                     }
                     if (result.parameters) {
@@ -546,7 +547,7 @@
             // Ignore and just run
             console.error(e);
         }
-        busyState--;
+        busyCount--;
         return { model, fileList };
     }
 
@@ -653,7 +654,7 @@
             const stem = name.substring(0, name.indexOf('.'));
             let fznFile = `${stem}.fzn`;
             let i = 1;
-            while (files.find(f => f.name === fznFile)) {
+            while (files.find((f) => f.name === fznFile)) {
                 fznFile = `${stem}-${i}.fzn`;
                 i++;
             }
@@ -790,7 +791,7 @@
         };
     }
 
-    let generatingProject = false;
+    let generatingProject = $state(false);
     async function downloadProject() {
         generatingProject = true;
         try {
@@ -829,9 +830,9 @@
         }
     }
 
-    let shareUrlInput;
-    let shareUrl = null;
-    let copiedShareUrl = false;
+    let shareUrlInput = $state();
+    let shareUrl = $state(null);
+    let copiedShareUrl = $state(false);
     function getShareUrl(base) {
         const project = getProject();
         const url = new URL(base);
@@ -857,7 +858,7 @@
     async function checkCode(editor) {
         const view = editor.view;
         if (
-            busyState !== 0 ||
+            busyCount !== 0 ||
             !currentSolver ||
             !currentFile ||
             !currentFile.name.endsWith('.mzn')
@@ -917,8 +918,6 @@
         edgeMiniZinc = e.detail.item === minizincVersions.edge;
     }
 
-    $: darkMode = { dark: true, light: false, auto: $browserDarkMode }[theme];
-
     function setTheme(dark) {
         if (currentFile) {
             currentFile.state = editor.getState();
@@ -928,14 +927,13 @@
         );
         applyEffects(currentFile);
     }
-    $: setTheme(darkMode);
 
     /**
      * @type Visualisation
      */
-    let visualisation;
-    let hasVisualisation = false;
-    let visualisationOpen = false;
+    let visualisation = $state();
+    let hasVisualisation = $state(false);
+    let visualisationOpen = $state(false);
 
     function visReSolve(cfg) {
         if (minizinc) {
@@ -976,8 +974,6 @@
         );
     }
 
-    $: dispatch('solversChanged', { solvers });
-
     export function isDefaultSolver() {
         return (
             currentSolverIndex ===
@@ -989,6 +985,81 @@
     export function isDefaultSolverConfig() {
         return solverConfig.isDefault();
     }
+    let versionItems = $derived([
+        minizincVersions.latest,
+        minizincVersions.edge,
+    ]);
+    $effect(() => {
+        loadSolvers(edgeMiniZinc);
+    });
+    $effect(() => {
+        loadProject(project);
+    });
+    let visibleFileCount = $derived(files.filter((f) => !f.hidden).length);
+    let currentFile = $derived(
+        currentIndex < files.length ? files[currentIndex] : null,
+    );
+    let editorState = $derived(currentFile ? currentFile.state : null);
+    let solvers = $derived(
+        enabledSolvers
+            ? allSolvers.filter((s) => enabledSolvers.indexOf(s.id) !== -1)
+            : allSolvers,
+    );
+    let currentSolver = $derived(
+        currentSolverIndex >= 0 && currentSolverIndex < solvers.length
+            ? solvers[currentSolverIndex]
+            : null,
+    );
+    let isModel = $derived(
+        currentFile &&
+            currentFile.name.endsWith('.mzn') &&
+            !currentFile.name.endsWith('.mzc.mzn'),
+    );
+    let isData = $derived(
+        currentFile &&
+            (currentFile.name.endsWith('.dzn') ||
+                currentFile.name.endsWith('.json')),
+    );
+    let isFzn = $derived(currentFile && currentFile.name.endsWith('.fzn'));
+    let canRun = $derived(
+        busyCount === 0 && currentSolver && (isModel || isData || isFzn),
+    );
+    let canCompile = $derived(
+        busyCount === 0 && currentSolver && (isModel || isData),
+    );
+    let splitterShowPanel = $derived(
+        !hideOutputOnStartup || hasRun ? 'all' : 'a',
+    );
+    let isRunning = $derived(minizinc !== null);
+    let modelFiles = $derived(
+        files
+            .filter(
+                (f) => f.name.endsWith('.mzn') && !f.name.endsWith('.mzc.mzn'),
+            )
+            .map((f) => f.name),
+    );
+    let dataFiles = $derived(
+        files
+            .filter((f) => f.name.endsWith('.dzn') || f.name.endsWith('.json'))
+            .map((f) => f.name),
+    );
+    $effect(() => {
+        enforceValidSolver(solvers, currentSolverIndex);
+    });
+    let currentStdFlags = $derived(currentSolver ? currentSolver.stdFlags : []);
+    $effect(() => {
+        applyEffects(currentFile);
+    });
+    let darkMode = $derived(
+        { dark: true, light: false, auto: $browserDarkMode }[theme],
+    );
+    $effect(() => {
+        const dark = darkMode;
+        untrack(() => setTheme(dark));
+    });
+    $effect(() => {
+        dispatch('solversChanged', { solvers });
+    });
 </script>
 
 <div class="mzn-playground">
@@ -997,10 +1068,9 @@
             <div class="top">
                 <nav class="navbar">
                     <div class="navbar-brand">
-                        <slot
-                            name="navbar-before-run-buttons"
-                            isMobile={$screenMobile}
-                        />
+                        {@render navbarBeforeRunButtons?.({
+                            isMobile: $screenMobile,
+                        })}
                         <div class="navbar-item is-expanded">
                             <div class="field navbar-run-buttons has-addons">
                                 <div class="control">
@@ -1008,7 +1078,7 @@
                                         <button
                                             class="button is-danger"
                                             title="Cancel solving"
-                                            on:click={stop}
+                                            onclick={stop}
                                         >
                                             <span>Stop</span>
                                             <span class="icon">
@@ -1019,7 +1089,7 @@
                                         <button
                                             class="button is-primary"
                                             title="Run the current file"
-                                            on:click={run}
+                                            onclick={run}
                                             disabled={!canRun}
                                         >
                                             <span>Run</span>
@@ -1034,7 +1104,7 @@
                                         <button
                                             class="button"
                                             title="Compile the current file and show the resultant FlatZinc"
-                                            on:click={compile}
+                                            onclick={compile}
                                             disabled={isRunning || !canCompile}
                                         >
                                             <span>Compile</span>
@@ -1052,16 +1122,17 @@
                                             disabled={isRunning}
                                             title="Configure MiniZinc version"
                                         >
-                                            <span slot="item" let:item>
-                                                {item.label} ({item.detail})
-                                            </span>
+                                            {#snippet item({ item })}
+                                                <span>
+                                                    {item.label} ({item.detail})
+                                                </span>
+                                            {/snippet}
                                         </Dropdown>
                                     </div>
                                 {/if}
-                                <slot
-                                    name="navbar-run-buttons"
-                                    isMobile={$screenMobile}
-                                />
+                                {@render navbarRunButtons?.({
+                                    isMobile: $screenMobile,
+                                })}
 
                                 {#if $screenMobile && showSolverDropdown && solvers.length > 0}
                                     <div class="control is-expanded">
@@ -1081,10 +1152,9 @@
                                 {/if}
                             </div>
                         </div>
-                        <slot
-                            name="navbar-after-run-buttons"
-                            isMobile={$screenMobile}
-                        />
+                        {@render navbarAfterRunButtons?.({
+                            isMobile: $screenMobile,
+                        })}
                         {#if showSolverDropdown && solvers.length > 0}
                             <div class="navbar-item is-hidden-mobile">
                                 <div class="field has-addons">
@@ -1112,7 +1182,7 @@
                                         <div class="control">
                                             <button
                                                 class="button is-primary"
-                                                on:click={toggleSolverConfig}
+                                                onclick={toggleSolverConfig}
                                                 title="Solver configuration"
                                             >
                                                 <span class="icon">
@@ -1124,20 +1194,19 @@
                                 </div>
                             </div>
                         {/if}
-                        <slot
-                            name="navbar-after-solver-selector"
-                            isMobile={$screenMobile}
-                        />
-                        <!-- svelte-ignore a11y-missing-attribute -->
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <!-- svelte-ignore a11y-interactive-supports-focus -->
+                        {@render navbarAfterSolverSelector?.({
+                            isMobile: $screenMobile,
+                        })}
+                        <!-- svelte-ignore a11y_missing_attribute -->
+                        <!-- svelte-ignore a11y_click_events_have_key_events -->
+                        <!-- svelte-ignore a11y_interactive_supports_focus -->
                         <a
                             role="button"
                             class="navbar-burger"
                             class:is-active={menuActive}
                             aria-label="menu"
                             aria-expanded={menuActive}
-                            on:click={() => {
+                            onclick={() => {
                                 menuActive = !menuActive;
                                 showSolverConfig = false;
                             }}
@@ -1152,11 +1221,11 @@
                         <div class="navbar-end">
                             {#if $screenMobile}
                                 {#if compilationEnabled && !isRunning && canCompile}
-                                    <!-- svelte-ignore a11y-invalid-attribute -->
+                                    <!-- svelte-ignore a11y_invalid_attribute -->
                                     <a
                                         class="navbar-item mobile-menu-item"
                                         href="javascript:void(0);"
-                                        on:click={() => {
+                                        onclick={() => {
                                             compile();
                                             menuActive = false;
                                         }}
@@ -1168,11 +1237,11 @@
                                     </a>
                                 {/if}
                                 {#if canEditSolverSettings && showSolverDropdown && solvers.length > 0}
-                                    <!-- svelte-ignore a11y-invalid-attribute -->
+                                    <!-- svelte-ignore a11y_invalid_attribute -->
                                     <a
                                         class="navbar-item mobile-menu-item"
                                         href="javascript:void(0);"
-                                        on:click={() => {
+                                        onclick={() => {
                                             toggleSolverConfig();
                                             menuActive = false;
                                         }}
@@ -1184,11 +1253,11 @@
                                     </a>
                                 {/if}
                                 {#if showVersionSwitcher && !isRunning}
-                                    <!-- svelte-ignore a11y-invalid-attribute -->
+                                    <!-- svelte-ignore a11y_invalid_attribute -->
                                     <a
                                         class="navbar-item mobile-menu-item"
                                         href="javascript:void(0);"
-                                        on:click={() => {
+                                        onclick={() => {
                                             edgeMiniZinc = !edgeMiniZinc;
                                             menuActive = false;
                                         }}
@@ -1203,16 +1272,15 @@
                                         >
                                     </a>
                                 {/if}
-                                <slot
-                                    name="navbar-before-share-buttons"
-                                    isMobile={$screenMobile}
-                                />
-                                {#if showShareButton && busyState === 0}
-                                    <!-- svelte-ignore a11y-invalid-attribute -->
+                                {@render navbarBeforeShareButtons?.({
+                                    isMobile: $screenMobile,
+                                })}
+                                {#if showShareButton && busyCount === 0}
+                                    <!-- svelte-ignore a11y_invalid_attribute -->
                                     <a
                                         class="navbar-item mobile-menu-item"
                                         href="javascript:void(0);"
-                                        on:click={() => {
+                                        onclick={() => {
                                             shareUrl = getShareUrl(
                                                 window.location.href,
                                             );
@@ -1225,12 +1293,12 @@
                                         <span>Share this project</span>
                                     </a>
                                 {/if}
-                                {#if externalPlaygroundURL && busyState === 0}
-                                    <!-- svelte-ignore a11y-invalid-attribute -->
+                                {#if externalPlaygroundURL && busyCount === 0}
+                                    <!-- svelte-ignore a11y_invalid_attribute -->
                                     <a
                                         class="navbar-item mobile-menu-item"
                                         href="javascript:void(0);"
-                                        on:click={() => {
+                                        onclick={() => {
                                             openInExternalPlayground();
                                             menuActive = false;
                                         }}
@@ -1244,10 +1312,9 @@
                                     </a>
                                 {/if}
                             {:else}
-                                <slot
-                                    name="navbar-before-share-buttons"
-                                    isMobile={$screenMobile}
-                                />
+                                {@render navbarBeforeShareButtons?.({
+                                    isMobile: $screenMobile,
+                                })}
                                 <div class="navbar-item">
                                     <div class="field has-addons">
                                         {#if showShareButton}
@@ -1255,8 +1322,8 @@
                                                 <button
                                                     class="button is-primary"
                                                     title="Share"
-                                                    disabled={busyState !== 0}
-                                                    on:click={() =>
+                                                    disabled={busyCount !== 0}
+                                                    onclick={() =>
                                                         (shareUrl = getShareUrl(
                                                             window.location
                                                                 .href,
@@ -1275,10 +1342,10 @@
                                                 <button
                                                     class="button"
                                                     title="Download project"
-                                                    on:click={() =>
+                                                    onclick={() =>
                                                         downloadProject()}
                                                     disabled={generatingProject ||
-                                                        busyState !== 0}
+                                                        busyCount !== 0}
                                                 >
                                                     <span class="icon">
                                                         <Fa icon={faDownload} />
@@ -1291,8 +1358,8 @@
                                                 <button
                                                     class="button is-primary"
                                                     title="Open in playground"
-                                                    disabled={busyState !== 0}
-                                                    on:click={openInExternalPlayground}
+                                                    disabled={busyCount !== 0}
+                                                    onclick={openInExternalPlayground}
                                                 >
                                                     <span class="icon">
                                                         <Fa
@@ -1302,17 +1369,15 @@
                                                 </button>
                                             </div>
                                         {/if}
-                                        <slot
-                                            name="navbar-share-buttons"
-                                            isMobile={$screenMobile}
-                                        />
+                                        {@render navbarShareButtons?.({
+                                            isMobile: $screenMobile,
+                                        })}
                                     </div>
                                 </div>
                             {/if}
-                            <slot
-                                name="navbar-after-share-buttons"
-                                isMobile={$screenMobile}
-                            />
+                            {@render navbarAfterShareButtons?.({
+                                isMobile: $screenMobile,
+                            })}
                         </div>
                     </div>
                 </nav>
@@ -1324,135 +1389,142 @@
                         bind:split={splitterSize}
                         showPanels={splitterShowPanel}
                     >
-                        <div class="panel stack" slot="panelA">
-                            {#if showTabs}
-                                <div class="top">
-                                    <Tabs
-                                        {files}
-                                        {currentIndex}
-                                        readonly={!canEditTabs}
-                                        on:selectTab={(e) =>
-                                            selectTab(e.detail.index)}
-                                        on:reorder={(e) =>
-                                            reorder(
-                                                e.detail.src,
-                                                e.detail.dest,
-                                            )}
-                                        on:newFile={() =>
-                                            (newFileRequested = true)}
-                                        on:rename={rename}
-                                        on:close={(e) =>
-                                            (deleteFileRequested =
-                                                e.detail.index)}
-                                        on:manageFiles={() =>
-                                            (managingFiles = true)}
-                                    />
-                                </div>
-                            {/if}
-                            <div class="grow">
-                                {#if state}
-                                    <Editor {state} bind:this={editor} />
+                        {#snippet panelA()}
+                            <div class="panel stack">
+                                {#if showTabs}
+                                    <div class="top">
+                                        <Tabs
+                                            {files}
+                                            {currentIndex}
+                                            readonly={!canEditTabs}
+                                            on:selectTab={(e) =>
+                                                selectTab(e.detail.index)}
+                                            on:reorder={(e) =>
+                                                reorder(
+                                                    e.detail.src,
+                                                    e.detail.dest,
+                                                )}
+                                            on:newFile={() =>
+                                                (newFileRequested = true)}
+                                            on:rename={rename}
+                                            on:close={(e) =>
+                                                (deleteFileRequested =
+                                                    e.detail.index)}
+                                            on:manageFiles={() =>
+                                                (managingFiles = true)}
+                                        />
+                                    </div>
                                 {/if}
+                                <div class="grow">
+                                    {#if editorState}
+                                        <Editor
+                                            state={editorState}
+                                            bind:this={editor}
+                                        />
+                                    {/if}
+                                </div>
                             </div>
-                        </div>
-                        <div class="panel stack" slot="panelB">
-                            {#if hasVisualisation}
-                                <div class="top">
-                                    <div class="tabs is-boxed">
-                                        <ul>
-                                            <li
-                                                class:is-active={!visualisationOpen}
-                                            >
-                                                <!-- svelte-ignore a11y-invalid-attribute -->
-                                                <!-- svelte-ignore a11y-no-static-element-interactions-->
-                                                <a
-                                                    href="javascript:void(0);"
-                                                    on:click={() => {
-                                                        visualisationOpen = false;
-                                                    }}>Output</a
+                        {/snippet}
+                        {#snippet panelB()}
+                            <div class="panel stack">
+                                {#if hasVisualisation}
+                                    <div class="top">
+                                        <div class="tabs is-boxed">
+                                            <ul>
+                                                <li
+                                                    class:is-active={!visualisationOpen}
                                                 >
-                                            </li>
-                                            <li
-                                                class:is-active={visualisationOpen}
-                                            >
-                                                <!-- svelte-ignore a11y-invalid-attribute -->
-                                                <!-- svelte-ignore a11y-no-static-element-interactions-->
-                                                <a
-                                                    href="javascript:void(0);"
-                                                    on:click={() => {
-                                                        visualisationOpen = true;
-                                                    }}>Visualisation</a
-                                                >
-                                            </li>
-                                            {#if canSwitchOrientation}
-                                                <li class="tab-end">
-                                                    <button
-                                                        class="button is-small"
-                                                        title="Switch orientation"
-                                                        on:click={switchOrientation}
+                                                    <!-- svelte-ignore a11y_invalid_attribute -->
+                                                    <!-- svelte-ignore a11y_no_static_element_interactions-->
+                                                    <a
+                                                        href="javascript:void(0);"
+                                                        onclick={() => {
+                                                            visualisationOpen = false;
+                                                        }}>Output</a
                                                     >
-                                                        <span class="icon"
-                                                            ><Fa
-                                                                icon={faRotate}
-                                                            /></span
-                                                        >
-                                                    </button>
                                                 </li>
-                                            {/if}
-                                        </ul>
+                                                <li
+                                                    class:is-active={visualisationOpen}
+                                                >
+                                                    <!-- svelte-ignore a11y_invalid_attribute -->
+                                                    <!-- svelte-ignore a11y_no_static_element_interactions-->
+                                                    <a
+                                                        href="javascript:void(0);"
+                                                        onclick={() => {
+                                                            visualisationOpen = true;
+                                                        }}>Visualisation</a
+                                                    >
+                                                </li>
+                                                {#if canSwitchOrientation}
+                                                    <li class="tab-end">
+                                                        <button
+                                                            class="button is-small"
+                                                            title="Switch orientation"
+                                                            onclick={switchOrientation}
+                                                        >
+                                                            <span class="icon"
+                                                                ><Fa
+                                                                    icon={faRotate}
+                                                                /></span
+                                                            >
+                                                        </button>
+                                                    </li>
+                                                {/if}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                {/if}
+                                <div class="grow">
+                                    <div
+                                        class="tab-window"
+                                        class:visible={visualisationOpen}
+                                    >
+                                        <Visualisation
+                                            bind:this={visualisation}
+                                            {files}
+                                            on:solve={(e) =>
+                                                visReSolve(e.detail)}
+                                        />
+                                    </div>
+                                    <div
+                                        class="tab-window"
+                                        class:visible={!hasVisualisation ||
+                                            !visualisationOpen}
+                                    >
+                                        <Output
+                                            {output}
+                                            on:clear={() => (output = [])}
+                                            on:goto={(e) =>
+                                                gotoLocation(e.detail.location)}
+                                            bind:autoClearOutput
+                                            {showClearOutput}
+                                            {showAutoClearOutput}
+                                            showSectionToggles={showOutputSectionToggles}
+                                            showRightControls={showOutputRightControls}
+                                            isTab={hasVisualisation}
+                                        >
+                                            {#snippet beforeRightControls()}
+                                                <p class="control">
+                                                    {#if canSwitchOrientation && !hasVisualisation}
+                                                        <button
+                                                            class="button is-small"
+                                                            title="Switch orientation"
+                                                            onclick={switchOrientation}
+                                                        >
+                                                            <span class="icon"
+                                                                ><Fa
+                                                                    icon={faRotate}
+                                                                /></span
+                                                            >
+                                                        </button>
+                                                    {/if}
+                                                </p>
+                                            {/snippet}
+                                        </Output>
                                     </div>
                                 </div>
-                            {/if}
-                            <div class="grow">
-                                <div
-                                    class="tab-window"
-                                    class:visible={visualisationOpen}
-                                >
-                                    <Visualisation
-                                        bind:this={visualisation}
-                                        {files}
-                                        on:solve={(e) => visReSolve(e.detail)}
-                                    />
-                                </div>
-                                <div
-                                    class="tab-window"
-                                    class:visible={!hasVisualisation ||
-                                        !visualisationOpen}
-                                >
-                                    <Output
-                                        {output}
-                                        on:clear={() => (output = [])}
-                                        on:goto={(e) =>
-                                            gotoLocation(e.detail.location)}
-                                        bind:autoClearOutput
-                                        {showClearOutput}
-                                        {showAutoClearOutput}
-                                        showSectionToggles={showOutputSectionToggles}
-                                        showRightControls={showOutputRightControls}
-                                        isTab={hasVisualisation}
-                                    >
-                                        <p
-                                            class="control"
-                                            slot="before-right-controls"
-                                        >
-                                            {#if canSwitchOrientation && !hasVisualisation}
-                                                <button
-                                                    class="button is-small"
-                                                    title="Switch orientation"
-                                                    on:click={switchOrientation}
-                                                >
-                                                    <span class="icon"
-                                                        ><Fa
-                                                            icon={faRotate}
-                                                        /></span
-                                                    >
-                                                </button>
-                                            {/if}
-                                        </p>
-                                    </Output>
-                                </div>
                             </div>
-                        </div>
+                        {/snippet}
                     </SplitPanel>
                 </div>
                 <SolverConfig
@@ -1491,19 +1563,22 @@
                 >?
             </p>
             <p>This cannot be undone.</p>
-            <div slot="footer">
-                <button
-                    class="button is-danger"
-                    on:click={() => closeFile(deleteFileRequested)}
-                >
-                    Delete
-                </button>
-                <button
-                    type="button"
-                    class="button"
-                    on:click={() => (deleteFileRequested = null)}>Cancel</button
-                >
-            </div>
+            {#snippet footer()}
+                <div>
+                    <button
+                        class="button is-danger"
+                        onclick={() => closeFile(deleteFileRequested)}
+                    >
+                        Delete
+                    </button>
+                    <button
+                        type="button"
+                        class="button"
+                        onclick={() => (deleteFileRequested = null)}
+                        >Cancel</button
+                    >
+                </div>
+            {/snippet}
         </Modal>
 
         <ModelModal
@@ -1533,7 +1608,7 @@
                         class="input"
                         type="text"
                         value={shareUrl}
-                        on:click={() => shareUrlInput.select()}
+                        onclick={() => shareUrlInput.select()}
                         readonly
                     />
                 </p>
@@ -1543,22 +1618,24 @@
                         class="button"
                         class:is-primary={!copiedShareUrl}
                         class:is-success={copiedShareUrl}
-                        on:click={copyShareUrl}
+                        onclick={copyShareUrl}
                     >
                         <span class="icon"><Fa icon={faClipboard} /></span>
                     </button>
                 </p>
             </div>
-            <div slot="footer">
-                <button
-                    class="button is-primary"
-                    on:click={() => (shareUrl = null)}
-                >
-                    Done
-                </button>
-            </div>
+            {#snippet footer()}
+                <div>
+                    <button
+                        class="button is-primary"
+                        onclick={() => (shareUrl = null)}
+                    >
+                        Done
+                    </button>
+                </div>
+            {/snippet}
         </Modal>
-        <slot />
+        {@render children?.()}
     </div>
 </div>
 

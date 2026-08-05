@@ -1,21 +1,31 @@
 <script>
+    import { run } from 'svelte/legacy';
+
     import { createEventDispatcher } from 'svelte';
     import Modal from './Modal.svelte';
     const dispatch = createEventDispatcher();
 
-    export let active = false;
-    export let projects = [];
+    /**
+     * @typedef {Object} Props
+     * @property {boolean} [active]
+     * @property {any} [projects]
+     */
 
-    let currentIndex = -1;
+    /** @type {Props} */
+    let { active = false, projects = [] } = $props();
 
-    $: valid = currentIndex >= 0 && currentIndex < projects.length;
+    let currentIndex = $state(-1);
+
+    let valid = $derived(currentIndex >= 0 && currentIndex < projects.length);
 
     function init(active) {
         if (!active) {
             currentIndex = -1;
         }
     }
-    $: init(active);
+    run(() => {
+        init(active);
+    });
 
     function accept() {
         if (valid) {
@@ -43,14 +53,14 @@
 >
     <div>
         {#each projects as project, i}
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
             <div
                 class="item"
                 class:has-background-primary={currentIndex === i}
                 class:has-text-white={currentIndex === i}
-                on:click={() => (currentIndex = i)}
-                on:dblclick={accept}
+                onclick={() => (currentIndex = i)}
+                ondblclick={accept}
             >
                 <div>
                     {projectFileNames(project)}
@@ -68,16 +78,18 @@
             <p class="has-text-centered">No recent projects.</p>
         {/each}
     </div>
-    <div slot="footer">
-        <button class="button is-primary" disabled={!valid}> Open </button>
-        <button
-            type="button"
-            class="button"
-            on:click={() => dispatch('cancel')}
-        >
-            Cancel
-        </button>
-    </div>
+    {#snippet footer()}
+        <div>
+            <button class="button is-primary" disabled={!valid}> Open </button>
+            <button
+                type="button"
+                class="button"
+                onclick={() => dispatch('cancel')}
+            >
+                Cancel
+            </button>
+        </div>
+    {/snippet}
 </Modal>
 
 <style>

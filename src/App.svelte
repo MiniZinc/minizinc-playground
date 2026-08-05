@@ -1,4 +1,6 @@
 <script>
+    import { run } from 'svelte/legacy';
+
     import { onMount } from 'svelte';
     import Playground from './lib/Playground.svelte';
     import RecentProjectsModal from './lib/RecentProjectsModal.svelte';
@@ -7,14 +9,13 @@
     import { faClockRotateLeft } from '@fortawesome/free-solid-svg-icons';
     import { settings } from './stores';
 
-    let playground;
-    let project = {
+    let playground = $state();
+    let project = $state({
         files: [],
-    };
+    });
     let timestamp = null;
-    let openRecent = false;
-    let solvers = [];
-    $: recentProjects = getRecentProjects(solvers, $settings);
+    let openRecent = $state(false);
+    let solvers = $state([]);
     function getRecentProjects(solvers, $settings) {
         if (!playground || !$settings) {
             return [];
@@ -205,17 +206,20 @@
             recentProjects = getRecentProjects(solvers, $settings);
         }
     }
-    $: forkOnExternalChange($settings);
+    let recentProjects = $derived(getRecentProjects(solvers, $settings));
+    run(() => {
+        forkOnExternalChange($settings);
+    });
 </script>
 
 <svelte:document
-    on:visibilitychange={() => {
+    onvisibilitychange={() => {
         if (document.hidden) {
             saveProject();
         }
     }}
 />
-<svelte:window on:beforeunload={saveProject} on:hashchange={hashChange} />
+<svelte:window onbeforeunload={saveProject} onhashchange={hashChange} />
 
 <div class="playground-app">
     <Playground
@@ -226,13 +230,13 @@
         bind:splitterSize={$settings.splitterSize}
         on:solversChanged={(e) => (solvers = e.detail.solvers)}
     >
-        <svelte:fragment slot="navbar-before-share-buttons" let:isMobile>
+        {#snippet navbarBeforeShareButtons({ isMobile })}
             {#if isMobile}
-                <!-- svelte-ignore a11y-invalid-attribute -->
+                <!-- svelte-ignore a11y_invalid_attribute -->
                 <a
                     class="navbar-item mobile-menu-item"
                     href="javascript:void(0);"
-                    on:click={() => (openRecent = true)}
+                    onclick={() => (openRecent = true)}
                 >
                     <span class="icon">
                         <Fa icon={faClockRotateLeft} />
@@ -246,7 +250,7 @@
                             <button
                                 class="button"
                                 title="Open recent project"
-                                on:click={() => (openRecent = true)}
+                                onclick={() => (openRecent = true)}
                             >
                                 <span class="icon">
                                     <Fa icon={faClockRotateLeft} />
@@ -256,7 +260,7 @@
                     </div>
                 </div>
             {/if}
-        </svelte:fragment>
+        {/snippet}
         <RecentProjectsModal
             projects={recentProjects}
             active={openRecent}

@@ -1,21 +1,36 @@
 <script>
+    import { run } from 'svelte/legacy';
+
     import { createEventDispatcher, tick } from 'svelte';
     import Fa from 'svelte-fa';
     import { faXmark } from '@fortawesome/free-solid-svg-icons';
 
-    export let active = false;
-    export let name = 'Untitled';
-    export let suffix = '.mzn';
-    export let readonly = false;
+    /**
+     * @typedef {Object} Props
+     * @property {boolean} [active]
+     * @property {string} [name]
+     * @property {string} [suffix]
+     * @property {boolean} [readonly]
+     */
+
+    /** @type {Props} */
+    let {
+        active = false,
+        name = 'Untitled',
+        suffix = '.mzn',
+        readonly = false,
+    } = $props();
 
     const dispatch = createEventDispatcher();
-    let isEditing = false;
-    let editInput;
-    let editValue = '';
+    let isEditing = $state(false);
+    let editInput = $state();
+    let editValue = $state('');
 
-    $: if (/[\/\\\.]/.test(editValue)) {
-        editValue = editValue.replaceAll(/[\/\\\.]/g, '');
-    }
+    run(() => {
+        if (/[\/\\\.]/.test(editValue)) {
+            editValue = editValue.replaceAll(/[\/\\\.]/g, '');
+        }
+    });
 
     async function editName() {
         if (!active || readonly) {
@@ -44,14 +59,14 @@
     }
 </script>
 
-<!-- svelte-ignore a11y-missing-attribute -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions-->
+<!-- svelte-ignore a11y_missing_attribute -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions-->
 <a
     class="filename-link"
     class:active
     class:readonly
-    on:click={() => {
+    onclick={() => {
         if (!isEditing) dispatch('click');
     }}
 >
@@ -60,16 +75,16 @@
             size={editValue.length || name.length}
             bind:this={editInput}
             bind:value={editValue}
-            on:blur={finishEditName}
-            on:keyup={editNameKeyUp}
+            onblur={finishEditName}
+            onkeyup={editNameKeyUp}
             placeholder={name}
         />{suffix}
     {:else}
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-static-element-interactions-->
-        <span class="filename" on:click={editName}>{name}{suffix}</span>
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions-->
+        <span class="filename" onclick={editName}>{name}{suffix}</span>
         {#if active && !readonly}
-            <span class="close-tab" on:click={() => dispatch('close')}>
+            <span class="close-tab" onclick={() => dispatch('close')}>
                 <Fa icon={faXmark} />
             </span>
         {/if}

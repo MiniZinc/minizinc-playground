@@ -8,17 +8,20 @@
     /**
      * @type {string | null}
      */
-    export let title = null;
-    export let items = [];
-    /**
-     * @type {any | null}
-     */
-    export let currentItem = null;
+    let {
+        title = null,
+        items = [],
+        /**
+         * @type {any | null}
+         */
+        currentItem = null,
+        active = $bindable(false),
+        disabled = false,
+        selected: selectedSnippet,
+        item: itemSnippet,
+    } = $props();
 
-    export let active = false;
-    export let disabled = false;
-
-    let element;
+    let element = $state();
 
     function selectItem(item) {
         dispatch('selectItem', { item });
@@ -32,16 +35,17 @@
     }
 </script>
 
-<svelte:body on:click={bodyClick} />
+<svelte:body onclick={bodyClick} />
 
 <div class="dropdown" class:is-active={active} bind:this={element} {title}>
     <div class="dropdown-trigger">
-        <button class="button" on:click={() => (active = !active)} {disabled}>
+        <button class="button" onclick={() => (active = !active)} {disabled}>
             <span>
                 {#if currentItem}
-                    <slot name="selected" item={currentItem}>
+                    {@render selectedSnippet?.({ item: currentItem })}
+                    {#if !selectedSnippet}
                         {currentItem.label}
-                    </slot>
+                    {/if}
                 {/if}
             </span>
             <span class="icon is-small">
@@ -58,9 +62,10 @@
                     href="javascript:void(0);"
                     class="dropdown-item"
                     class:is-active={currentItem === item}
-                    on:click={() => selectItem(item)}
+                    onclick={() => selectItem(item)}
                 >
-                    <slot name="item" {item}>{item.label}</slot>
+                    {@render itemSnippet?.({ item })}
+                    {#if !itemSnippet}{item.label}{/if}
                 </a>
             {/each}
         </div>

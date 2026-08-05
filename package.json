@@ -18,29 +18,30 @@
         "dev": "vite"
     },
     "devDependencies": {
-        "@lezer/generator": "^1.7.2",
-        "@sveltejs/vite-plugin-svelte": "^5.0.3",
-        "minizinc": "^4.4.0",
-        "prettier": "^3.5.1",
-        "sass": "^1.85.0",
-        "svelte": "^5.20.2",
-        "vite": "^6.1.0"
+        "@lezer/generator": "^1.8.0",
+        "@sveltejs/vite-plugin-svelte": "^7.2.0",
+        "minizinc": "^4.5.0",
+        "prettier": "^3.9.6",
+        "prettier-plugin-svelte": "^4.1.1",
+        "sass": "^1.102.0",
+        "svelte": "^5.56.8",
+        "vite": "^8.2.0"
     },
     "dependencies": {
-        "@codemirror/commands": "^6.8.0",
-        "@codemirror/lang-html": "^6.4.9",
-        "@codemirror/lang-json": "^6.0.1",
-        "@fortawesome/fontawesome-svg-core": "^6.7.2",
-        "@fortawesome/free-solid-svg-icons": "^6.7.2",
-        "@lezer/highlight": "^1.2.1",
-        "@lezer/lr": "^1.4.2",
-        "bulma": "^1.0.3",
-        "codemirror": "^6.0.1",
+        "@codemirror/commands": "^6.10.4",
+        "@codemirror/lang-html": "^6.4.12",
+        "@codemirror/lang-json": "^6.0.2",
+        "@fortawesome/fontawesome-svg-core": "^7.3.1",
+        "@fortawesome/free-solid-svg-icons": "^7.3.1",
+        "@lezer/highlight": "^1.2.3",
+        "@lezer/lr": "^1.4.10",
+        "bulma": "^1.0.4",
+        "codemirror": "^6.0.2",
         "file-saver": "^2.0.5",
         "jszip": "^3.10.1",
-        "lodash": "^4.17.21",
+        "lodash": "^4.18.1",
         "split.js": "^1.6.5",
-        "svelte-fa": "^4.0.3",
+        "svelte-fa": "^4.0.4",
         "thememirror": "^2.0.1"
     }
 }
