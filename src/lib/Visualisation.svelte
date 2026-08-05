@@ -1,33 +1,33 @@
-<script context="module">
+<script module>
     import connector from '../vis/connector?raw';
 
     const connectorURL = URL.createObjectURL(
         new Blob([connector], {
             type: 'text/html; charset=utf-8',
-        })
+        }),
     );
 </script>
 
 <script>
+    import { run } from 'svelte/legacy';
+
     import Fa from 'svelte-fa';
     import { faForwardFast } from '@fortawesome/free-solid-svg-icons';
     import { createEventDispatcher } from 'svelte';
 
     const dispatch = createEventDispatcher();
 
-    export let files = [];
+    let { files = [] } = $props();
 
     let prevFollowLatest = true;
-    let followLatest = true;
+    let followLatest = $state(true);
     let prevSolution = 0;
-    let currentSolution = 0;
-    let numSolutions = 0;
+    let currentSolution = $state(0);
+    let numSolutions = $state(0);
 
-    let visualisations = [];
+    let visualisations = $state([]);
     let finalStatus = null;
     let finishTime = null;
-
-    $: columns = Math.ceil(Math.sqrt(visualisations.length));
 
     export function reset() {
         for (const vis of visualisations) {
@@ -54,12 +54,12 @@
         ready.then((target) => {
             target.contentWindow.postMessage(
                 { event: 'init', payload: userData },
-                '*'
+                '*',
             );
         });
         const projectFiles = files.reduce(
             (acc, x) => ({ ...acc, [x.name]: x.state.doc.toString() }),
-            {}
+            {},
         );
         const extraUrls = [];
         const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -71,7 +71,7 @@
                 const url = URL.createObjectURL(
                     new Blob([projectFiles[src]], {
                         type: 'text/javascript; charset=utf-8',
-                    })
+                    }),
                 );
                 script.src = url;
                 extraUrls.push(url);
@@ -83,7 +83,7 @@
                 const url = URL.createObjectURL(
                     new Blob([projectFiles[href]], {
                         type: 'text/css; charset=utf-8',
-                    })
+                    }),
                 );
                 link.href = url;
                 extraUrls.push(url);
@@ -96,7 +96,7 @@
         const url = URL.createObjectURL(
             new Blob([contents], {
                 type: 'text/html; charset=utf-8',
-            })
+            }),
         );
         visualisations = [
             ...visualisations,
@@ -134,7 +134,7 @@
         for (let i = 0; i < visualisations.length; i++) {
             sendMessage(
                 { event: 'status', payload: finalStatus },
-                visualisations[i]
+                visualisations[i],
             );
         }
     }
@@ -144,7 +144,7 @@
         for (let i = 0; i < visualisations.length; i++) {
             sendMessage(
                 { event: 'finish', payload: finishTime },
-                visualisations[i]
+                visualisations[i],
             );
         }
     }
@@ -152,7 +152,7 @@
     function onMessage(e) {
         const message = e.data;
         const vis = visualisations.find(
-            (v) => v.element.contentWindow === e.source
+            (v) => v.element.contentWindow === e.source,
         );
         switch (message.event) {
             case 'rebroadcast':
@@ -181,7 +181,7 @@
                         id: message.id,
                         payload: vis.solutions.length,
                     },
-                    vis
+                    vis,
                 );
                 break;
             case 'getSolution':
@@ -196,7 +196,7 @@
                             id: message.id,
                             message: 'Solution index out of range',
                         },
-                        vis
+                        vis,
                     );
                 } else {
                     sendMessage(
@@ -210,7 +210,7 @@
                                         : message.index
                                 ],
                         },
-                        vis
+                        vis,
                     );
                     break;
                 }
@@ -221,7 +221,7 @@
                         id: message.id,
                         payload: vis.solutions,
                     },
-                    vis
+                    vis,
                 );
                 break;
             case 'getStatus':
@@ -231,7 +231,7 @@
                         id: message.id,
                         payload: finalStatus,
                     },
-                    vis
+                    vis,
                 );
                 break;
             case 'getFinishTime':
@@ -241,7 +241,7 @@
                         id: message.id,
                         payload: finishTime,
                     },
-                    vis
+                    vis,
                 );
                 break;
         }
@@ -251,8 +251,6 @@
         await vis.ready;
         vis.element.contentWindow.postMessage(message, '*');
     }
-
-    $: updateControls(currentSolution, followLatest, numSolutions);
 
     function updateControls(c, f, n) {
         if (followLatest && prevSolution === currentSolution) {
@@ -268,7 +266,7 @@
                         event: 'goToSolution',
                         payload: followLatest ? -1 : currentSolution - 1,
                     },
-                    vis
+                    vis,
                 );
             }
         }
@@ -283,14 +281,18 @@
                         event: 'goToSolution',
                         payload: currentSolution - 1,
                     },
-                    vis
+                    vis,
                 );
             }
         }
     }
+    let columns = $derived(Math.ceil(Math.sqrt(visualisations.length)));
+    run(() => {
+        updateControls(currentSolution, followLatest, numSolutions);
+    });
 </script>
 
-<svelte:window on:message={onMessage} />
+<svelte:window onmessage={onMessage} />
 
 <div class="stack">
     {#if numSolutions > 0}
@@ -320,7 +322,7 @@
                         class:is-primary={followLatest}
                         class:is-light={!followLatest}
                         title="Follow latest solution"
-                        on:click={() => (followLatest = !followLatest)}
+                        onclick={() => (followLatest = !followLatest)}
                     >
                         <span class="icon"><Fa icon={faForwardFast} /></span>
                     </button>
@@ -339,7 +341,7 @@
                     src={vis.url}
                     title="Visualisation"
                     bind:this={vis.element}
-                    on:load={(e) => vis.makeReady(e.target)}
+                    onload={(e) => vis.makeReady(e.target)}
                 ></iframe>
             {/each}
         </div>

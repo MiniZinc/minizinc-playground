@@ -1,18 +1,24 @@
 <script>
+    import { run } from 'svelte/legacy';
+
     import { createEventDispatcher, tick } from 'svelte';
     import Modal from './Modal.svelte';
     import { loadFromUrl } from './loadFromUrl';
-    export let active = false;
+    /**
+     * @typedef {Object} Props
+     * @property {boolean} [active]
+     */
+
+    /** @type {Props} */
+    let { active = false } = $props();
 
     const dispatch = createEventDispatcher();
-    let fileInput;
-    let files;
-    let element;
-    let url = '';
-    let importingFromUrl = false;
-    let error = null;
-
-    $: reset(active);
+    let fileInput = $state();
+    let files = $state();
+    let element = $state();
+    let url = $state('');
+    let importingFromUrl = $state(false);
+    let error = $state(null);
 
     function reset(active) {
         importingFromUrl = false;
@@ -52,6 +58,9 @@
             console.error(e);
         }
     }
+    run(() => {
+        reset(active);
+    });
 </script>
 
 {#if importingFromUrl}
@@ -79,14 +88,16 @@
                 />
             </p>
         </div>
-        <div slot="footer">
-            <button class="button is-primary">OK</button>
-            <button
-                class="button"
-                type="button"
-                on:click={() => dispatch('cancel')}>Cancel</button
-            >
-        </div>
+        {#snippet footer()}
+            <div>
+                <button class="button is-primary">OK</button>
+                <button
+                    class="button"
+                    type="button"
+                    onclick={() => dispatch('cancel')}>Cancel</button
+                >
+            </div>
+        {/snippet}
     </Modal>
 {:else}
     <Modal
@@ -102,7 +113,7 @@
                     <button
                         type="button"
                         bind:this={element}
-                        on:click={() => dispatch('new', { type: '.mzn' })}
+                        onclick={() => dispatch('new', { type: '.mzn' })}
                     >
                         Model file (.mzn)
                     </button>
@@ -110,7 +121,7 @@
                 <li>
                     <button
                         type="button"
-                        on:click={() => dispatch('new', { type: '.mzc.mzn' })}
+                        onclick={() => dispatch('new', { type: '.mzc.mzn' })}
                     >
                         Solution checker model (.mzc.mzn)
                     </button>
@@ -121,7 +132,7 @@
                 <li>
                     <button
                         type="button"
-                        on:click={() => dispatch('new', { type: '.dzn' })}
+                        onclick={() => dispatch('new', { type: '.dzn' })}
                     >
                         Data file (.dzn)
                     </button>
@@ -129,7 +140,7 @@
                 <li>
                     <button
                         type="button"
-                        on:click={() => dispatch('new', { type: '.json' })}
+                        onclick={() => dispatch('new', { type: '.json' })}
                     >
                         JSON data file (.json)
                     </button>
@@ -140,7 +151,7 @@
                 <li>
                     <button
                         type="button"
-                        on:click={() => dispatch('new', { type: '.html' })}
+                        onclick={() => dispatch('new', { type: '.html' })}
                     >
                         Custom visualisation (.html)
                     </button>
@@ -149,14 +160,14 @@
             <p class="menu-label">Import</p>
             <ul class="menu-list">
                 <li>
-                    <button type="button" on:click={() => fileInput.click()}
+                    <button type="button" onclick={() => fileInput.click()}
                         >Upload file(s)</button
                     >
                 </li>
                 <li>
                     <button
                         type="button"
-                        on:click={() => (importingFromUrl = true)}
+                        onclick={() => (importingFromUrl = true)}
                         >Import from URL</button
                     >
                 </li>
@@ -169,7 +180,7 @@
     type="file"
     bind:this={fileInput}
     bind:files
-    on:change={uploaded}
+    onchange={uploaded}
     multiple
     accept=".mzn,.mzc,.dzn,.json,.html,.js,.css"
 />

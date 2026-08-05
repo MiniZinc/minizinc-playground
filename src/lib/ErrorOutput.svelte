@@ -1,7 +1,7 @@
 <script>
     import { createEventDispatcher } from 'svelte';
 
-    export let msg;
+    let { msg } = $props();
 
     const dispatch = createEventDispatcher();
 
@@ -19,12 +19,12 @@
 {#if msg.stack && msg.stack.length > 0}
     {#each msg.stack as entry, i}
         {#if i === 0 || entry.location.filename !== msg.stack[i - 1].location.filename || entry.location.firstLine !== msg.stack[i - 1].location.firstLine}
-            <!-- svelte-ignore a11y-missing-attribute -->
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <!-- svelte-ignore a11y-no-static-element-interactions-->
+            <!-- svelte-ignore a11y_missing_attribute -->
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions-->
             <pre><a
                     class="mzn-link mzn-{msg.type}"
-                    on:click={() =>
+                    onclick={() =>
                         dispatch('goto', {
                             location: entry.location,
                         })}>{displayLocation(entry.location)}</a
@@ -40,12 +40,12 @@
         <br />
     {/each}
 {:else if msg.location}
-    <!-- svelte-ignore a11y-missing-attribute -->
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-static-element-interactions-->
+    <!-- svelte-ignore a11y_missing_attribute -->
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions-->
     <pre><a
             class="mzn-link mzn-{msg.type}"
-            on:click={() =>
+            onclick={() =>
                 dispatch('goto', {
                     location: msg.location,
                 })}>{displayLocation(msg.location)}</a

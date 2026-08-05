@@ -11,52 +11,69 @@
         faPlus,
     } from '@fortawesome/free-solid-svg-icons';
 
-    export let active = false;
-    export let files = [];
+    /**
+     * @typedef {Object} Props
+     * @property {boolean} [active]
+     * @property {any} [files]
+     */
+
+    /** @type {Props} */
+    let { active = false, files = [] } = $props();
 
     const dispatch = createEventDispatcher();
 
-    $: indexed = files.map((file, index) => ({ file, index }));
+    let indexed = $derived(files.map((file, index) => ({ file, index })));
 
-    $: models = indexed
-        .filter(
-            (f) =>
-                f.file.name.endsWith('.mzn') &&
-                !f.file.name.endsWith('.mzc.mzn'),
-        )
-        .sort((a, b) => a.file.name.localeCompare(b.file.name));
+    let models = $derived(
+        indexed
+            .filter(
+                (f) =>
+                    f.file.name.endsWith('.mzn') &&
+                    !f.file.name.endsWith('.mzc.mzn'),
+            )
+            .sort((a, b) => a.file.name.localeCompare(b.file.name)),
+    );
 
-    $: data = indexed
-        .filter(
-            (f) =>
-                f.file.name.endsWith('.dzn') || f.file.name.endsWith('.json'),
-        )
-        .sort((a, b) => a.file.name.localeCompare(b.file.name));
+    let data = $derived(
+        indexed
+            .filter(
+                (f) =>
+                    f.file.name.endsWith('.dzn') ||
+                    f.file.name.endsWith('.json'),
+            )
+            .sort((a, b) => a.file.name.localeCompare(b.file.name)),
+    );
 
-    $: checkers = indexed
-        .filter(
-            (f) =>
-                f.file.name.endsWith('.mzc') ||
-                f.file.name.endsWith('.mzc.mzn'),
-        )
-        .sort((a, b) => a.file.name.localeCompare(b.file.name));
+    let checkers = $derived(
+        indexed
+            .filter(
+                (f) =>
+                    f.file.name.endsWith('.mzc') ||
+                    f.file.name.endsWith('.mzc.mzn'),
+            )
+            .sort((a, b) => a.file.name.localeCompare(b.file.name)),
+    );
 
-    $: other = indexed
-        .filter(
-            (f) =>
-                !f.file.name.endsWith('.mzn') &&
-                !f.file.name.endsWith('.mzc') &&
-                !f.file.name.endsWith('.dzn') &&
-                !f.file.name.endsWith('.json'),
-        )
-        .sort((a, b) => a.file.name.localeCompare(b.file.name));
+    let other = $derived(
+        indexed
+            .filter(
+                (f) =>
+                    !f.file.name.endsWith('.mzn') &&
+                    !f.file.name.endsWith('.mzc') &&
+                    !f.file.name.endsWith('.dzn') &&
+                    !f.file.name.endsWith('.json'),
+            )
+            .sort((a, b) => a.file.name.localeCompare(b.file.name)),
+    );
 
-    $: sections = [
-        { label: 'Model files', files: models },
-        { label: 'Data files', files: data },
-        { label: 'Solution checkers', files: checkers },
-        { label: 'Other files', files: other },
-    ].filter((s) => s.files.length > 0);
+    let sections = $derived(
+        [
+            { label: 'Model files', files: models },
+            { label: 'Data files', files: data },
+            { label: 'Solution checkers', files: checkers },
+            { label: 'Other files', files: other },
+        ].filter((s) => s.files.length > 0),
+    );
 
     function accept() {
         dispatch('close');
@@ -83,7 +100,7 @@
                                             class:is-primary={!file.hidden}
                                             class:is-light={file.hidden}
                                             type="button"
-                                            on:click={() =>
+                                            onclick={() =>
                                                 dispatch('modifyFile', {
                                                     index,
                                                     options: {
@@ -121,7 +138,7 @@
                                                 class:is-primary={!file.readOnly}
                                                 class:is-light={file.readOnly}
                                                 type="button"
-                                                on:click={() =>
+                                                onclick={() =>
                                                     dispatch('modifyFile', {
                                                         index,
                                                         options: {
@@ -145,7 +162,7 @@
                                             class="button is-small is-danger"
                                             title="Delete this file"
                                             type="button"
-                                            on:click={() =>
+                                            onclick={() =>
                                                 dispatch('delete', { index })}
                                         >
                                             <span class="icon">
@@ -165,7 +182,7 @@
     <div>
         <button
             class="button is-fullwidth"
-            on:click={() => dispatch('newFile')}
+            onclick={() => dispatch('newFile')}
             type="button"
         >
             <span class="icon">
@@ -175,9 +192,11 @@
         </button>
     </div>
 
-    <div slot="footer">
-        <button class="button is-primary"> Accept </button>
-    </div>
+    {#snippet footer()}
+        <div>
+            <button class="button is-primary"> Accept </button>
+        </div>
+    {/snippet}
 </Modal>
 
 <style>

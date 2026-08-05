@@ -1,4 +1,6 @@
 <script>
+    import { run, preventDefault } from 'svelte/legacy';
+
     import { faXmark } from '@fortawesome/free-solid-svg-icons';
     import { createEventDispatcher } from 'svelte';
     import Fa from 'svelte-fa';
@@ -6,8 +8,7 @@
 
     const dispatch = createEventDispatcher();
 
-    export let active;
-    export let stdFlags = [];
+    let { active, stdFlags = [] } = $props();
 
     const defaultConfig = {
         enableTimeLimit: false,
@@ -21,11 +22,9 @@
         freeSearch: false,
     };
 
-    let config = {
+    let config = $state({
         ...defaultConfig,
-    };
-
-    $: validateTimeLimit(config.timeLimit);
+    });
 
     function validateTimeLimit(t) {
         const ms = t * 1000;
@@ -104,18 +103,21 @@
         }
         return options;
     }
+    run(() => {
+        validateTimeLimit(config.timeLimit);
+    });
 </script>
 
 {#if active}
     <div transition:fly={{ x: 100, duration: 200 }} class="config-window">
         <button
             class="button is-text is-small exit-button"
-            on:click={() => dispatch('close')}
+            onclick={() => dispatch('close')}
         >
             <span class="icon"><Fa icon={faXmark} /></span>
         </button>
 
-        <form on:submit|preventDefault={() => dispatch('close')}>
+        <form onsubmit={preventDefault(() => dispatch('close'))}>
             <h5 class="title is-5">Solving options</h5>
             <div class="field is-grouped">
                 <p class="control checkbox-control">
@@ -244,7 +246,7 @@
                     <button
                         type="button"
                         class="button is-danger"
-                        on:click={reset}>Reset to defaults</button
+                        onclick={reset}>Reset to defaults</button
                     >
                 </p>
             </div>

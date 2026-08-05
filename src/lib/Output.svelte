@@ -5,46 +5,53 @@
     import ErrorOutput from './ErrorOutput.svelte';
     const dispatch = createEventDispatcher();
 
-    export let output;
-    export let autoClearOutput = false;
-    export let showClearOutput = true;
-    export let showAutoClearOutput = true;
-    export let showSectionToggles = true;
-    export let showRightControls = true;
-    export let isTab = false;
+    let {
+        output,
+        autoClearOutput = $bindable(false),
+        showClearOutput = true,
+        showAutoClearOutput = true,
+        showSectionToggles = true,
+        showRightControls = true,
+        isTab = false,
+        beforeRightControls,
+    } = $props();
 
-    let outputElement;
-    let showStatistics = true;
-    let showStderr = true;
-    let showTiming = true;
-    let showWarnings = true;
-    let showErrors = true;
+    let outputElement = $state();
+    let showStatistics = $state(true);
+    let showStderr = $state(true);
+    let showTiming = $state(true);
+    let showWarnings = $state(true);
+    let showErrors = $state(true);
 
-    $: hasStatistics = output.some((run) =>
-        run.output.some((m) => m.type === 'statistics'),
+    let hasStatistics = $derived(
+        output.some((run) => run.output.some((m) => m.type === 'statistics')),
     );
-    $: hasStderr = output.some((run) =>
-        run.output.some((m) => m.type === 'stderr'),
+    let hasStderr = $derived(
+        output.some((run) => run.output.some((m) => m.type === 'stderr')),
     );
-    $: hasTiming = output.some((run) =>
-        run.output.some((m) => m.type === 'time'),
+    let hasTiming = $derived(
+        output.some((run) => run.output.some((m) => m.type === 'time')),
     );
-    $: hasWarnings = output.some((run) =>
-        run.output.some(
-            (m) =>
-                m.type === 'warning' ||
-                (m.type === 'checker' &&
-                    m.messages &&
-                    m.messages.some((m) => m.type === 'warning')),
+    let hasWarnings = $derived(
+        output.some((run) =>
+            run.output.some(
+                (m) =>
+                    m.type === 'warning' ||
+                    (m.type === 'checker' &&
+                        m.messages &&
+                        m.messages.some((m) => m.type === 'warning')),
+            ),
         ),
     );
-    $: hasErrors = output.some((run) =>
-        run.output.some(
-            (m) =>
-                m.type === 'error' ||
-                (m.type === 'checker' &&
-                    m.messages &&
-                    m.messages.some((m) => m.type === 'error')),
+    let hasErrors = $derived(
+        output.some((run) =>
+            run.output.some(
+                (m) =>
+                    m.type === 'error' ||
+                    (m.type === 'checker' &&
+                        m.messages &&
+                        m.messages.some((m) => m.type === 'error')),
+            ),
         ),
     );
 
@@ -66,7 +73,6 @@
         );
         const result = [...sections.values()];
         result.sort();
-        hiddenSections = hiddenSections.filter((s) => sections.has(s));
         return result;
     }
 
@@ -86,10 +92,20 @@
         }
     }
 
-    $: userSections = getUserSections(output);
-    let hiddenSections = [];
+    let userSections = $derived(getUserSections(output));
+    let hiddenSections = $state([]);
 
-    $: update(output);
+    $effect(() => {
+        const visibleSections = new Set(userSections);
+        const nextHiddenSections = hiddenSections.filter((section) =>
+            visibleSections.has(section),
+        );
+        if (nextHiddenSections.length !== hiddenSections.length) {
+            hiddenSections = nextHiddenSections;
+        }
+    });
+
+    $effect(() => update(output));
 
     const statusMap = {
         ALL_SOLUTIONS: '==========',
@@ -284,7 +300,7 @@
         {/if}
         {#if showRightControls}
             <div class="field has-addons">
-                <slot name="before-right-controls" />
+                {@render beforeRightControls?.()}
 
                 {#if showAutoClearOutput}
                     <p class="control">

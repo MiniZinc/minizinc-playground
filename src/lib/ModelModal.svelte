@@ -1,13 +1,20 @@
 <script>
+    import { run } from 'svelte/legacy';
+
     import { createEventDispatcher } from 'svelte';
     import Modal from './Modal.svelte';
     const dispatch = createEventDispatcher();
 
-    export let modelFiles;
-    export let active = false;
-    let selectedModel = null;
+    /**
+     * @typedef {Object} Props
+     * @property {any} modelFiles
+     * @property {boolean} [active]
+     */
 
-    $: init(modelFiles);
+    /** @type {Props} */
+    let { modelFiles, active = false } = $props();
+    let selectedModel = $state(null);
+
     function init(modelFiles) {
         if (!selectedModel && modelFiles && modelFiles.length > 0) {
             selectedModel = modelFiles[0];
@@ -17,6 +24,9 @@
     function accept() {
         dispatch('accept', { modelFile: selectedModel });
     }
+    run(() => {
+        init(modelFiles);
+    });
 </script>
 
 <Modal
@@ -35,16 +45,18 @@
             {/each}
         </select>
     </div>
-    <div slot="footer">
-        <button class="button is-primary"> OK </button>
-        <button
-            type="button"
-            class="button"
-            on:click={() => dispatch('cancel')}
-        >
-            Cancel
-        </button>
-    </div>
+    {#snippet footer()}
+        <div>
+            <button class="button is-primary"> OK </button>
+            <button
+                type="button"
+                class="button"
+                onclick={() => dispatch('cancel')}
+            >
+                Cancel
+            </button>
+        </div>
+    {/snippet}
 </Modal>
 
 <style>
