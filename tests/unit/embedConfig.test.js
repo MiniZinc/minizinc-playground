@@ -72,4 +72,38 @@ describe('parseEmbedConfig', () => {
             'both project and url',
         );
     });
+
+    test('rejects malformed JSON and non-string URLs', () => {
+        expect(() => parseEmbedConfig('#embed=not-json')).toThrow();
+
+        const config = encodeURIComponent(JSON.stringify({ url: 42 }));
+        expect(() => parseEmbedConfig(`#embed=${config}`)).toThrow(
+            'Embed url must be a string',
+        );
+    });
+
+    test('preserves false and zero option values', () => {
+        const config = encodeURIComponent(
+            JSON.stringify({
+                autoFocus: false,
+                splitterSize: 0,
+                showTabs: false,
+            }),
+        );
+
+        expect(parseEmbedConfig(`#embed=${config}`).options).toEqual({
+            autoFocus: false,
+            splitterSize: 0,
+            showTabs: false,
+        });
+    });
+
+    test('normalises a project with no file list', () => {
+        const config = encodeURIComponent(JSON.stringify({ project: {} }));
+
+        expect(parseEmbedConfig(`#embed=${config}`).project).toEqual({
+            files: [],
+            tab: 0,
+        });
+    });
 });

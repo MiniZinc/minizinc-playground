@@ -153,4 +153,76 @@ describe('embed protocol', () => {
             '*',
         );
     });
+
+    test('rejects invalid command payloads without calling operations', async () => {
+        const hostWindow = createWindow();
+        const parentWindow = { postMessage: vi.fn() };
+        const operations = { loadProject: vi.fn() };
+        const protocol = createEmbedProtocol({
+            hostWindow,
+            parentWindow,
+            operations,
+        });
+        protocol.start();
+        protocol.announceReady();
+
+        hostWindow.dispatchMessage(
+            createEmbedEnvelope('load-project', {}, 'request-1'),
+            parentWindow,
+        );
+        await Promise.resolve();
+
+        expect(operations.loadProject).not.toHaveBeenCalled();
+        expect(parentWindow.postMessage).toHaveBeenLastCalledWith(
+            createEmbedEnvelope(
+                'error',
+                { message: 'Invalid payload for load-project' },
+                'request-1',
+            ),
+            '*',
+        );
+    });
+
+    test('returns operation errors and times out unanswered requests', async () => {
+        vi.useFakeTimers();
+        try {
+            const hostWindow = createWindow();
+            const parentWindow = { postMessage: vi.fn() };
+            const protocol = createEmbedProtocol({
+                hostWindow,
+                parentWindow,
+                operations: {
+                    clearOutput: vi.fn(() => {
+                        throw new Error('cannot clear');
+                    }),
+                },
+                requestTimeout: 10,
+            });
+            protocol.start();
+            protocol.announceReady();
+
+            hostWindow.dispatchMessage(
+                createEmbedEnvelope('clear-output', {}, 'request-1'),
+                parentWindow,
+            );
+            await Promise.resolve();
+            expect(parentWindow.postMessage).toHaveBeenLastCalledWith(
+                createEmbedEnvelope(
+                    'error',
+                    { message: 'cannot clear' },
+                    'request-1',
+                ),
+                '*',
+            );
+
+            const pending = protocol.request('host-command');
+            const assertion = expect(pending).rejects.toThrow(
+                'Request timed out: host-command',
+            );
+            await vi.advanceTimersByTimeAsync(10);
+            await assertion;
+        } finally {
+            vi.useRealTimers();
+        }
+    });
 });
