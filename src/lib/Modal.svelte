@@ -1,7 +1,5 @@
 <script>
-    import { run, preventDefault } from 'svelte/legacy';
-
-    import { createEventDispatcher, tick } from 'svelte';
+    import { tick } from 'svelte';
     import { fade, fly } from 'svelte/transition';
 
     /**
@@ -10,11 +8,13 @@
      * @property {boolean} [active]
      * @property {import('svelte').Snippet} [children]
      * @property {import('svelte').Snippet} [footer]
+     * @property {() => void} [onactivate]
+     * @property {() => void} [oncancel]
+     * @property {() => void} [onsubmit]
      */
 
     /** @type {Props} */
-    let { title, active = false, children, footer } = $props();
-    const dispatch = createEventDispatcher();
+    let { title, active = false, children, footer, onactivate, oncancel, onsubmit } = $props();
     let form = $state();
 
     async function setFocus(active) {
@@ -23,16 +23,14 @@
             if (form) {
                 form.focus();
             }
-            dispatch('activate');
+            onactivate?.();
         }
     }
 
     function cancel() {
-        dispatch('cancel');
+        oncancel?.();
     }
-    run(() => {
-        setFocus(active);
-    });
+    $effect(() => setFocus(active));
 </script>
 
 {#if active}
@@ -42,7 +40,10 @@
         bind:this={form}
         transition:fade={{ duration: 200 }}
         class="modal is-active"
-        onsubmit={preventDefault(() => dispatch('submit'))}
+        onsubmit={(event) => {
+            event.preventDefault();
+            onsubmit?.();
+        }}
     >
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <!-- svelte-ignore a11y_no_static_element_interactions-->

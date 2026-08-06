@@ -1,13 +1,11 @@
 <script>
-    import { createEventDispatcher } from 'svelte';
     import Fa from 'svelte-fa';
     import { faClipboard } from '@fortawesome/free-solid-svg-icons';
     import Modal from './Modal.svelte';
     import { DEFAULT_EMBED_OPTIONS, EMBED_OPTIONS } from './embedConfig.js';
 
     /** @type {{ active?: boolean, shareUrl: string, project: any }} */
-    let { active = false, shareUrl, project } = $props();
-    const dispatch = createEventDispatcher();
+    let { active = false, shareUrl, project, oncancel } = $props();
 
     let activeTab = $state('link');
     let copied = $state(false);
@@ -85,11 +83,11 @@
     }
 
     function close() {
-        dispatch('cancel');
+        oncancel?.();
     }
 </script>
 
-<Modal {active} title="Share this project" on:cancel={close}>
+<Modal {active} title="Share this project" oncancel={close}>
     <div class="tabs">
         <ul>
             <li class:is-active={activeTab === 'link'}>

@@ -9,19 +9,14 @@
 </script>
 
 <script>
-    import { run } from 'svelte/legacy';
-
     import Fa from 'svelte-fa';
     import { faForwardFast } from '@fortawesome/free-solid-svg-icons';
-    import { createEventDispatcher } from 'svelte';
-
-    const dispatch = createEventDispatcher();
 
     // Nested visualisations receive JSON-shaped MiniZinc data. Serialising here
     // removes Svelte's reactive proxies before the browser structured-clones it.
     const serialiseMessage = (message) => JSON.parse(JSON.stringify(message));
 
-    let { files = [] } = $props();
+    let { files = [], onsolve } = $props();
 
     let prevFollowLatest = true;
     let followLatest = $state(true);
@@ -172,7 +167,7 @@
                 }
                 break;
             case 'solve':
-                dispatch('solve', {
+                onsolve?.({
                     modelFile: message.modelFile,
                     dataFiles: message.dataFiles,
                     options: message.options,
@@ -291,7 +286,7 @@
         }
     }
     let columns = $derived(Math.ceil(Math.sqrt(visualisations.length)));
-    run(() => {
+    $effect(() => {
         updateControls(currentSolution, followLatest, numSolutions);
     });
 </script>

@@ -1,9 +1,6 @@
 <script>
-    import { run } from 'svelte/legacy';
-
-    import { createEventDispatcher, tick } from 'svelte';
+    import { tick } from 'svelte';
     import Modal from './Modal.svelte';
-    const dispatch = createEventDispatcher();
 
     /**
      * @typedef {Object} Props
@@ -13,7 +10,14 @@
      */
 
     /** @type {Props} */
-    let { active = false, parameters, dataFiles } = $props();
+    let {
+        active = false,
+        parameters,
+        dataFiles,
+        onactivate,
+        onaccept,
+        oncancel,
+    } = $props();
 
     let dataTab = $state(true);
     let selectedFiles = $state([]);
@@ -39,9 +43,9 @@
 
     function accept() {
         if (dataTabActive) {
-            dispatch('accept', { dataFiles: selectedFiles });
+            onaccept?.({ dataFiles: selectedFiles });
         } else {
-            dispatch('accept', {
+            onaccept?.({
                 parameters: parameterValues.reduce(
                     (acc, param) => ({ ...acc, [param.name]: param.value }),
                     {},
@@ -49,7 +53,7 @@
             });
         }
     }
-    run(() => {
+    $effect(() => {
         createParameterValues(parameters);
     });
     let hasDataFiles = $derived(dataFiles.length > 0);
@@ -59,9 +63,9 @@
 <Modal
     {active}
     title="Model parameters"
-    on:activate={setFocus}
-    on:submit={accept}
-    on:cancel={() => dispatch('cancel')}
+    onactivate={setFocus}
+    onsubmit={accept}
+    oncancel={oncancel}
 >
     {#if hasDataFiles}
         <div class="tabs">
@@ -116,7 +120,7 @@
             <button
                 type="button"
                 class="button"
-                onclick={() => dispatch('cancel')}
+                onclick={() => oncancel?.()}
             >
                 Cancel
             </button>

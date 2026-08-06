@@ -1,9 +1,5 @@
 <script>
-    import { run } from 'svelte/legacy';
-
-    import { createEventDispatcher } from 'svelte';
     import Modal from './Modal.svelte';
-    const dispatch = createEventDispatcher();
 
     /**
      * @typedef {Object} Props
@@ -12,7 +8,7 @@
      */
 
     /** @type {Props} */
-    let { modelFiles, active = false } = $props();
+    let { modelFiles, active = false, onaccept, oncancel } = $props();
     let selectedModel = $state(null);
 
     function init(modelFiles) {
@@ -22,9 +18,9 @@
     }
 
     function accept() {
-        dispatch('accept', { modelFile: selectedModel });
+        onaccept?.({ modelFile: selectedModel });
     }
-    run(() => {
+    $effect(() => {
         init(modelFiles);
     });
 </script>
@@ -32,8 +28,8 @@
 <Modal
     {active}
     title="Select model to run"
-    on:submit={accept}
-    on:cancel={() => dispatch('cancel')}
+    onsubmit={accept}
+    oncancel={oncancel}
 >
     <div class="select is-fullwidth is-multiple">
         <select
@@ -51,7 +47,7 @@
             <button
                 type="button"
                 class="button"
-                onclick={() => dispatch('cancel')}
+                onclick={() => oncancel?.()}
             >
                 Cancel
             </button>

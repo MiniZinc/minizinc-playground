@@ -1,6 +1,4 @@
 <script>
-    import { run } from 'svelte/legacy';
-
     import { onDestroy, onMount, tick } from 'svelte';
     import Playground from './lib/Playground.svelte';
     import RecentProjectsModal from './lib/RecentProjectsModal.svelte';
@@ -302,14 +300,14 @@
         }
     }
     let recentProjects = $derived(getRecentProjects(solvers, $settings));
-    run(() => {
+    $effect(() => {
         if (!embedded) {
             forkOnExternalChange($settings);
         }
     });
 
-    function notifyEmbed(type, event) {
-        embedProtocol?.notify(type, event.detail);
+    function notifyEmbed(type, payload) {
+        embedProtocol?.notify(type, payload);
     }
 </script>
 
@@ -347,15 +345,15 @@
         bind:autoClearOutput={$settings.autoClearOutput}
         bind:splitterDirection={$settings.splitterDirection}
         bind:splitterSize={$settings.splitterSize}
-        on:solversChanged={(e) => {
-            solvers = e.detail.solvers;
-            notifyEmbed('solvers-changed', e);
+        onsolversChanged={(payload) => {
+            solvers = payload.solvers;
+            notifyEmbed('solvers-changed', payload);
         }}
-        on:projectChanged={(e) => notifyEmbed('project-changed', e)}
-        on:runStarted={(e) => notifyEmbed('run-started', e)}
-        on:output={(e) => notifyEmbed('minizinc', e)}
-        on:runFinished={(e) => notifyEmbed('run-finished', e)}
-        on:runError={(e) => notifyEmbed('run-error', e)}
+        onprojectChanged={(payload) => notifyEmbed('project-changed', payload)}
+        onrunStarted={(payload) => notifyEmbed('run-started', payload)}
+        onoutput={(payload) => notifyEmbed('minizinc', payload)}
+        onrunFinished={(payload) => notifyEmbed('run-finished', payload)}
+        onrunError={(payload) => notifyEmbed('run-error', payload)}
     >
         {#if !embedded}
             {#snippet navbarBeforeShareButtons({ isMobile })}
@@ -392,11 +390,11 @@
             <RecentProjectsModal
                 projects={recentProjects}
                 active={openRecent}
-                on:cancel={() => (openRecent = false)}
-                on:accept={(e) =>
+                oncancel={() => (openRecent = false)}
+                onaccept={({ project }) =>
                     openProject(
-                        e.detail.project.key,
-                        $settings.sessions[e.detail.project.key],
+                        project.key,
+                        $settings.sessions[project.key],
                     )}
             />
         {/if}

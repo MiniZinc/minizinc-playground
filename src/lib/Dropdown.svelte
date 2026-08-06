@@ -1,9 +1,6 @@
 <script>
     import Fa from 'svelte-fa';
     import { faAngleDown } from '@fortawesome/free-solid-svg-icons';
-    import { createEventDispatcher } from 'svelte';
-
-    const dispatch = createEventDispatcher();
 
     /**
      * @type {string | null}
@@ -19,12 +16,13 @@
         disabled = false,
         selected: selectedSnippet,
         item: itemSnippet,
+        onselectItem,
     } = $props();
 
     let element = $state();
 
     function selectItem(item) {
-        dispatch('selectItem', { item });
+        onselectItem?.({ item });
         active = false;
     }
 

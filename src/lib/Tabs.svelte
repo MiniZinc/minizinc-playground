@@ -1,5 +1,4 @@
 <script>
-    import { createEventDispatcher } from 'svelte';
     import Tab from './Tab.svelte';
     import Fa from 'svelte-fa';
     import { faPlus, faFolderTree } from '@fortawesome/free-solid-svg-icons';
@@ -13,18 +12,26 @@
      */
 
     /** @type {Props} */
-    let { files = [], currentIndex = 0, readonly = false } = $props();
-
-    const dispatch = createEventDispatcher();
+    let {
+        files = [],
+        currentIndex = 0,
+        readonly = false,
+        onselectTab,
+        onrename,
+        onreorder,
+        onclose,
+        onnewFile,
+        onmanageFiles,
+    } = $props();
 
     function onClick(index) {
-        dispatch('selectTab', { index });
+        onselectTab?.({ index });
     }
 
-    function onRename(event, index) {
-        dispatch('rename', {
+    function renameTab(payload, index) {
+        onrename?.({
             index,
-            ...event.detail,
+            ...payload,
         });
     }
 
@@ -46,13 +53,13 @@
         event.preventDefault();
         event.dataTransfer.dropEffect = 'move';
         if (dragIndex !== index) {
-            dispatch('reorder', { src: dragIndex, dest: index });
+            onreorder?.({ src: dragIndex, dest: index });
         }
         dragIndex = null;
     }
 
     function onClose(index) {
-        dispatch('close', { index });
+        onclose?.({ index });
     }
 
     let tabs = $derived(
@@ -88,9 +95,9 @@
                     suffix={file.suffix}
                     active={currentIndex === file.index}
                     readonly={readonly || file.readonlyTab}
-                    on:click={() => onClick(file.index)}
-                    on:rename={(e) => onRename(e, file.index)}
-                    on:close={(e) => onClose(file.index)}
+                    onclick={() => onClick(file.index)}
+                    onrename={(payload) => renameTab(payload, file.index)}
+                    onclose={() => onClose(file.index)}
                 />
             </li>
         {/each}
@@ -100,7 +107,7 @@
                 <!-- svelte-ignore a11y_missing_attribute -->
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions-->
-                <a title="Add new file" onclick={() => dispatch('newFile')}>
+                <a title="Add new file" onclick={() => onnewFile?.()}>
                     <span class="icon add-icon">
                         <Fa icon={faPlus} />
                     </span>
@@ -110,7 +117,7 @@
                 <button
                     class="button is-small"
                     title="Manage files"
-                    onclick={() => dispatch('manageFiles')}
+                    onclick={() => onmanageFiles?.()}
                 >
                     <span class="icon">
                         <Fa icon={faFolderTree} />
