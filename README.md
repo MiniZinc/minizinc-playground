@@ -33,6 +33,8 @@ npm ci
 npm run dev
 ```
 
+For information on the internal project format used by the Playground, see the [project documentation](docs/project.md).
+
 ## Building
 
 ```sh
