@@ -7,6 +7,7 @@
     import { faClockRotateLeft } from '@fortawesome/free-solid-svg-icons';
     import { initialiseSettings, settings } from './stores';
     import {
+        DEFAULT_EMBED_OPTIONS,
         normaliseEmbedOptions,
         normaliseProject,
         parseEmbedConfig,
@@ -16,7 +17,9 @@
     let playground = $state();
     const embedConfig = parseEmbedConfig(window.location.hash);
     const embedded = embedConfig !== null;
-    let embedOptions = $state(embedConfig?.options || {});
+    let embedOptions = $state(
+        embedded ? { ...DEFAULT_EMBED_OPTIONS, ...embedConfig.options } : {},
+    );
     initialiseSettings({ persistence: !embedded });
     function updateEmbedOptions(options) {
         const nextOptions = normaliseEmbedOptions(options);

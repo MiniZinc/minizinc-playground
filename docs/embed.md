@@ -202,26 +202,26 @@ embed URL.
 | Property                       | Type                          | Default      | Description                                                   |
 | ------------------------------ | ----------------------------- | ------------ | ------------------------------------------------------------- |
 | `theme`                        | `"auto" \| "light" \| "dark"` | `"auto"`     | Colour theme.                                                 |
-| `showVersionSwitcher`          | boolean                       | `true`       | Show the MiniZinc version switcher.                           |
+| `showVersionSwitcher`          | boolean                       | `false`      | Show the MiniZinc version switcher.                           |
 | `showSolverDropdown`           | boolean                       | `true`       | Show the solver selector.                                     |
-| `showShareButton`              | boolean                       | `true`       | Show the share button.                                        |
-| `showDownloadButton`           | boolean                       | `true`       | Show the project download button.                             |
-| `showExternalPlaygroundButton` | boolean                       | `false`      | Show a button to open the project in a standalone playground. |
+| `showShareButton`              | boolean                       | `false`      | Show the share button.                                        |
+| `showDownloadButton`           | boolean                       | `false`      | Show the project download button.                             |
+| `showExternalPlaygroundButton` | boolean                       | `true`       | Show a button to open the project in a standalone playground. |
 | `showTabs`                     | boolean                       | `true`       | Show the file tabs.                                           |
 | `canEditTabs`                  | boolean                       | `true`       | Allow files and tabs to be edited.                            |
-| `compilationEnabled`           | boolean                       | `true`       | Enable compilation.                                           |
+| `compilationEnabled`           | boolean                       | `false`      | Enable compilation.                                           |
 | `canEditSolverSettings`        | boolean                       | `true`       | Allow solver settings to be edited.                           |
 | `enabledSolvers`               | array of strings \| `null`    | `null`       | Restrict the solver list by solver ID.                        |
-| `canSwitchOrientation`         | boolean                       | `true`       | Allow switching the editor/output orientation.                |
+| `canSwitchOrientation`         | boolean                       | `false`      | Allow switching the editor/output orientation.                |
 | `hideOutputOnStartup`          | boolean                       | `true`       | Hide output when the iframe starts.                           |
 | `autoFocus`                    | boolean                       | `true`       | Focus the editor automatically.                               |
 | `splitterDirection`            | `"vertical" \| "horizontal"`  | `"vertical"` | Initial editor/output layout.                                 |
 | `splitterSize`                 | number                        | `75`         | Initial splitter size.                                        |
 | `autoClearOutput`              | boolean                       | `false`      | Clear output before each run.                                 |
 | `showClearOutput`              | boolean                       | `true`       | Show the clear-output control.                                |
-| `showAutoClearOutput`          | boolean                       | `true`       | Show the auto-clear-output control.                           |
-| `showOutputSectionToggles`     | boolean                       | `true`       | Show output section toggles.                                  |
-| `showOutputRightControls`      | boolean                       | `true`       | Show controls on the right side of output.                    |
+| `showAutoClearOutput`          | boolean                       | `false`      | Show the auto-clear-output control.                           |
+| `showOutputSectionToggles`     | boolean                       | `false`      | Show output section toggles.                                  |
+| `showOutputRightControls`      | boolean                       | `false`      | Show controls on the right side of output.                    |
 
 Example configuration with an inline project:
 
