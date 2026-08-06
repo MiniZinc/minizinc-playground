@@ -25,12 +25,7 @@
     });
 </script>
 
-<Modal
-    {active}
-    title="Select model to run"
-    onsubmit={accept}
-    oncancel={oncancel}
->
+<Modal {active} title="Select model to run" onsubmit={accept} {oncancel}>
     <div class="select is-fullwidth is-multiple">
         <select
             bind:value={selectedModel}
@@ -44,11 +39,7 @@
     {#snippet footer()}
         <div>
             <button class="button is-primary"> OK </button>
-            <button
-                type="button"
-                class="button"
-                onclick={() => oncancel?.()}
-            >
+            <button type="button" class="button" onclick={() => oncancel?.()}>
                 Cancel
             </button>
         </div>

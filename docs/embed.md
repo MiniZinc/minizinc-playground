@@ -43,8 +43,8 @@ global:
 ```html
 <script src="https://play.minizinc.dev/embed.js"></script>
 <script>
-  const iframe = document.querySelector('#playground');
-  const embed = MiniZincPlayground(iframe);
+    const iframe = document.querySelector('#playground');
+    const embed = MiniZincPlayground(iframe);
 </script>
 ```
 
@@ -55,9 +55,9 @@ For module-based hosts, use the ES module build instead:
 
 ```html
 <script type="module">
-  import minizincPlayground from 'https://play.minizinc.dev/embed.module.js';
+    import minizincPlayground from 'https://play.minizinc.dev/embed.module.js';
 
-  const embed = minizincPlayground(document.querySelector('#playground'));
+    const embed = minizincPlayground(document.querySelector('#playground'));
 </script>
 ```
 

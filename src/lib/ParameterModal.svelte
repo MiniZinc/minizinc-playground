@@ -65,7 +65,7 @@
     title="Model parameters"
     onactivate={setFocus}
     onsubmit={accept}
-    oncancel={oncancel}
+    {oncancel}
 >
     {#if hasDataFiles}
         <div class="tabs">
@@ -117,11 +117,7 @@
     {#snippet footer()}
         <div>
             <button class="button is-primary">OK</button>
-            <button
-                type="button"
-                class="button"
-                onclick={() => oncancel?.()}
-            >
+            <button type="button" class="button" onclick={() => oncancel?.()}>
                 Cancel
             </button>
         </div>

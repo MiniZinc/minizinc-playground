@@ -392,10 +392,7 @@
                 active={openRecent}
                 oncancel={() => (openRecent = false)}
                 onaccept={({ project }) =>
-                    openProject(
-                        project.key,
-                        $settings.sessions[project.key],
-                    )}
+                    openProject(project.key, $settings.sessions[project.key])}
             />
         {/if}
     </Playground>
