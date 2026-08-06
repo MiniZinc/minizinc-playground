@@ -165,6 +165,9 @@
     });
 
     export async function loadProject(project) {
+        if (!project) {
+            return;
+        }
         edgeMiniZinc = project.minizincVersion === 'edge';
         await mounted;
         files = [];
@@ -186,6 +189,32 @@
         } else {
             solverConfig.reset();
         }
+        notifyProjectChanged();
+    }
+
+    let projectLoad = Promise.resolve();
+    export function whenProjectLoaded() {
+        return projectLoad;
+    }
+
+    export function getMiniZincVersion() {
+        const key = edgeMiniZinc ? 'edge' : 'latest';
+        return minizincVersions[key].detail;
+    }
+
+    function notifyProjectChanged() {
+        if (currentSolver && solverConfig) {
+            dispatch('projectChanged', { project: getProject() });
+        }
+    }
+
+    function editorChanged(state) {
+        if (!currentFile) {
+            return;
+        }
+        files[currentIndex] = { ...currentFile, state };
+        files = files;
+        notifyProjectChanged();
     }
 
     async function importFiles(e) {
@@ -198,6 +227,7 @@
             await loadSolvers();
             currentSolverIndex = solvers.findIndex((s) => s.id === e.solverId);
         }
+        notifyProjectChanged();
     }
 
     export function hasFiles() {
@@ -296,6 +326,7 @@
         ];
         selectTab(files.length - 1);
         newFileRequested = false;
+        notifyProjectChanged();
     }
 
     function openFiles(toOpen, focus = true) {
@@ -333,6 +364,7 @@
         files = [...files, ...toAdd];
         selectTab(files.length - 1, focus);
         newFileRequested = false;
+        notifyProjectChanged();
     }
 
     function rename(e) {
@@ -350,6 +382,7 @@
             { ...files[index], name: name + suffix },
             ...files.slice(index + 1),
         ];
+        notifyProjectChanged();
     }
 
     function closeFile(index) {
@@ -378,6 +411,7 @@
             selectTab(currentIndex);
         }
         deleteFileRequested = null;
+        notifyProjectChanged();
     }
 
     function modifyFile(index, opts) {
@@ -393,6 +427,7 @@
         }
         files = [...files.slice(0, index), file, ...files.slice(index + 1)];
         selectTab(currentIndex);
+        notifyProjectChanged();
     }
 
     function reorder(src, dest) {
@@ -415,6 +450,7 @@
         const newIndex = newFiles.indexOf(currentFile);
         files = newFiles;
         currentIndex = newIndex;
+        notifyProjectChanged();
     }
 
     function enqueueEffect(file, effect) {
@@ -551,7 +587,7 @@
         return { model, fileList };
     }
 
-    async function run() {
+    export async function run() {
         if (isFzn) {
             const model = new MiniZinc.Model();
             model.addFile(currentFile.name, currentFile.state.doc.toString());
@@ -573,6 +609,7 @@
     }
 
     async function runWith(model, fileList, options) {
+        dispatch('runStarted', { files: fileList });
         hasRun = true;
         const startTime = Date.now();
         if (autoClearOutput) {
@@ -608,17 +645,22 @@
                 code: 0,
                 runTime: Date.now() - startTime,
             });
+            dispatch('runFinished', { files: fileList });
         } catch (e) {
             addOutput({
                 type: 'exit',
                 code: e.code,
                 runTime: Date.now() - startTime,
             });
+            dispatch('runError', {
+                files: fileList,
+                error: { message: e instanceof Error ? e.message : String(e) },
+            });
         }
         minizinc = null;
     }
 
-    async function compile() {
+    export async function compile() {
         hasRun = true;
         const mznModel = await getModel(true);
         if (!mznModel) {
@@ -628,6 +670,7 @@
         resetVisualisation();
         const { model, fileList } = mznModel;
         const name = fileList[0];
+        dispatch('runStarted', { files: fileList, isCompile: true });
         const startTime = Date.now();
         if (autoClearOutput) {
             output = [];
@@ -669,22 +712,32 @@
                 },
             ];
             selectTab(files.length - 1);
+            notifyProjectChanged();
             addOutput({
                 type: 'exit',
                 code: 0,
                 runTime: Date.now() - startTime,
             });
+            dispatch('runFinished', { files: fileList, isCompile: true });
         } catch (e) {
             addOutput({
                 type: 'exit',
                 code: e.code,
                 runTime: Date.now() - startTime,
             });
+            dispatch('runError', {
+                files: fileList,
+                isCompile: true,
+                error: { message: e instanceof Error ? e.message : String(e) },
+            });
         }
         minizinc = null;
     }
 
     function stop() {
+        if (!minizinc) {
+            return;
+        }
         addOutput({ type: 'cancel' });
         minizinc.cancel();
     }
@@ -700,6 +753,11 @@
         }
         output[output.length - 1].output.push(value);
         output = output; // Force update
+        dispatch('output', value);
+    }
+
+    export function clearOutput() {
+        output = [];
     }
 
     function resetVisualisation() {
@@ -993,7 +1051,7 @@
         loadSolvers(edgeMiniZinc);
     });
     $effect(() => {
-        loadProject(project);
+        projectLoad = loadProject(project);
     });
     let visibleFileCount = $derived(files.filter((f) => !f.hidden).length);
     let currentFile = $derived(
@@ -1420,6 +1478,7 @@
                                         <Editor
                                             state={editorState}
                                             bind:this={editor}
+                                            onChange={editorChanged}
                                         />
                                     {/if}
                                 </div>
@@ -1493,7 +1552,7 @@
                                     >
                                         <Output
                                             {output}
-                                            on:clear={() => (output = [])}
+                                            on:clear={clearOutput}
                                             on:goto={(e) =>
                                                 gotoLocation(e.detail.location)}
                                             bind:autoClearOutput

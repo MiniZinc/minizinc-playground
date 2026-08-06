@@ -3,7 +3,7 @@
 
     import { onMount, tick } from 'svelte';
 
-    let { state: editorState } = $props();
+    let { state: editorState, onChange = () => {} } = $props();
 
     let div = $state();
     let view = $state();
@@ -11,6 +11,13 @@
     onMount(() => {
         view = new EditorView({
             parent: div,
+            extensions: [
+                EditorView.updateListener.of((update) => {
+                    if (update.docChanged) {
+                        onChange(update.state);
+                    }
+                }),
+            ],
         });
     });
 
