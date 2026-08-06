@@ -63,8 +63,11 @@ const libraryBuild = {
 const buildConfigs = { library: libraryBuild };
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ command, mode }) => ({
     build: buildConfigs[mode],
     base: process.env.BASE_PATH,
+    // The development embed build writes here and Vite exposes publicDir at
+    // the server root, making the watched bundle available at /embed.js.
+    publicDir: command === 'serve' ? '.vite-embed' : 'public',
     plugins: [lezer(), svelte()],
 }));
