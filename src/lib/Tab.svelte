@@ -1,7 +1,5 @@
 <script>
-    import { run } from 'svelte/legacy';
-
-    import { createEventDispatcher, tick } from 'svelte';
+    import { tick } from 'svelte';
     import Fa from 'svelte-fa';
     import { faXmark } from '@fortawesome/free-solid-svg-icons';
 
@@ -11,6 +9,9 @@
      * @property {string} [name]
      * @property {string} [suffix]
      * @property {boolean} [readonly]
+     * @property {(payload: { name: string, suffix: string }) => void} [onrename]
+     * @property {() => void} [onclick]
+     * @property {() => void} [onclose]
      */
 
     /** @type {Props} */
@@ -19,14 +20,16 @@
         name = 'Untitled',
         suffix = '.mzn',
         readonly = false,
+        onrename,
+        onclick,
+        onclose,
     } = $props();
 
-    const dispatch = createEventDispatcher();
     let isEditing = $state(false);
     let editInput = $state();
     let editValue = $state('');
 
-    run(() => {
+    $effect(() => {
         if (/[\/\\\.]/.test(editValue)) {
             editValue = editValue.replaceAll(/[\/\\\.]/g, '');
         }
@@ -54,7 +57,7 @@
     function finishEditName() {
         isEditing = false;
         if (editValue.length > 0) {
-            dispatch('rename', { name: editValue, suffix });
+            onrename?.({ name: editValue, suffix });
         }
     }
 </script>
@@ -67,7 +70,7 @@
     class:active
     class:readonly
     onclick={() => {
-        if (!isEditing) dispatch('click');
+        if (!isEditing) onclick?.();
     }}
 >
     {#if isEditing}
@@ -84,7 +87,7 @@
         <!-- svelte-ignore a11y_no_static_element_interactions-->
         <span class="filename" onclick={editName}>{name}{suffix}</span>
         {#if active && !readonly}
-            <span class="close-tab" onclick={() => dispatch('close')}>
+            <span class="close-tab" onclick={() => onclose?.()}>
                 <Fa icon={faXmark} />
             </span>
         {/if}

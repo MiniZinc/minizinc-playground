@@ -1,9 +1,5 @@
 <script>
-    import { createEventDispatcher } from 'svelte';
-
-    let { msg } = $props();
-
-    const dispatch = createEventDispatcher();
+    let { msg, ongoto } = $props();
 
     function displayLocation(loc) {
         if (loc.firstLine == loc.lastLine) {
@@ -25,7 +21,7 @@
             <pre><a
                     class="mzn-link mzn-{msg.type}"
                     onclick={() =>
-                        dispatch('goto', {
+                        ongoto?.({
                             location: entry.location,
                         })}>{displayLocation(entry.location)}</a
                 ></pre>
@@ -46,7 +42,7 @@
     <pre><a
             class="mzn-link mzn-{msg.type}"
             onclick={() =>
-                dispatch('goto', {
+                ongoto?.({
                     location: msg.location,
                 })}>{displayLocation(msg.location)}</a
         >:</pre>

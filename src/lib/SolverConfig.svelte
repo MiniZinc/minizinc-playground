@@ -1,14 +1,9 @@
 <script>
-    import { run, preventDefault } from 'svelte/legacy';
-
     import { faXmark } from '@fortawesome/free-solid-svg-icons';
-    import { createEventDispatcher } from 'svelte';
     import Fa from 'svelte-fa';
     import { fly } from 'svelte/transition';
 
-    const dispatch = createEventDispatcher();
-
-    let { active, stdFlags = [] } = $props();
+    let { active, stdFlags = [], onclose } = $props();
 
     const defaultConfig = {
         enableTimeLimit: false,
@@ -103,7 +98,7 @@
         }
         return options;
     }
-    run(() => {
+    $effect(() => {
         validateTimeLimit(config.timeLimit);
     });
 </script>
@@ -112,12 +107,17 @@
     <div transition:fly={{ x: 100, duration: 200 }} class="config-window">
         <button
             class="button is-text is-small exit-button"
-            onclick={() => dispatch('close')}
+            onclick={() => onclose?.()}
         >
             <span class="icon"><Fa icon={faXmark} /></span>
         </button>
 
-        <form onsubmit={preventDefault(() => dispatch('close'))}>
+        <form
+            onsubmit={(event) => {
+                event.preventDefault();
+                onclose?.();
+            }}
+        >
             <h5 class="title is-5">Solving options</h5>
             <div class="field is-grouped">
                 <p class="control checkbox-control">

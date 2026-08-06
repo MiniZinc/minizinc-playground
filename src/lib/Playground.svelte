@@ -33,7 +33,7 @@
     import SolverConfig from './SolverConfig.svelte';
     import Dropdown from './Dropdown.svelte';
     import { addErrors, lineCharToPos } from '../lang/underline';
-    import { createEventDispatcher, onMount, tick, untrack } from 'svelte';
+    import { onMount, tick, untrack } from 'svelte';
 
     import * as MiniZincLatest from 'https://cdn.jsdelivr.net/npm/minizinc/dist/minizinc.mjs';
     import * as MiniZincEdge from 'https://cdn.jsdelivr.net/npm/minizinc@edge/dist/minizinc.mjs';
@@ -107,9 +107,13 @@
         navbarShareButtons,
         navbarAfterShareButtons,
         children,
+        onprojectChanged,
+        onrunStarted,
+        onoutput,
+        onrunFinished,
+        onrunError,
+        onsolversChanged,
     } = $props();
-
-    const dispatch = createEventDispatcher();
 
     let busyCount = $state(0);
     let allSolvers = $state([]);
@@ -214,7 +218,7 @@
 
     function notifyProjectChanged() {
         if (currentSolver && solverConfig) {
-            dispatch('projectChanged', { project: getProject() });
+            onprojectChanged?.({ project: getProject() });
         }
     }
 
@@ -620,7 +624,7 @@
     }
 
     async function runWith(model, fileList, options) {
-        dispatch('runStarted', { files: fileList });
+        onrunStarted?.({ files: fileList });
         hasRun = true;
         const startTime = Date.now();
         if (autoClearOutput) {
@@ -656,14 +660,14 @@
                 code: 0,
                 runTime: Date.now() - startTime,
             });
-            dispatch('runFinished', { files: fileList });
+            onrunFinished?.({ files: fileList });
         } catch (e) {
             addOutput({
                 type: 'exit',
                 code: e.code,
                 runTime: Date.now() - startTime,
             });
-            dispatch('runError', {
+            onrunError?.({
                 files: fileList,
                 error: { message: e instanceof Error ? e.message : String(e) },
             });
@@ -681,7 +685,7 @@
         resetVisualisation();
         const { model, fileList } = mznModel;
         const name = fileList[0];
-        dispatch('runStarted', { files: fileList, isCompile: true });
+        onrunStarted?.({ files: fileList, isCompile: true });
         const startTime = Date.now();
         if (autoClearOutput) {
             output = [];
@@ -729,14 +733,14 @@
                 code: 0,
                 runTime: Date.now() - startTime,
             });
-            dispatch('runFinished', { files: fileList, isCompile: true });
+            onrunFinished?.({ files: fileList, isCompile: true });
         } catch (e) {
             addOutput({
                 type: 'exit',
                 code: e.code,
                 runTime: Date.now() - startTime,
             });
-            dispatch('runError', {
+            onrunError?.({
                 files: fileList,
                 isCompile: true,
                 error: { message: e instanceof Error ? e.message : String(e) },
@@ -764,7 +768,7 @@
         }
         output[output.length - 1].output.push(value);
         output = output; // Force update
-        dispatch('output', value);
+        onoutput?.(value);
     }
 
     export function clearOutput() {
@@ -1121,7 +1125,7 @@
         untrack(() => setTheme(dark));
     });
     $effect(() => {
-        dispatch('solversChanged', { solvers });
+        onsolversChanged?.({ solvers });
     });
 </script>
 
@@ -1181,7 +1185,7 @@
                                             currentItem={edgeMiniZinc
                                                 ? minizincVersions.edge
                                                 : minizincVersions.latest}
-                                            on:selectItem={selectVersion}
+                                            onselectItem={selectVersion}
                                             disabled={isRunning}
                                             title="Configure MiniZinc version"
                                         >
@@ -1454,20 +1458,17 @@
                                             {files}
                                             {currentIndex}
                                             readonly={!canEditTabs}
-                                            on:selectTab={(e) =>
-                                                selectTab(e.detail.index)}
-                                            on:reorder={(e) =>
-                                                reorder(
-                                                    e.detail.src,
-                                                    e.detail.dest,
-                                                )}
-                                            on:newFile={() =>
+                                            onselectTab={({ index }) =>
+                                                selectTab(index)}
+                                            onreorder={({ src, dest }) =>
+                                                reorder(src, dest)}
+                                            onnewFile={() =>
                                                 (newFileRequested = true)}
-                                            on:rename={rename}
-                                            on:close={(e) =>
+                                            onrename={rename}
+                                            onclose={({ index }) =>
                                                 (deleteFileRequested =
-                                                    e.detail.index)}
-                                            on:manageFiles={() =>
+                                                    index)}
+                                            onmanageFiles={() =>
                                                 (managingFiles = true)}
                                         />
                                     </div>
@@ -1540,8 +1541,7 @@
                                         <Visualisation
                                             bind:this={visualisation}
                                             {files}
-                                            on:solve={(e) =>
-                                                visReSolve(e.detail)}
+                                            onsolve={visReSolve}
                                         />
                                     </div>
                                     <div
@@ -1551,9 +1551,9 @@
                                     >
                                         <Output
                                             {output}
-                                            on:clear={clearOutput}
-                                            on:goto={(e) =>
-                                                gotoLocation(e.detail.location)}
+                                            onclear={clearOutput}
+                                            ongoto={({ location }) =>
+                                                gotoLocation(location)}
                                             bind:autoClearOutput
                                             {showClearOutput}
                                             {showAutoClearOutput}
@@ -1589,7 +1589,7 @@
                     active={showSolverConfig}
                     bind:this={solverConfig}
                     stdFlags={currentStdFlags}
-                    on:close={() => (showSolverConfig = false)}
+                    onclose={() => (showSolverConfig = false)}
                 />
             </div>
         </div>
@@ -1597,23 +1597,23 @@
         <ManageFilesModal
             active={managingFiles}
             {files}
-            on:close={() => (managingFiles = false)}
-            on:delete={(e) => (deleteFileRequested = e.detail.index)}
-            on:modifyFile={(e) => modifyFile(e.detail.index, e.detail.options)}
-            on:newFile={() => (newFileRequested = true)}
+            onclose={() => (managingFiles = false)}
+            ondelete={({ index }) => (deleteFileRequested = index)}
+            onmodifyFile={({ index, options }) => modifyFile(index, options)}
+            onnewFile={() => (newFileRequested = true)}
         />
 
         <NewFileModal
             active={newFileRequested}
-            on:cancel={() => (newFileRequested = false)}
-            on:new={(e) => newFile(e.detail.type)}
-            on:open={(e) => importFiles(e.detail)}
+            oncancel={() => (newFileRequested = false)}
+            onnew={({ type }) => newFile(type)}
+            onopen={importFiles}
         />
 
         <Modal
             active={deleteFileRequested !== null}
             title="Delete file"
-            on:cancel={() => (deleteFileRequested = null)}
+            oncancel={() => (deleteFileRequested = null)}
         >
             <p>
                 Are you sure you wish to delete <code
@@ -1642,23 +1642,23 @@
         <ModelModal
             active={needsModel}
             {modelFiles}
-            on:accept={(e) => getModelResolve(e.detail)}
-            on:cancel={() => getModelResolve(false)}
+            onaccept={getModelResolve}
+            oncancel={() => getModelResolve(false)}
         />
 
         <ParameterModal
             active={needsData}
             {dataFiles}
             parameters={parameterModalParameters}
-            on:accept={(e) => getModelResolve(e.detail)}
-            on:cancel={() => getModelResolve(false)}
+            onaccept={getModelResolve}
+            oncancel={() => getModelResolve(false)}
         />
 
         <ShareModal
             active={shareUrl}
             {shareUrl}
             project={shareProject}
-            on:cancel={() => (shareUrl = null)}
+            oncancel={() => (shareUrl = null)}
         />
         {@render children?.()}
     </div>

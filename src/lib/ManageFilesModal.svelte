@@ -1,5 +1,4 @@
 <script>
-    import { createEventDispatcher } from 'svelte';
     import Modal from './Modal.svelte';
     import Fa from 'svelte-fa';
     import {
@@ -18,9 +17,14 @@
      */
 
     /** @type {Props} */
-    let { active = false, files = [] } = $props();
-
-    const dispatch = createEventDispatcher();
+    let {
+        active = false,
+        files = [],
+        onclose,
+        onmodifyFile,
+        ondelete,
+        onnewFile,
+    } = $props();
 
     let indexed = $derived(files.map((file, index) => ({ file, index })));
 
@@ -76,11 +80,11 @@
     );
 
     function accept() {
-        dispatch('close');
+        onclose?.();
     }
 </script>
 
-<Modal {active} title="Manage files" on:submit={accept} on:cancel={accept}>
+<Modal {active} title="Manage files" onsubmit={accept} oncancel={accept}>
     {#each sections as section}
         <p>{section.label}</p>
         <table class="table is-fullwidth">
@@ -101,7 +105,7 @@
                                             class:is-light={file.hidden}
                                             type="button"
                                             onclick={() =>
-                                                dispatch('modifyFile', {
+                                                onmodifyFile?.({
                                                     index,
                                                     options: {
                                                         hidden: !file.hidden,
@@ -139,7 +143,7 @@
                                                 class:is-light={file.readOnly}
                                                 type="button"
                                                 onclick={() =>
-                                                    dispatch('modifyFile', {
+                                                    onmodifyFile?.({
                                                         index,
                                                         options: {
                                                             readOnly:
@@ -163,7 +167,7 @@
                                             title="Delete this file"
                                             type="button"
                                             onclick={() =>
-                                                dispatch('delete', { index })}
+                                                ondelete?.({ index })}
                                         >
                                             <span class="icon">
                                                 <Fa icon={faTrash} />
@@ -182,7 +186,7 @@
     <div>
         <button
             class="button is-fullwidth"
-            onclick={() => dispatch('newFile')}
+            onclick={() => onnewFile?.()}
             type="button"
         >
             <span class="icon">

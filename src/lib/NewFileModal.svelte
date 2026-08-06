@@ -1,7 +1,5 @@
 <script>
-    import { run } from 'svelte/legacy';
-
-    import { createEventDispatcher, tick } from 'svelte';
+    import { tick } from 'svelte';
     import Modal from './Modal.svelte';
     import { loadFromUrl } from './loadFromUrl';
     /**
@@ -10,9 +8,14 @@
      */
 
     /** @type {Props} */
-    let { active = false } = $props();
+    let {
+        active = false,
+        onactivate,
+        oncancel,
+        onopen,
+        onnew,
+    } = $props();
 
-    const dispatch = createEventDispatcher();
     let fileInput = $state();
     let files = $state();
     let element = $state();
@@ -47,18 +50,18 @@
             );
         }
         const result = await Promise.all(promises);
-        dispatch('open', { files: result });
+        onopen?.({ files: result });
     }
 
     async function importFromUrl() {
         try {
-            dispatch('open', await loadFromUrl(url));
+            onopen?.(await loadFromUrl(url));
         } catch (e) {
             error = `Failed to import from URL: ${e.message || e}`;
             console.error(e);
         }
     }
-    run(() => {
+    $effect(() => {
         reset(active);
     });
 </script>
@@ -67,9 +70,9 @@
     <Modal
         {active}
         title="Import from URL"
-        on:activate={setFocus}
-        on:cancel={() => dispatch('cancel')}
-        on:submit={importFromUrl}
+        onactivate={setFocus}
+        oncancel={oncancel}
+        onsubmit={importFromUrl}
     >
         {#if error}
             <div class="error">
@@ -94,7 +97,7 @@
                 <button
                     class="button"
                     type="button"
-                    onclick={() => dispatch('cancel')}>Cancel</button
+                    onclick={() => oncancel?.()}>Cancel</button
                 >
             </div>
         {/snippet}
@@ -103,8 +106,8 @@
     <Modal
         {active}
         title="Create new file"
-        on:activate={setFocus}
-        on:cancel={() => dispatch('cancel')}
+        onactivate={setFocus}
+        oncancel={oncancel}
     >
         <aside class="menu">
             <p class="menu-label">Model</p>
@@ -113,7 +116,7 @@
                     <button
                         type="button"
                         bind:this={element}
-                        onclick={() => dispatch('new', { type: '.mzn' })}
+                        onclick={() => onnew?.({ type: '.mzn' })}
                     >
                         Model file (.mzn)
                     </button>
@@ -121,7 +124,7 @@
                 <li>
                     <button
                         type="button"
-                        onclick={() => dispatch('new', { type: '.mzc.mzn' })}
+                        onclick={() => onnew?.({ type: '.mzc.mzn' })}
                     >
                         Solution checker model (.mzc.mzn)
                     </button>
@@ -132,7 +135,7 @@
                 <li>
                     <button
                         type="button"
-                        onclick={() => dispatch('new', { type: '.dzn' })}
+                        onclick={() => onnew?.({ type: '.dzn' })}
                     >
                         Data file (.dzn)
                     </button>
@@ -140,7 +143,7 @@
                 <li>
                     <button
                         type="button"
-                        onclick={() => dispatch('new', { type: '.json' })}
+                        onclick={() => onnew?.({ type: '.json' })}
                     >
                         JSON data file (.json)
                     </button>
@@ -151,7 +154,7 @@
                 <li>
                     <button
                         type="button"
-                        onclick={() => dispatch('new', { type: '.html' })}
+                        onclick={() => onnew?.({ type: '.html' })}
                     >
                         Custom visualisation (.html)
                     </button>

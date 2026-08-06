@@ -1,10 +1,8 @@
 <script>
-    import { createEventDispatcher, tick } from 'svelte';
+    import { tick } from 'svelte';
     import Fa from 'svelte-fa';
     import { faEraser, faTrash } from '@fortawesome/free-solid-svg-icons';
     import ErrorOutput from './ErrorOutput.svelte';
-    const dispatch = createEventDispatcher();
-
     let {
         output,
         autoClearOutput = $bindable(false),
@@ -14,6 +12,8 @@
         showRightControls = true,
         isTab = false,
         beforeRightControls,
+        onclear,
+        ongoto,
     } = $props();
 
     let outputElement = $state();
@@ -321,7 +321,7 @@
                         <button
                             class="button is-small is-danger"
                             title="Clear output"
-                            onclick={() => dispatch('clear')}
+                            onclick={() => onclear?.()}
                         >
                             <span class="icon"><Fa icon={faTrash} /></span>
                         </button>
@@ -372,7 +372,7 @@
                                             {#if (part.type === 'error' && showErrors) || (part.type === 'warning' && showWarnings)}
                                                 <ErrorOutput
                                                     msg={part}
-                                                    on:goto
+                                                    ongoto={ongoto}
                                                 />
                                             {/if}
                                         {/if}
@@ -429,7 +429,7 @@
                                 <br />
                             {:else if msg.type === 'error' || msg.type === 'warning'}
                                 {#if (msg.type === 'error' && showErrors) || (msg.type === 'warning' && showWarnings)}
-                                    <ErrorOutput {msg} on:goto />
+                                    <ErrorOutput {msg} {ongoto} />
                                 {/if}
                             {:else if msg.type === 'exit'}
                                 {#if msg.code}

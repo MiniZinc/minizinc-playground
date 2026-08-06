@@ -1,9 +1,5 @@
 <script>
-    import { run } from 'svelte/legacy';
-
-    import { createEventDispatcher } from 'svelte';
     import Modal from './Modal.svelte';
-    const dispatch = createEventDispatcher();
 
     /**
      * @typedef {Object} Props
@@ -12,7 +8,7 @@
      */
 
     /** @type {Props} */
-    let { active = false, projects = [] } = $props();
+    let { active = false, projects = [], onaccept, oncancel } = $props();
 
     let currentIndex = $state(-1);
 
@@ -23,13 +19,13 @@
             currentIndex = -1;
         }
     }
-    run(() => {
+    $effect(() => {
         init(active);
     });
 
     function accept() {
         if (valid) {
-            dispatch('accept', { project: projects[currentIndex] });
+            onaccept?.({ project: projects[currentIndex] });
         }
     }
 
@@ -48,8 +44,8 @@
 <Modal
     {active}
     title="Open recent project"
-    on:submit={accept}
-    on:cancel={() => dispatch('cancel')}
+    onsubmit={accept}
+    oncancel={oncancel}
 >
     <div>
         {#each projects as project, i}
@@ -84,7 +80,7 @@
             <button
                 type="button"
                 class="button"
-                onclick={() => dispatch('cancel')}
+                onclick={() => oncancel?.()}
             >
                 Cancel
             </button>
