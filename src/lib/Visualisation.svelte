@@ -17,6 +17,10 @@
 
     const dispatch = createEventDispatcher();
 
+    // Nested visualisations receive JSON-shaped MiniZinc data. Serialising here
+    // removes Svelte's reactive proxies before the browser structured-clones it.
+    const serialiseMessage = (message) => JSON.parse(JSON.stringify(message));
+
     let { files = [] } = $props();
 
     let prevFollowLatest = true;
@@ -53,7 +57,7 @@
         });
         ready.then((target) => {
             target.contentWindow.postMessage(
-                { event: 'init', payload: userData },
+                serialiseMessage({ event: 'init', payload: userData }),
                 '*',
             );
         });
@@ -249,7 +253,7 @@
 
     async function sendMessage(message, vis) {
         await vis.ready;
-        vis.element.contentWindow.postMessage(message, '*');
+        vis.element.contentWindow.postMessage(serialiseMessage(message), '*');
     }
 
     function updateControls(c, f, n) {
