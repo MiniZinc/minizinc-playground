@@ -33,7 +33,7 @@
                 ? {}
                 : { splitterSize: nextOptions.splitterSize }),
         }));
-        return embedOptions;
+        return normaliseEmbedOptions(embedOptions);
     }
     if (embedded) {
         updateEmbedOptions(embedConfig.options);
