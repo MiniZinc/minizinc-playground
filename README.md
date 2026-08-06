@@ -12,6 +12,8 @@ The GUI is styled using [Bulma](https://bulma.io) and [CodeMirror](https://codem
 
 The playground supports generating a link which opens the active project (including the current tab and solver settings) using the share button on the top-right. It may be useful to pass these through a link shortening service to get more friendly URLs.
 
+The same share button can also be used to embed the playground in an iframe. See the [embedding documentation](docs/embed.md) for the URL format, configuration options, and messaging API.
+
 ### Loading code directly
 
 You can also generate URLs which directly populate the playground with some code by using `#code=<minizinc code>` as the URL hash.
@@ -23,45 +25,6 @@ For example: [`https://play.minizinc.dev/#code=var%201..3%3A%20x%3B`](https://pl
 It's also possible to generate a link to load a project from a remote URL by using `#url=<file url>` as the hash.
 
 For example: [`https://play.minizinc.dev/#url=https%3A%2F%2Fraw.githubusercontent.com%2FMiniZinc%2Flibminizinc%2Fmaster%2Fdocs%2Fen%2Fexamples%2Floan%2Floan.mzp`](https://play.minizinc.dev/#url=https%3A%2F%2Fraw.githubusercontent.com%2FMiniZinc%2Flibminizinc%2Fmaster%2Fdocs%2Fen%2Fexamples%2Floan%2Floan.mzp)
-
-## Embedding
-
-The normal playground can be embedded directly in an iframe. Use a URL-encoded
-JSON configuration in the `#embed=` fragment and give the iframe a fixed height:
-
-```html
-<iframe
-    src="https://play.minizinc.dev/#embed=%7B%22theme%22%3A%22dark%22%7D"
-    title="MiniZinc Playground"
-    width="100%"
-    height="700"
-    allow="clipboard-write"
-></iframe>
-```
-
-The configuration may set `theme`, `showVersionSwitcher`,
-`showSolverDropdown`, `showShareButton`, `showDownloadButton`,
-`showExternalPlaygroundButton`, `showTabs`, `canEditTabs`,
-`compilationEnabled`, `canEditSolverSettings`, `enabledSolvers`,
-`canSwitchOrientation`, `hideOutputOnStartup`, `autoFocus`,
-`splitterDirection`, `splitterSize`, `autoClearOutput`, `showClearOutput`,
-`showAutoClearOutput`, `showOutputSectionToggles`, and
-`showOutputRightControls`. The external-playground button opens a shared
-project URL using the current page's origin. The configuration may also contain either
-`project` (the existing `getProject()` format) or `url` (a supported remote
-MiniZinc file or project), but not both. Embedded instances do not use browser
-storage.
-
-After loading, the iframe sends a `ready` `postMessage` envelope on the
-`minizinc-playground` channel. Hosts can then send version 1 `load-project`,
-`get-project`, `run`, `stop`, `compile`, `clear-output`, and `set-options`
-commands. Commands use `{ channel, version, type, requestId, payload }`;
-`load-project` receives `{ project }`. `set-options` receives a partial
-configuration object: supplied supported options replace their current values,
-and omitted options remain unchanged. The iframe returns `response` or `error` with the same
-`requestId`, and emits `project-changed`, `run-started`, `output`,
-`run-finished`, `run-error`, and `solvers-changed` events. The target origin is
-currently `*`, so hosts should validate received messages.
 
 ## Development
 

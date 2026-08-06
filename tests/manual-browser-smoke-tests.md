@@ -7,7 +7,7 @@ embedding. Record the browser, operating system, build URL, and result.
 2. Load inline and remote projects through `#embed`, including every supported
    remote file type.
 3. Confirm embedded mode does not access or update browser storage.
-4. Send commands after `ready`; inspect responses and output events. Confirm
+4. Send commands after `ready`; inspect responses and `minizinc` events. Confirm
    commands sent before `ready` are discarded.
 5. Run and compile a tiny deterministic model.
 6. Check CodeMirror editing, focus, downloads, clipboard behavior, and a model

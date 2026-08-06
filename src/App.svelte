@@ -356,7 +356,7 @@
         }}
         on:projectChanged={(e) => notifyEmbed('project-changed', e)}
         on:runStarted={(e) => notifyEmbed('run-started', e)}
-        on:output={(e) => notifyEmbed('output', e)}
+        on:output={(e) => notifyEmbed('minizinc', e)}
         on:runFinished={(e) => notifyEmbed('run-finished', e)}
         on:runError={(e) => notifyEmbed('run-error', e)}
     >
