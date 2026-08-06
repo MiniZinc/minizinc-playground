@@ -168,28 +168,38 @@
         if (!project) {
             return;
         }
-        edgeMiniZinc = project.minizincVersion === 'edge';
-        await mounted;
-        files = [];
-        openFiles(project.files, autoFocus);
-        currentIndex = project.tab || 0;
-        await loadSolvers();
-        if (project.solverId) {
-            currentSolverIndex = solvers.findIndex(
-                (s) => s.id === project.solverId,
-            );
-        } else {
-            currentSolverIndex =
-                solvers.findIndex(
-                    (s) => s.extraInfo && s.extraInfo.isDefault,
-                ) || 0;
+        isLoadingProject = true;
+        try {
+            edgeMiniZinc = project.minizincVersion === 'edge';
+            await mounted;
+            files = [];
+            openFiles(project.files, autoFocus, false);
+            currentIndex = project.tab || 0;
+            await loadSolvers();
+            if (project.solverId) {
+                currentSolverIndex = solvers.findIndex(
+                    (s) => s.id === project.solverId,
+                );
+            } else {
+                currentSolverIndex =
+                    solvers.findIndex(
+                        (s) => s.extraInfo && s.extraInfo.isDefault,
+                    ) || 0;
+            }
+            if (project.solverConfig) {
+                solverConfig.load(project.solverConfig);
+            } else {
+                solverConfig.reset();
+            }
+            notifyProjectChanged();
+        } finally {
+            await tick();
+            if (editor && currentFile) {
+                editor.setState(currentFile.state);
+            }
+            await tick();
+            isLoadingProject = false;
         }
-        if (project.solverConfig) {
-            solverConfig.load(project.solverConfig);
-        } else {
-            solverConfig.reset();
-        }
-        notifyProjectChanged();
     }
 
     let projectLoad = Promise.resolve();
@@ -236,6 +246,7 @@
 
     let editor = $state();
     let files = $state([]);
+    let isLoadingProject = $state(false);
 
     let menuActive = $state(false);
 
@@ -276,8 +287,8 @@
         showSolverConfig = !showSolverConfig;
     }
 
-    async function selectTab(index, focus = true) {
-        if (editor) {
+    async function selectTab(index, focus = true, saveCurrentFile = true) {
+        if (editor && saveCurrentFile) {
             if (currentIndex < files.length) {
                 currentFile.state = editor.getState();
                 currentFile.scrollTop = editor.getView().scrollDOM.scrollTop;
@@ -329,7 +340,7 @@
         notifyProjectChanged();
     }
 
-    function openFiles(toOpen, focus = true) {
+    function openFiles(toOpen, focus = true, saveCurrentFile = true) {
         let toAdd = [];
         for (const file of toOpen) {
             const dot = file.name.endsWith('.mzc.mzn')
@@ -362,7 +373,7 @@
             });
         }
         files = [...files, ...toAdd];
-        selectTab(files.length - 1, focus);
+        selectTab(files.length - 1, focus, saveCurrentFile);
         newFileRequested = false;
         notifyProjectChanged();
     }
@@ -374,7 +385,7 @@
         while (files.some((f) => f === dest + suffix)) {
             dest = `${name}-${i++}`;
         }
-        if (currentFile) {
+        if (currentFile && !isLoadingProject) {
             currentFile.state = editor.getState();
         }
         files = [
@@ -415,7 +426,7 @@
     }
 
     function modifyFile(index, opts) {
-        if (currentFile) {
+        if (currentFile && !isLoadingProject) {
             currentFile.state = editor.getState();
         }
         const file = { ...files[index], ...opts };
@@ -832,7 +843,7 @@
     }
 
     export function getProject() {
-        if (currentFile) {
+        if (currentFile && !isLoadingProject) {
             currentFile.state = editor.getState();
         }
         return {
@@ -975,7 +986,7 @@
     }
 
     function setTheme(dark) {
-        if (currentFile) {
+        if (currentFile && !isLoadingProject) {
             currentFile.state = editor.getState();
         }
         files.forEach((file) =>

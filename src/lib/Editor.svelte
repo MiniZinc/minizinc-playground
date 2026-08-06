@@ -41,6 +41,12 @@
         return null;
     }
 
+    export function setState(state) {
+        if (view && view.state !== state) {
+            view.setState(state);
+        }
+    }
+
     export async function setCursor(pos) {
         if (view) {
             await tick();
