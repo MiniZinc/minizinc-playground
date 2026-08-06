@@ -1,0 +1,6 @@
+{
+  "projectFiles": ["model.mzn", "data.dzn"],
+  "openFiles": ["model.mzn", "data.dzn"],
+  "openTab": "model.mzn",
+  "selectedBuiltinConfigId": "org.gecode.gecode"
+}

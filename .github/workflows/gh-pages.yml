@@ -23,6 +23,10 @@ jobs:
         run: npm ci
       - name: Check formatting
         run: npm run format:check
+      - name: Run unit tests
+        run: npm run test:unit
+      - name: Run component tests
+        run: npm run test:components
       - name: Build application
         run: npm run build
       - name: Upload artifact
@@ -52,6 +56,12 @@ jobs:
           node-version: lts/*
       - name: Install dependencies
         run: npm ci
+      - name: Check formatting
+        run: npm run format:check
+      - name: Run unit tests
+        run: npm run test:unit
+      - name: Run component tests
+        run: npm run test:components
       - name: Build application
         run: npm run build
         env:
