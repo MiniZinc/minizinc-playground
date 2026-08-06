@@ -13,14 +13,15 @@ export async function loadFromUrl(url) {
         url.startsWith('http://') || url.startsWith('https://')
             ? url
             : `http://${url}`;
-    const name = src.split('/').pop();
+    const sourceUrl = new URL(src);
+    const name = sourceUrl.pathname.split('/').pop();
     if (
         !name.endsWith('.mzp') &&
         allowedExtensions.every((ext) => !name.endsWith(ext))
     ) {
         throw new Error('File type not recognised');
     }
-    const response = await fetch(new URL(src));
+    const response = await fetch(sourceUrl);
     if (!response.ok) {
         throw new Error(
             `Request failed (${response.status} ${response.statusText})`,

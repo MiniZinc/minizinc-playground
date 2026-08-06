@@ -84,4 +84,75 @@ describe('loadFromUrl', () => {
             timestamp: expect.any(Number),
         });
     });
+
+    test('reports an HTTP error without reading the response body', async () => {
+        const fetch = vi.fn().mockResolvedValue({
+            ok: false,
+            status: 404,
+            statusText: 'Not Found',
+        });
+        vi.stubGlobal('fetch', fetch);
+
+        await expect(
+            loadFromUrl('https://example.test/missing.mzn'),
+        ).rejects.toThrow('Request failed (404 Not Found)');
+    });
+
+    test('reports an HTTP error for a project file', async () => {
+        const projectUrl = 'https://example.test/project.mzp';
+        const fetch = vi.fn((url) => {
+            if (url.href === projectUrl) {
+                return Promise.resolve({
+                    ok: true,
+                    json: () =>
+                        Promise.resolve({
+                            projectFiles: ['model.mzn'],
+                            openFiles: ['model.mzn'],
+                            openTab: 'model.mzn',
+                        }),
+                });
+            }
+            return Promise.resolve({
+                ok: false,
+                status: 503,
+                statusText: 'Unavailable',
+            });
+        });
+        vi.stubGlobal('fetch', fetch);
+
+        await expect(loadFromUrl(projectUrl)).rejects.toThrow(
+            'Request failed (503 Unavailable)',
+        );
+    });
+
+    test('resolves project files relative to a project URL with a query', async () => {
+        const projectUrl = 'https://example.test/projects/project.mzp?v=1';
+        const fetchedUrls = [];
+        const fetch = vi.fn((url) => {
+            fetchedUrls.push(url.href);
+            if (url.href === projectUrl) {
+                return Promise.resolve({
+                    ok: true,
+                    json: () =>
+                        Promise.resolve({
+                            projectFiles: ['model.mzn'],
+                            openFiles: ['model.mzn'],
+                            openTab: 'model.mzn',
+                        }),
+                });
+            }
+            return Promise.resolve({
+                ok: true,
+                text: () => Promise.resolve('solve satisfy;'),
+            });
+        });
+        vi.stubGlobal('fetch', fetch);
+
+        await loadFromUrl(projectUrl);
+
+        expect(fetchedUrls).toEqual([
+            projectUrl,
+            'https://example.test/projects/model.mzn',
+        ]);
+    });
 });
