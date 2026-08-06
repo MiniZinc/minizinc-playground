@@ -364,6 +364,7 @@
                 checkCode,
                 darkMode,
                 file.readOnly,
+                file.readOnlyLines,
             );
             toAdd.push({
                 ...file,
@@ -856,6 +857,7 @@
                 contents: f.state.doc.toString(),
                 ...(f.hidden ? { hidden: true } : {}),
                 ...(f.readOnly ? { readOnly: true } : {}),
+                ...(f.readOnlyLines ? { readOnlyLines: f.readOnlyLines } : {}),
             })),
             tab: currentIndex,
             solverId: currentSolver.id,
