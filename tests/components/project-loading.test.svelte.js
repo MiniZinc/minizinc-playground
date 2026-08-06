@@ -27,3 +27,35 @@ test('replaces the CodeMirror document when a new project is loaded', async () =
         { name: 'second.mzn', contents: 'int: second = 2;' },
     ]);
 });
+
+test('loads and preserves read-only line ranges', async () => {
+    const { component, container } = render(Playground, {
+        project: null,
+        autoFocus: false,
+    });
+    const loadedProject = {
+        files: [
+            {
+                name: 'model.mzn',
+                contents: 'generated\neditable\nprotected',
+                readOnlyLines: [
+                    [1, 1],
+                    [3, 3],
+                ],
+            },
+        ],
+        solverId: 'org.minizinc.gecode_presolver',
+    };
+
+    await component.loadProject(loadedProject);
+
+    await waitFor(() => {
+        expect(
+            container.querySelectorAll('.cm-mzn-read-only-line'),
+        ).toHaveLength(2);
+    });
+    expect(component.getProject().files[0].readOnlyLines).toEqual([
+        [1, 1],
+        [3, 3],
+    ]);
+});

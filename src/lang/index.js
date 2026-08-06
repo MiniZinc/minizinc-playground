@@ -16,6 +16,7 @@ import { styleTags, tags as t } from '@lezer/highlight';
 import { json } from '@codemirror/lang-json';
 import { html } from '@codemirror/lang-html';
 import { debounce } from 'lodash';
+import { readOnlyLines } from './readOnlyLines';
 
 export const MiniZincLanguage = LRLanguage.define({
     parser: parser.configure({
@@ -165,7 +166,13 @@ export const editableEffect = editable.reconfigure(
 export const lightThemeEffect = theme.reconfigure(lightTheme);
 export const darkThemeEffect = theme.reconfigure(darkTheme);
 
-export function getExtensions(suffix, codeCheck, darkMode, readOnly = false) {
+export function getExtensions(
+    suffix,
+    codeCheck,
+    darkMode,
+    readOnly = false,
+    protectedLines = [],
+) {
     const extensions = [
         basicSetup,
         keymap.of([
@@ -204,8 +211,18 @@ export function getExtensions(suffix, codeCheck, darkMode, readOnly = false) {
             '&.cm-focused .cm-selectionBackground': {
                 backgroundColor: '#036dd638',
             },
+            '.cm-mzn-read-only-line': {
+                backgroundColor: darkMode
+                    ? 'rgba(255, 255, 255, 0.07)'
+                    : 'rgba(0, 0, 0, 0.04)',
+                opacity: '0.85',
+            },
         }),
     ];
+
+    if (protectedLines.length > 0) {
+        extensions.push(readOnlyLines(protectedLines));
+    }
 
     if (suffix === '.json' || suffix === '.mpc') {
         return [
