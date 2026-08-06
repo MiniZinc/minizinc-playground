@@ -56,17 +56,15 @@
     <div class="dropdown-menu">
         <div class="dropdown-content">
             {#each items as item}
-                <!-- svelte-ignore a11y-invalid-attribute -->
-                <!-- svelte-ignore a11y-no-static-element-interactions-->
-                <a
-                    href="javascript:void(0);"
+                <button
+                    type="button"
                     class="dropdown-item"
                     class:is-active={currentItem === item}
                     onclick={() => selectItem(item)}
                 >
                     {@render itemSnippet?.({ item })}
                     {#if !itemSnippet}{item.label}{/if}
-                </a>
+                </button>
             {/each}
         </div>
     </div>

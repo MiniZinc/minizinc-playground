@@ -213,7 +213,7 @@
         {#if showSectionToggles}
             <button
                 class="button is-small section-toggle"
-                on:click={() => toggleAllSections()}
+                onclick={() => toggleAllSections()}
                 disabled={userSections.length === 0}
             >
                 {#if hiddenSections.length === 0}
@@ -230,7 +230,7 @@
                     title={`Click to ${
                         hiddenSections.indexOf(section) === -1 ? 'hide' : 'show'
                     } ${section} output`}
-                    on:click={() => toggleSection(section)}
+                    onclick={() => toggleSection(section)}
                 >
                     {section}
                 </button>
@@ -244,7 +244,7 @@
                     title={`Click to ${
                         showStatistics ? 'hide' : 'show'
                     } statistics information`}
-                    on:click={() => (showStatistics = !showStatistics)}
+                    onclick={() => (showStatistics = !showStatistics)}
                 >
                     Statistics
                 </button>
@@ -257,7 +257,7 @@
                     title={`Click to ${
                         showStderr ? 'hide' : 'show'
                     } standard error output`}
-                    on:click={() => (showStderr = !showStderr)}
+                    onclick={() => (showStderr = !showStderr)}
                 >
                     Standard error
                 </button>
@@ -270,7 +270,7 @@
                     title={`Click to ${
                         showTiming ? 'hide' : 'show'
                     } timing information`}
-                    on:click={() => (showTiming = !showTiming)}
+                    onclick={() => (showTiming = !showTiming)}
                 >
                     Timing
                 </button>
@@ -281,7 +281,7 @@
                     class:is-primary={showWarnings}
                     class:is-light={!showWarnings}
                     title={`Click to ${showTiming ? 'hide' : 'show'} warnings`}
-                    on:click={() => (showWarnings = !showWarnings)}
+                    onclick={() => (showWarnings = !showWarnings)}
                 >
                     Warnings
                 </button>
@@ -292,7 +292,7 @@
                     class:is-primary={showErrors}
                     class:is-light={!showErrors}
                     title={`Click to ${showTiming ? 'hide' : 'show'} errors`}
-                    on:click={() => (showErrors = !showErrors)}
+                    onclick={() => (showErrors = !showErrors)}
                 >
                     Errors
                 </button>
@@ -309,8 +309,7 @@
                             class:is-primary={autoClearOutput}
                             class:is-light={!autoClearOutput}
                             title="Clear output on each run"
-                            on:click={() =>
-                                (autoClearOutput = !autoClearOutput)}
+                            onclick={() => (autoClearOutput = !autoClearOutput)}
                         >
                             <span class="icon"><Fa icon={faEraser} /></span>
                         </button>
@@ -322,7 +321,7 @@
                         <button
                             class="button is-small is-danger"
                             title="Clear output"
-                            on:click={() => dispatch('clear')}
+                            onclick={() => dispatch('clear')}
                         >
                             <span class="icon"><Fa icon={faTrash} /></span>
                         </button>
