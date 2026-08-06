@@ -9,7 +9,6 @@
         faCog,
         faShareNodes,
         faDownload,
-        faClipboard,
         faArrowUpRightFromSquare,
         faRotate,
         faHammer,
@@ -28,6 +27,7 @@
     import Visualisation from './Visualisation.svelte';
     import NewFileModal from './NewFileModal.svelte';
     import ManageFilesModal from './ManageFilesModal.svelte';
+    import ShareModal from './ShareModal.svelte';
     import ModelModal from './ModelModal.svelte';
     import ParameterModal from './ParameterModal.svelte';
     import SolverConfig from './SolverConfig.svelte';
@@ -899,22 +899,18 @@
         }
     }
 
-    let shareUrlInput = $state();
     let shareUrl = $state(null);
-    let copiedShareUrl = $state(false);
+    let shareProject = $state(null);
     function getShareUrl(base) {
         const project = getProject();
         const url = new URL(base);
         url.hash = `#project=${encodeURIComponent(JSON.stringify(project))}`;
-        copiedShareUrl = false;
         return url.toString();
     }
 
-    function copyShareUrl() {
-        shareUrlInput.select();
-        shareUrlInput.setSelectionRange(0, shareUrl.length);
-        navigator.clipboard.writeText(shareUrl);
-        copiedShareUrl = true;
+    function openShareModal() {
+        shareProject = getProject();
+        shareUrl = getShareUrl(window.location.href);
     }
 
     function openInExternalPlayground() {
@@ -1348,9 +1344,7 @@
                                         class="navbar-item mobile-menu-item"
                                         href="javascript:void(0);"
                                         onclick={() => {
-                                            shareUrl = getShareUrl(
-                                                window.location.href,
-                                            );
+                                            openShareModal();
                                             menuActive = false;
                                         }}
                                     >
@@ -1390,11 +1384,7 @@
                                                     class="button is-primary"
                                                     title="Share"
                                                     disabled={busyCount !== 0}
-                                                    onclick={() =>
-                                                        (shareUrl = getShareUrl(
-                                                            window.location
-                                                                .href,
-                                                        ))}
+                                                    onclick={openShareModal}
                                                 >
                                                     <span class="icon">
                                                         <Fa
@@ -1664,45 +1654,12 @@
             on:cancel={() => getModelResolve(false)}
         />
 
-        <Modal
+        <ShareModal
             active={shareUrl}
-            title="Share this project"
+            {shareUrl}
+            project={shareProject}
             on:cancel={() => (shareUrl = null)}
-        >
-            <div class="field has-addons">
-                <p class="control is-expanded">
-                    <input
-                        bind:this={shareUrlInput}
-                        class="input"
-                        type="text"
-                        value={shareUrl}
-                        onclick={() => shareUrlInput.select()}
-                        readonly
-                    />
-                </p>
-                <p class="control">
-                    <button
-                        type="button"
-                        class="button"
-                        class:is-primary={!copiedShareUrl}
-                        class:is-success={copiedShareUrl}
-                        onclick={copyShareUrl}
-                    >
-                        <span class="icon"><Fa icon={faClipboard} /></span>
-                    </button>
-                </p>
-            </div>
-            {#snippet footer()}
-                <div>
-                    <button
-                        class="button is-primary"
-                        onclick={() => (shareUrl = null)}
-                    >
-                        Done
-                    </button>
-                </div>
-            {/snippet}
-        </Modal>
+        />
         {@render children?.()}
     </div>
 </div>

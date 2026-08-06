@@ -22,6 +22,30 @@ export const EMBED_OPTIONS = [
     'showOutputRightControls',
 ];
 
+export const DEFAULT_EMBED_OPTIONS = {
+    theme: 'auto',
+    showVersionSwitcher: true,
+    showSolverDropdown: true,
+    showShareButton: true,
+    showDownloadButton: true,
+    showExternalPlaygroundButton: false,
+    showTabs: true,
+    canEditTabs: true,
+    compilationEnabled: true,
+    canEditSolverSettings: true,
+    enabledSolvers: null,
+    canSwitchOrientation: true,
+    hideOutputOnStartup: true,
+    autoFocus: true,
+    splitterDirection: 'vertical',
+    splitterSize: 75,
+    autoClearOutput: false,
+    showClearOutput: true,
+    showAutoClearOutput: true,
+    showOutputSectionToggles: true,
+    showOutputRightControls: true,
+};
+
 function isObject(value) {
     return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
