@@ -11,6 +11,15 @@ describe('parseEmbedConfig', () => {
             JSON.stringify({
                 theme: 'dark',
                 showTabs: false,
+                autoFocus: false,
+                splitterDirection: 'horizontal',
+                splitterSize: 60,
+                autoClearOutput: true,
+                showClearOutput: false,
+                showAutoClearOutput: false,
+                showOutputSectionToggles: false,
+                showOutputRightControls: false,
+                showExternalPlaygroundButton: true,
                 unsupported: true,
                 project: {
                     files: [{ name: 'model.mzn', contents: 'solve satisfy;' }],
@@ -19,7 +28,19 @@ describe('parseEmbedConfig', () => {
         );
 
         expect(parseEmbedConfig(`#embed=${config}`)).toEqual({
-            options: { theme: 'dark', showTabs: false },
+            options: {
+                theme: 'dark',
+                showTabs: false,
+                autoFocus: false,
+                splitterDirection: 'horizontal',
+                splitterSize: 60,
+                autoClearOutput: true,
+                showClearOutput: false,
+                showAutoClearOutput: false,
+                showOutputSectionToggles: false,
+                showOutputRightControls: false,
+                showExternalPlaygroundButton: true,
+            },
             project: {
                 files: [{ name: 'model.mzn', contents: 'solve satisfy;' }],
                 tab: 0,

@@ -4,6 +4,7 @@ export const EMBED_OPTIONS = [
     'showSolverDropdown',
     'showShareButton',
     'showDownloadButton',
+    'showExternalPlaygroundButton',
     'showTabs',
     'canEditTabs',
     'compilationEnabled',
@@ -11,10 +12,30 @@ export const EMBED_OPTIONS = [
     'enabledSolvers',
     'canSwitchOrientation',
     'hideOutputOnStartup',
+    'autoFocus',
+    'splitterDirection',
+    'splitterSize',
+    'autoClearOutput',
+    'showClearOutput',
+    'showAutoClearOutput',
+    'showOutputSectionToggles',
+    'showOutputRightControls',
 ];
 
 function isObject(value) {
     return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+export function normaliseEmbedOptions(config) {
+    if (!isObject(config)) {
+        throw new Error('Embed configuration must be an object');
+    }
+    return Object.fromEntries(
+        EMBED_OPTIONS.filter((key) => config[key] !== undefined).map((key) => [
+            key,
+            config[key],
+        ]),
+    );
 }
 
 export function normaliseProject(project) {
@@ -45,12 +66,7 @@ export function parseEmbedConfig(hash) {
     if (config.url !== undefined && typeof config.url !== 'string') {
         throw new Error('Embed url must be a string');
     }
-    const options = Object.fromEntries(
-        EMBED_OPTIONS.filter((key) => config[key] !== undefined).map((key) => [
-            key,
-            config[key],
-        ]),
-    );
+    const options = normaliseEmbedOptions(config);
     return {
         options,
         project:
