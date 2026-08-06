@@ -1,0 +1,121 @@
+import { describe, expect, test, vi } from 'vitest';
+import {
+    createEmbedEnvelope,
+    createEmbedProtocol,
+    parseEmbedEnvelope,
+} from '../../src/lib/embedProtocol.js';
+
+function createWindow() {
+    const listeners = new Set();
+    return {
+        addEventListener: (_type, listener) => listeners.add(listener),
+        removeEventListener: (_type, listener) => listeners.delete(listener),
+        dispatchMessage(data, source) {
+            for (const listener of listeners)
+                listener({ data, source, origin: 'https://host.test' });
+        },
+        setTimeout,
+        clearTimeout,
+    };
+}
+
+describe('embed protocol', () => {
+    test('creates and parses versioned envelopes', () => {
+        const envelope = createEmbedEnvelope('get-project', {}, 'request-1');
+
+        expect(parseEmbedEnvelope(envelope)).toEqual(envelope);
+        expect(parseEmbedEnvelope({ ...envelope, version: 2 })).toBeNull();
+        expect(
+            parseEmbedEnvelope({ ...envelope, payload: 'invalid' }),
+        ).toBeNull();
+    });
+
+    test('discards commands before ready and rejects messages from another source', async () => {
+        const hostWindow = createWindow();
+        const parentWindow = { postMessage: vi.fn() };
+        const operations = { getProject: vi.fn(() => ({ files: [] })) };
+        const protocol = createEmbedProtocol({
+            hostWindow,
+            parentWindow,
+            operations,
+        });
+        protocol.start();
+
+        hostWindow.dispatchMessage(
+            createEmbedEnvelope('get-project', {}, 'before'),
+            parentWindow,
+        );
+        hostWindow.dispatchMessage(
+            createEmbedEnvelope('get-project', {}, 'wrong'),
+            {},
+        );
+        await Promise.resolve();
+        expect(operations.getProject).not.toHaveBeenCalled();
+
+        protocol.announceReady();
+        hostWindow.dispatchMessage(
+            createEmbedEnvelope('get-project', {}, 'after'),
+            parentWindow,
+        );
+        await Promise.resolve();
+        expect(operations.getProject).toHaveBeenCalledOnce();
+        expect(parentWindow.postMessage).toHaveBeenLastCalledWith(
+            createEmbedEnvelope(
+                'response',
+                { project: { files: [] } },
+                'after',
+            ),
+            '*',
+        );
+    });
+
+    test('correlates requests and cleans up unresolved requests on teardown', async () => {
+        const hostWindow = createWindow();
+        const parentWindow = { postMessage: vi.fn() };
+        const protocol = createEmbedProtocol({
+            hostWindow,
+            parentWindow,
+            operations: {},
+        });
+        protocol.start();
+        const response = protocol.request('host-command');
+        const request = parentWindow.postMessage.mock.calls[0][0];
+
+        hostWindow.dispatchMessage(
+            createEmbedEnvelope('response', { ok: true }, request.requestId),
+            parentWindow,
+        );
+        await expect(response).resolves.toEqual({ ok: true });
+
+        const pending = protocol.request('another-command');
+        protocol.destroy();
+        await expect(pending).rejects.toThrow('destroyed');
+    });
+
+    test('reports malformed and unknown commands safely', async () => {
+        const hostWindow = createWindow();
+        const parentWindow = { postMessage: vi.fn() };
+        const protocol = createEmbedProtocol({
+            hostWindow,
+            parentWindow,
+            operations: {},
+        });
+        protocol.start();
+        protocol.announceReady();
+
+        hostWindow.dispatchMessage({ channel: 'wrong' }, parentWindow);
+        hostWindow.dispatchMessage(
+            createEmbedEnvelope('unknown', {}, 'request-1'),
+            parentWindow,
+        );
+        await Promise.resolve();
+        expect(parentWindow.postMessage).toHaveBeenLastCalledWith(
+            createEmbedEnvelope(
+                'error',
+                { message: 'Unknown command: unknown' },
+                'request-1',
+            ),
+            '*',
+        );
+    });
+});

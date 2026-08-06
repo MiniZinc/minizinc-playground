@@ -1,23 +1,30 @@
 <script>
     import { run } from 'svelte/legacy';
 
-    import { onMount } from 'svelte';
+    import { onDestroy, onMount, tick } from 'svelte';
     import Playground from './lib/Playground.svelte';
     import RecentProjectsModal from './lib/RecentProjectsModal.svelte';
     import { loadFromUrl } from './lib/loadFromUrl';
     import Fa from 'svelte-fa';
     import { faClockRotateLeft } from '@fortawesome/free-solid-svg-icons';
-    import { settings } from './stores';
+    import { initialiseSettings, settings } from './stores';
+    import { normaliseProject, parseEmbedConfig } from './lib/embedConfig';
+    import { createEmbedProtocol } from './lib/embedProtocol';
+    import { version as applicationVersion } from '../package.json';
 
     let playground = $state();
-    let project = $state({
-        files: [],
-    });
+    const embedConfig = parseEmbedConfig(window.location.hash);
+    const embedded = embedConfig !== null;
+    const embedOptions = embedConfig?.options || {};
+    initialiseSettings({ persistence: !embedded });
+
+    let project = $state(null);
     let timestamp = null;
     let openRecent = $state(false);
     let solvers = $state([]);
+    let embedProtocol = null;
     function getRecentProjects(solvers, $settings) {
-        if (!playground || !$settings) {
+        if (embedded || !playground || !$settings) {
             return [];
         }
         return Object.entries($settings.sessions)
@@ -58,7 +65,7 @@
             // For backwards compatibility with initial version
             if (p.solver === 0) {
                 p.solverId = 'org.minizinc.gecode_presolver';
-            } else if (project.solver === 1) {
+            } else if (p.solver === 1) {
                 p.solverId = 'org.minizinc.mip.coin-bc';
             }
         }
@@ -67,6 +74,9 @@
 
     let ignoreHashChange = false;
     async function hashChange() {
+        if (embedded) {
+            return;
+        }
         const hash = window.location.hash;
         if (hash.length > 0) {
             ignoreHashChange = true;
@@ -134,7 +144,7 @@
             return;
         }
 
-        if (project.files.length === 0) {
+        if (!project || project.files.length === 0) {
             openProject(newSession(), {
                 files: [
                     {
@@ -148,9 +158,62 @@
         }
     }
 
-    onMount(() => hashChange());
+    async function startEmbeddedPlayground() {
+        if (embedConfig.url) {
+            project = await loadFromUrl(embedConfig.url);
+        } else if (embedConfig.project) {
+            project = embedConfig.project;
+        } else {
+            project = {
+                files: [
+                    {
+                        name: 'Playground.mzn',
+                        contents: defaultModel,
+                        anchor: defaultModel.length,
+                    },
+                ],
+            };
+        }
+        await tick();
+        await playground.whenProjectLoaded();
+        embedProtocol = createEmbedProtocol({
+            hostWindow: window,
+            operations: {
+                loadProject: async (nextProject) => {
+                    project = normaliseProject(nextProject);
+                    await tick();
+                    await playground.whenProjectLoaded();
+                    return { project: playground.getProject() };
+                },
+                getProject: () => playground.getProject(),
+                run: () => playground.run(),
+                stop: () => playground.stop(),
+                compile: () => playground.compile(),
+                clearOutput: () => playground.clearOutput(),
+            },
+            getReadyPayload: () => ({
+                protocolVersion: 1,
+                applicationVersion,
+                minizincVersion: playground.getMiniZincVersion(),
+            }),
+        });
+        embedProtocol.start();
+        embedProtocol.announceReady();
+    }
+
+    onMount(() => {
+        if (embedded) {
+            startEmbeddedPlayground();
+        } else {
+            hashChange();
+        }
+    });
+    onDestroy(() => embedProtocol?.destroy());
 
     function saveProject() {
+        if (embedded) {
+            return;
+        }
         if (sessionStorage.mznPlaygroundSession && playground.hasFiles()) {
             try {
                 const project = playground.getProject();
@@ -208,8 +271,14 @@
     }
     let recentProjects = $derived(getRecentProjects(solvers, $settings));
     run(() => {
-        forkOnExternalChange($settings);
+        if (!embedded) {
+            forkOnExternalChange($settings);
+        }
     });
+
+    function notifyEmbed(type, event) {
+        embedProtocol?.notify(type, event.detail);
+    }
 </script>
 
 <svelte:document
@@ -225,52 +294,74 @@
     <Playground
         bind:this={playground}
         {project}
+        theme={embedOptions.theme}
+        showVersionSwitcher={embedOptions.showVersionSwitcher}
+        showSolverDropdown={embedOptions.showSolverDropdown}
+        showShareButton={embedOptions.showShareButton}
+        showDownloadButton={embedOptions.showDownloadButton}
+        showTabs={embedOptions.showTabs}
+        canEditTabs={embedOptions.canEditTabs}
+        compilationEnabled={embedOptions.compilationEnabled}
+        canEditSolverSettings={embedOptions.canEditSolverSettings}
+        enabledSolvers={embedOptions.enabledSolvers}
+        canSwitchOrientation={embedOptions.canSwitchOrientation}
+        hideOutputOnStartup={embedOptions.hideOutputOnStartup}
         bind:autoClearOutput={$settings.autoClearOutput}
         bind:splitterDirection={$settings.splitterDirection}
         bind:splitterSize={$settings.splitterSize}
-        on:solversChanged={(e) => (solvers = e.detail.solvers)}
+        on:solversChanged={(e) => {
+            solvers = e.detail.solvers;
+            notifyEmbed('solvers-changed', e);
+        }}
+        on:projectChanged={(e) => notifyEmbed('project-changed', e)}
+        on:runStarted={(e) => notifyEmbed('run-started', e)}
+        on:output={(e) => notifyEmbed('output', e)}
+        on:runFinished={(e) => notifyEmbed('run-finished', e)}
+        on:runError={(e) => notifyEmbed('run-error', e)}
     >
-        {#snippet navbarBeforeShareButtons({ isMobile })}
-            {#if isMobile}
-                <!-- svelte-ignore a11y_invalid_attribute -->
-                <a
-                    class="navbar-item mobile-menu-item"
-                    href="javascript:void(0);"
-                    onclick={() => (openRecent = true)}
-                >
-                    <span class="icon">
-                        <Fa icon={faClockRotateLeft} />
-                    </span>
-                    <span>Open recent project</span>
-                </a>
-            {:else}
-                <div class="navbar-item">
-                    <div class="field">
-                        <div class="control">
-                            <button
-                                class="button"
-                                title="Open recent project"
-                                onclick={() => (openRecent = true)}
-                            >
-                                <span class="icon">
-                                    <Fa icon={faClockRotateLeft} />
-                                </span>
-                            </button>
+        {#if !embedded}
+            {#snippet navbarBeforeShareButtons({ isMobile })}
+                {#if isMobile}
+                    <!-- svelte-ignore a11y_invalid_attribute -->
+                    <a
+                        class="navbar-item mobile-menu-item"
+                        href="javascript:void(0);"
+                        onclick={() => (openRecent = true)}
+                    >
+                        <span class="icon">
+                            <Fa icon={faClockRotateLeft} />
+                        </span>
+                        <span>Open recent project</span>
+                    </a>
+                {:else}
+                    <div class="navbar-item">
+                        <div class="field">
+                            <div class="control">
+                                <button
+                                    class="button"
+                                    title="Open recent project"
+                                    onclick={() => (openRecent = true)}
+                                >
+                                    <span class="icon">
+                                        <Fa icon={faClockRotateLeft} />
+                                    </span>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            {/if}
-        {/snippet}
-        <RecentProjectsModal
-            projects={recentProjects}
-            active={openRecent}
-            on:cancel={() => (openRecent = false)}
-            on:accept={(e) =>
-                openProject(
-                    e.detail.project.key,
-                    $settings.sessions[e.detail.project.key],
-                )}
-        />
+                {/if}
+            {/snippet}
+            <RecentProjectsModal
+                projects={recentProjects}
+                active={openRecent}
+                on:cancel={() => (openRecent = false)}
+                on:accept={(e) =>
+                    openProject(
+                        e.detail.project.key,
+                        $settings.sessions[e.detail.project.key],
+                    )}
+            />
+        {/if}
     </Playground>
 </div>
 
