@@ -40,18 +40,25 @@ JSON configuration in the `#embed=` fragment and give the iframe a fixed height:
 ```
 
 The configuration may set `theme`, `showVersionSwitcher`,
-`showSolverDropdown`, `showShareButton`, `showDownloadButton`, `showTabs`,
-`canEditTabs`, `compilationEnabled`, `canEditSolverSettings`, `enabledSolvers`,
-`canSwitchOrientation`, and `hideOutputOnStartup`. It may also contain either
+`showSolverDropdown`, `showShareButton`, `showDownloadButton`,
+`showExternalPlaygroundButton`, `showTabs`, `canEditTabs`,
+`compilationEnabled`, `canEditSolverSettings`, `enabledSolvers`,
+`canSwitchOrientation`, `hideOutputOnStartup`, `autoFocus`,
+`splitterDirection`, `splitterSize`, `autoClearOutput`, `showClearOutput`,
+`showAutoClearOutput`, `showOutputSectionToggles`, and
+`showOutputRightControls`. The external-playground button opens a shared
+project URL using the current page's origin. The configuration may also contain either
 `project` (the existing `getProject()` format) or `url` (a supported remote
 MiniZinc file or project), but not both. Embedded instances do not use browser
 storage.
 
 After loading, the iframe sends a `ready` `postMessage` envelope on the
 `minizinc-playground` channel. Hosts can then send version 1 `load-project`,
-`get-project`, `run`, `stop`, `compile`, and `clear-output` commands. Commands
-use `{ channel, version, type, requestId, payload }`; `load-project` receives
-`{ project }`. The iframe returns `response` or `error` with the same
+`get-project`, `run`, `stop`, `compile`, `clear-output`, and `set-options`
+commands. Commands use `{ channel, version, type, requestId, payload }`;
+`load-project` receives `{ project }`. `set-options` receives a partial
+configuration object: supplied supported options replace their current values,
+and omitted options remain unchanged. The iframe returns `response` or `error` with the same
 `requestId`, and emits `project-changed`, `run-started`, `output`,
 `run-finished`, `run-error`, and `solvers-changed` events. The target origin is
 currently `*`, so hosts should validate received messages.

@@ -8,15 +8,39 @@
     import Fa from 'svelte-fa';
     import { faClockRotateLeft } from '@fortawesome/free-solid-svg-icons';
     import { initialiseSettings, settings } from './stores';
-    import { normaliseProject, parseEmbedConfig } from './lib/embedConfig';
+    import {
+        normaliseEmbedOptions,
+        normaliseProject,
+        parseEmbedConfig,
+    } from './lib/embedConfig';
     import { createEmbedProtocol } from './lib/embedProtocol';
     import { version as applicationVersion } from '../package.json';
 
     let playground = $state();
     const embedConfig = parseEmbedConfig(window.location.hash);
     const embedded = embedConfig !== null;
-    const embedOptions = embedConfig?.options || {};
+    let embedOptions = $state(embedConfig?.options || {});
     initialiseSettings({ persistence: !embedded });
+    function updateEmbedOptions(options) {
+        const nextOptions = normaliseEmbedOptions(options);
+        embedOptions = { ...embedOptions, ...nextOptions };
+        settings.update((current) => ({
+            ...current,
+            ...(nextOptions.autoClearOutput === undefined
+                ? {}
+                : { autoClearOutput: nextOptions.autoClearOutput }),
+            ...(nextOptions.splitterDirection === undefined
+                ? {}
+                : { splitterDirection: nextOptions.splitterDirection }),
+            ...(nextOptions.splitterSize === undefined
+                ? {}
+                : { splitterSize: nextOptions.splitterSize }),
+        }));
+        return embedOptions;
+    }
+    if (embedded) {
+        updateEmbedOptions(embedConfig.options);
+    }
 
     let project = $state(null);
     let timestamp = null;
@@ -190,6 +214,17 @@
                 stop: () => playground.stop(),
                 compile: () => playground.compile(),
                 clearOutput: () => playground.clearOutput(),
+                setOptions: (options) => {
+                    if (
+                        options.project !== undefined ||
+                        options.url !== undefined
+                    ) {
+                        throw new Error(
+                            'set-options cannot change project or url',
+                        );
+                    }
+                    return updateEmbedOptions(options);
+                },
             },
             getReadyPayload: () => ({
                 protocolVersion: 1,
@@ -299,6 +334,7 @@
         showSolverDropdown={embedOptions.showSolverDropdown}
         showShareButton={embedOptions.showShareButton}
         showDownloadButton={embedOptions.showDownloadButton}
+        showExternalPlaygroundButton={embedOptions.showExternalPlaygroundButton}
         showTabs={embedOptions.showTabs}
         canEditTabs={embedOptions.canEditTabs}
         compilationEnabled={embedOptions.compilationEnabled}
@@ -306,6 +342,11 @@
         enabledSolvers={embedOptions.enabledSolvers}
         canSwitchOrientation={embedOptions.canSwitchOrientation}
         hideOutputOnStartup={embedOptions.hideOutputOnStartup}
+        autoFocus={embedOptions.autoFocus}
+        showClearOutput={embedOptions.showClearOutput}
+        showAutoClearOutput={embedOptions.showAutoClearOutput}
+        showOutputSectionToggles={embedOptions.showOutputSectionToggles}
+        showOutputRightControls={embedOptions.showOutputRightControls}
         bind:autoClearOutput={$settings.autoClearOutput}
         bind:splitterDirection={$settings.splitterDirection}
         bind:splitterSize={$settings.splitterSize}

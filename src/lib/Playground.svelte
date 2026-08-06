@@ -53,7 +53,7 @@
      * @property {boolean} [canEditSolverSettings]
      * @property {boolean} [showShareButton]
      * @property {boolean} [showDownloadButton]
-     * @property {any} [externalPlaygroundURL]
+     * @property {boolean} [showExternalPlaygroundButton]
      * @property {string} [splitterDirection]
      * @property {number} [splitterSize]
      * @property {boolean} [canSwitchOrientation]
@@ -88,7 +88,7 @@
         canEditSolverSettings = true,
         showShareButton = true,
         showDownloadButton = true,
-        externalPlaygroundURL = null,
+        showExternalPlaygroundButton = false,
         splitterDirection = $bindable('vertical'),
         splitterSize = $bindable(75),
         canSwitchOrientation = true,
@@ -907,9 +907,7 @@
     }
 
     function openInExternalPlayground() {
-        if (externalPlaygroundURL) {
-            window.open(getShareUrl(externalPlaygroundURL), '_blank').focus();
-        }
+        window.open(getShareUrl(window.location.href), '_blank').focus();
     }
 
     let prevText = null;
@@ -1351,7 +1349,7 @@
                                         <span>Share this project</span>
                                     </a>
                                 {/if}
-                                {#if externalPlaygroundURL && busyCount === 0}
+                                {#if showExternalPlaygroundButton && busyCount === 0}
                                     <!-- svelte-ignore a11y_invalid_attribute -->
                                     <a
                                         class="navbar-item mobile-menu-item"
@@ -1411,7 +1409,7 @@
                                                 </button>
                                             </div>
                                         {/if}
-                                        {#if externalPlaygroundURL}
+                                        {#if showExternalPlaygroundButton}
                                             <div class="control">
                                                 <button
                                                     class="button is-primary"

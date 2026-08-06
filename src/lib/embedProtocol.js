@@ -8,6 +8,7 @@ const commandTypes = new Set([
     'stop',
     'compile',
     'clear-output',
+    'set-options',
 ]);
 
 function isObject(value) {
@@ -74,8 +75,8 @@ export function createEmbedProtocol({
             return;
         }
         if (
-            (type === 'load-project' && !isObject(payload.project)) ||
-            !isObject(payload)
+            !isObject(payload) ||
+            (type === 'load-project' && !isObject(payload.project))
         ) {
             if (requestId)
                 send(
@@ -93,6 +94,8 @@ export function createEmbedProtocol({
                 result = { project: operations.getProject() };
             else if (type === 'clear-output')
                 result = await operations.clearOutput();
+            else if (type === 'set-options')
+                result = { options: await operations.setOptions(payload) };
             else result = await operations[type]();
             if (requestId) send('response', result ?? {}, requestId);
         } catch (error) {

@@ -118,4 +118,39 @@ describe('embed protocol', () => {
             '*',
         );
     });
+
+    test('passes partial runtime options to the configured operation', async () => {
+        const hostWindow = createWindow();
+        const parentWindow = { postMessage: vi.fn() };
+        const setOptions = vi.fn((options) => ({ ...options, theme: 'light' }));
+        const protocol = createEmbedProtocol({
+            hostWindow,
+            parentWindow,
+            operations: { setOptions },
+        });
+        protocol.start();
+        protocol.announceReady();
+
+        hostWindow.dispatchMessage(
+            createEmbedEnvelope(
+                'set-options',
+                { splitterDirection: 'vertical' },
+                'request-1',
+            ),
+            parentWindow,
+        );
+        await Promise.resolve();
+
+        expect(setOptions).toHaveBeenCalledWith({
+            splitterDirection: 'vertical',
+        });
+        expect(parentWindow.postMessage).toHaveBeenLastCalledWith(
+            createEmbedEnvelope(
+                'response',
+                { options: { splitterDirection: 'vertical', theme: 'light' } },
+                'request-1',
+            ),
+            '*',
+        );
+    });
 });
