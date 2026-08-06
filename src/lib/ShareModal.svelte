@@ -164,7 +164,7 @@
         </details>
 
         <div class="field">
-            <label class="label" for="iframe-code">Embed code</label>
+            <label class="label" for="iframe-code">Iframe code</label>
             <div class="control">
                 <textarea
                     id="iframe-code"
@@ -179,6 +179,7 @@
         <button
             type="button"
             class="button"
+            aria-label="Copy iframe code"
             class:is-primary={!copied}
             class:is-success={copied}
             disabled={!iframeCode}

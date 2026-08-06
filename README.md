@@ -12,7 +12,7 @@ The GUI is styled using [Bulma](https://bulma.io) and [CodeMirror](https://codem
 
 The playground supports generating a link which opens the active project (including the current tab and solver settings) using the share button on the top-right. It may be useful to pass these through a link shortening service to get more friendly URLs.
 
-The same share button can also be used to embed the playground in an iframe. See the [embedding documentation](docs/embed.md) for the URL format, configuration options, and messaging API.
+The same share button can also be used to embed the playground in an iframe. A browser script at [`https://play.minizinc.dev/embed.js`](https://play.minizinc.dev/embed.js) provides a small JavaScript client for controlling interactive embeds. See the [embedding documentation](docs/embed.md) for the URL format, configuration options, and client API.
 
 ### Loading code directly
 

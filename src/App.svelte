@@ -14,7 +14,6 @@
         parseEmbedConfig,
     } from './lib/embedConfig';
     import { createEmbedProtocol } from './lib/embedProtocol';
-    import { version as applicationVersion } from '../package.json';
 
     let playground = $state();
     const embedConfig = parseEmbedConfig(window.location.hash);
@@ -227,8 +226,6 @@
                 },
             },
             getReadyPayload: () => ({
-                protocolVersion: 1,
-                applicationVersion,
                 minizincVersion: playground.getMiniZincVersion(),
             }),
         });

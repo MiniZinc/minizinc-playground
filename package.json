@@ -3,17 +3,11 @@
     "private": true,
     "version": "0.0.0",
     "type": "module",
-    "exports": {
-        ".": {
-            "require": "./dist/minizinc-playground.umd.cjs",
-            "default": "./dist/minizinc-playground.js"
-        },
-        "./style.css": "./dist/style.css"
-    },
     "scripts": {
         "format:check": "prettier -c .",
         "format": "prettier -w .",
-        "build": "vite build",
+        "build": "vite build && npm run build:embed",
+        "build:embed": "vite build --mode library",
         "preview": "vite preview",
         "dev": "vite",
         "test:unit": "vitest run --project unit",
