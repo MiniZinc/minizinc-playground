@@ -372,7 +372,7 @@
                                             {#if (part.type === 'error' && showErrors) || (part.type === 'warning' && showWarnings)}
                                                 <ErrorOutput
                                                     msg={part}
-                                                    ongoto={ongoto}
+                                                    {ongoto}
                                                 />
                                             {/if}
                                         {/if}

@@ -8,13 +8,7 @@
      */
 
     /** @type {Props} */
-    let {
-        active = false,
-        onactivate,
-        oncancel,
-        onopen,
-        onnew,
-    } = $props();
+    let { active = false, onactivate, oncancel, onopen, onnew } = $props();
 
     let fileInput = $state();
     let files = $state();
@@ -71,7 +65,7 @@
         {active}
         title="Import from URL"
         onactivate={setFocus}
-        oncancel={oncancel}
+        {oncancel}
         onsubmit={importFromUrl}
     >
         {#if error}
@@ -103,12 +97,7 @@
         {/snippet}
     </Modal>
 {:else}
-    <Modal
-        {active}
-        title="Create new file"
-        onactivate={setFocus}
-        oncancel={oncancel}
-    >
+    <Modal {active} title="Create new file" onactivate={setFocus} {oncancel}>
         <aside class="menu">
             <p class="menu-label">Model</p>
             <ul class="menu-list">

@@ -14,7 +14,15 @@
      */
 
     /** @type {Props} */
-    let { title, active = false, children, footer, onactivate, oncancel, onsubmit } = $props();
+    let {
+        title,
+        active = false,
+        children,
+        footer,
+        onactivate,
+        oncancel,
+        onsubmit,
+    } = $props();
     let form = $state();
 
     async function setFocus(active) {

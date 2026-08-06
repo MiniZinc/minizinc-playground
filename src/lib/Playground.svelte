@@ -1468,8 +1468,7 @@
                                                 (newFileRequested = true)}
                                             onrename={rename}
                                             onclose={({ index }) =>
-                                                (deleteFileRequested =
-                                                    index)}
+                                                (deleteFileRequested = index)}
                                             onmanageFiles={() =>
                                                 (managingFiles = true)}
                                         />

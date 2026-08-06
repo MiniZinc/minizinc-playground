@@ -41,12 +41,7 @@
     }
 </script>
 
-<Modal
-    {active}
-    title="Open recent project"
-    onsubmit={accept}
-    oncancel={oncancel}
->
+<Modal {active} title="Open recent project" onsubmit={accept} {oncancel}>
     <div>
         {#each projects as project, i}
             <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -77,11 +72,7 @@
     {#snippet footer()}
         <div>
             <button class="button is-primary" disabled={!valid}> Open </button>
-            <button
-                type="button"
-                class="button"
-                onclick={() => oncancel?.()}
-            >
+            <button type="button" class="button" onclick={() => oncancel?.()}>
                 Cancel
             </button>
         </div>
