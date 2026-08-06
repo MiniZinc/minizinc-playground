@@ -44,32 +44,27 @@ function lezer() {
 }
 
 const libraryBuild = {
-    lib: { entry: 'src/embed.js', name: 'MiniZincPlayground' },
+    lib: {
+        entry: 'src/embed.js',
+        name: 'MiniZincPlayground',
+        formats: ['iife', 'es'],
+        fileName: (format) =>
+            ({
+                iife: 'embed.js',
+                es: 'embed.module.js',
+            })[format],
+    },
+    // The application build runs first. Keep its output when this second
+    // build adds the standalone embed client.
+    emptyOutDir: false,
     rollupOptions: { output: { globals: (g) => g } },
 };
 
-const buildConfigs = {
-    library: libraryBuild,
-    'library-external-svelte': {
-        lib: { ...libraryBuild.lib },
-        rollupOptions: {
-            ...libraryBuild.rollupOptions,
-            external: ['svelte', /svelte\/.*/],
-        },
-        outDir: 'dist/external-svelte',
-    },
-};
-
-const svelteLibOptions = {
-    compilerOptions: { compatibility: { componentApi: 4 } },
-};
+const buildConfigs = { library: libraryBuild };
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
     build: buildConfigs[mode],
     base: process.env.BASE_PATH,
-    plugins: [
-        lezer(),
-        svelte({ ...(mode in buildConfigs ? svelteLibOptions : {}) }),
-    ],
+    plugins: [lezer(), svelte()],
 }));

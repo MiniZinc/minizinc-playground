@@ -1,4 +1,3 @@
-import './style.scss';
-import Playground from './lib/Playground.svelte';
+import minizincPlayground from './lib/embedClient.js';
 
-export default Playground;
+export default minizincPlayground;

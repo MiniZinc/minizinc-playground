@@ -20,11 +20,10 @@ function createWindow() {
 }
 
 describe('embed protocol', () => {
-    test('creates and parses versioned envelopes', () => {
+    test('creates and parses envelopes', () => {
         const envelope = createEmbedEnvelope('get-project', {}, 'request-1');
 
         expect(parseEmbedEnvelope(envelope)).toEqual(envelope);
-        expect(parseEmbedEnvelope({ ...envelope, version: 2 })).toBeNull();
         expect(
             parseEmbedEnvelope({ ...envelope, payload: 'invalid' }),
         ).toBeNull();
@@ -103,7 +102,7 @@ describe('embed protocol', () => {
         protocol.start();
         protocol.announceReady();
 
-        hostWindow.dispatchMessage({ channel: 'wrong' }, parentWindow);
+        hostWindow.dispatchMessage({ type: 42 }, parentWindow);
         hostWindow.dispatchMessage(
             createEmbedEnvelope('unknown', {}, 'request-1'),
             parentWindow,

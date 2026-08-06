@@ -1,6 +1,3 @@
-export const EMBED_CHANNEL = 'minizinc-playground';
-export const EMBED_PROTOCOL_VERSION = 1;
-
 const commandTypes = new Set([
     'load-project',
     'get-project',
@@ -18,8 +15,6 @@ function isObject(value) {
 export function parseEmbedEnvelope(value) {
     if (!isObject(value)) return null;
     if (
-        value.channel !== EMBED_CHANNEL ||
-        value.version !== EMBED_PROTOCOL_VERSION ||
         typeof value.type !== 'string' ||
         (value.requestId !== undefined &&
             (typeof value.requestId !== 'string' ||
@@ -32,8 +27,6 @@ export function parseEmbedEnvelope(value) {
 
 export function createEmbedEnvelope(type, payload, requestId) {
     return {
-        channel: EMBED_CHANNEL,
-        version: EMBED_PROTOCOL_VERSION,
         type,
         ...(requestId === undefined ? {} : { requestId }),
         ...(payload === undefined ? {} : { payload }),
