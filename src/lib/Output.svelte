@@ -12,6 +12,7 @@
      * @property {boolean} [showAutoClearOutput]
      * @property {boolean} [showSectionToggles]
      * @property {boolean} [showRightControls]
+     * @property {boolean} [showCheckerOutput]
      * @property {boolean} [isTab]
      * @property {import('svelte').Snippet<[]>} [beforeRightControls]
      * @property {() => void} [onclear]
@@ -25,6 +26,7 @@
         showAutoClearOutput = true,
         showSectionToggles = true,
         showRightControls = true,
+        showCheckerOutput = true,
         isTab = false,
         beforeRightControls,
         onclear,
@@ -382,22 +384,24 @@
                                 <pre>----------</pre>
                                 <br />
                             {:else if msg.type === 'checker'}
-                                <span class="mzn-checker">
-                                    <pre>% Solution checker report:</pre>
-                                    <br />
-                                    {#each processCheckerMessage(msg, hiddenSections) as part}
-                                        {#if part.type === 'text'}
-                                            <pre>{part.message}</pre>
-                                        {:else if part.type === 'error' || part.type === 'warning'}
-                                            {#if (part.type === 'error' && showErrors) || (part.type === 'warning' && showWarnings)}
-                                                <ErrorOutput
-                                                    msg={part}
-                                                    {ongoto}
-                                                />
+                                {#if showCheckerOutput}
+                                    <span class="mzn-checker">
+                                        <pre>% Solution checker report:</pre>
+                                        <br />
+                                        {#each processCheckerMessage(msg, hiddenSections) as part}
+                                            {#if part.type === 'text'}
+                                                <pre>{part.message}</pre>
+                                            {:else if part.type === 'error' || part.type === 'warning'}
+                                                {#if (part.type === 'error' && showErrors) || (part.type === 'warning' && showWarnings)}
+                                                    <ErrorOutput
+                                                        msg={part}
+                                                        {ongoto}
+                                                    />
+                                                {/if}
                                             {/if}
-                                        {/if}
-                                    {/each}
-                                </span>
+                                        {/each}
+                                    </span>
+                                {/if}
                             {:else if msg.type === 'time'}
                                 {#if showTiming}
                                     <pre

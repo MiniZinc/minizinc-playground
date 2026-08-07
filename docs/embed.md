@@ -222,6 +222,7 @@ embed URL.
 | `showAutoClearOutput`          | boolean                       | `false`      | Show the auto-clear-output control.                           |
 | `showOutputSectionToggles`     | boolean                       | `false`      | Show output section toggles.                                  |
 | `showOutputRightControls`      | boolean                       | `false`      | Show controls on the right side of output.                    |
+| `showCheckerOutput`            | boolean                       | `true`       | Show solution checker reports in the output.                  |
 
 Example configuration with an inline project:
 

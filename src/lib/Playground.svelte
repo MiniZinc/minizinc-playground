@@ -64,6 +64,7 @@
      * @property {string} [theme]
      * @property {boolean} [hideOutputOnStartup]
      * @property {boolean} [autoFocus]
+     * @property {boolean} [showCheckerOutput]
      * @property {import('svelte').Snippet<[{ isMobile: boolean }]>} [navbarBeforeRunButtons]
      * @property {import('svelte').Snippet<[{ isMobile: boolean }]>} [navbarRunButtons]
      * @property {import('svelte').Snippet<[{ isMobile: boolean }]>} [navbarAfterRunButtons]
@@ -105,6 +106,7 @@
         theme = 'auto',
         hideOutputOnStartup = true,
         autoFocus = true,
+        showCheckerOutput = true,
         navbarBeforeRunButtons,
         navbarRunButtons,
         navbarAfterRunButtons,
@@ -1596,6 +1598,7 @@
                                             {showAutoClearOutput}
                                             showSectionToggles={showOutputSectionToggles}
                                             showRightControls={showOutputRightControls}
+                                            {showCheckerOutput}
                                             isTab={hasVisualisation}
                                         >
                                             {#snippet beforeRightControls()}
