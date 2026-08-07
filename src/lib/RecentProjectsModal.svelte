@@ -4,7 +4,9 @@
     /**
      * @typedef {Object} Props
      * @property {boolean} [active]
-     * @property {any} [projects]
+     * @property {any[]} [projects]
+     * @property {(payload: { project: any }) => void} [onaccept]
+     * @property {() => void} [oncancel]
      */
 
     /** @type {Props} */
@@ -14,6 +16,7 @@
 
     let valid = $derived(currentIndex >= 0 && currentIndex < projects.length);
 
+    /** @param {boolean} active */
     function init(active) {
         if (!active) {
             currentIndex = -1;
@@ -29,6 +32,7 @@
         }
     }
 
+    /** @param {{ files: Array<{ name: string }> }} project @param {boolean} [short] */
     function projectFileNames(project, short = true) {
         if (short) {
             const names = project.files.slice(0, 3).map((f) => f.name);

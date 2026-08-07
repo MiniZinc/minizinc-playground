@@ -13,7 +13,11 @@
     /**
      * @typedef {Object} Props
      * @property {boolean} [active]
-     * @property {any} [files]
+     * @property {any[]} [files]
+     * @property {() => void} [onclose]
+     * @property {(payload: { index: number, options: object }) => void} [onmodifyFile]
+     * @property {(payload: { index: number }) => void} [ondelete]
+     * @property {() => void} [onnewFile]
      */
 
     /** @type {Props} */

@@ -64,14 +64,20 @@
      * @property {string} [theme]
      * @property {boolean} [hideOutputOnStartup]
      * @property {boolean} [autoFocus]
-     * @property {import('svelte').Snippet<[any]>} [navbarBeforeRunButtons]
-     * @property {import('svelte').Snippet<[any]>} [navbarRunButtons]
-     * @property {import('svelte').Snippet<[any]>} [navbarAfterRunButtons]
-     * @property {import('svelte').Snippet<[any]>} [navbarAfterSolverSelector]
-     * @property {import('svelte').Snippet<[any]>} [navbarBeforeShareButtons]
-     * @property {import('svelte').Snippet<[any]>} [navbarShareButtons]
-     * @property {import('svelte').Snippet<[any]>} [navbarAfterShareButtons]
-     * @property {import('svelte').Snippet} [children]
+     * @property {import('svelte').Snippet<[{ isMobile: boolean }]>} [navbarBeforeRunButtons]
+     * @property {import('svelte').Snippet<[{ isMobile: boolean }]>} [navbarRunButtons]
+     * @property {import('svelte').Snippet<[{ isMobile: boolean }]>} [navbarAfterRunButtons]
+     * @property {import('svelte').Snippet<[{ isMobile: boolean }]>} [navbarAfterSolverSelector]
+     * @property {import('svelte').Snippet<[{ isMobile: boolean }]>} [navbarBeforeShareButtons]
+     * @property {import('svelte').Snippet<[{ isMobile: boolean }]>} [navbarShareButtons]
+     * @property {import('svelte').Snippet<[{ isMobile: boolean }]>} [navbarAfterShareButtons]
+     * @property {import('svelte').Snippet<[]>} [children]
+     * @property {(payload: { project: any }) => void} [onprojectChanged]
+     * @property {(payload: { files: string[], isCompile?: boolean }) => void} [onrunStarted]
+     * @property {(value: any) => void} [onoutput]
+     * @property {(payload: { files: string[], isCompile?: boolean }) => void} [onrunFinished]
+     * @property {(payload: { files: string[], error: { message: string }, isCompile?: boolean }) => void} [onrunError]
+     * @property {(payload: { solvers: any[] }) => void} [onsolversChanged]
      */
 
     /** @type {Props} */
@@ -128,7 +134,7 @@
         edge: { label: 'Edge', detail: 'development' },
     });
 
-    function loadSolvers(e) {
+    function loadSolvers() {
         const toLoad = edgeMiniZinc ? MiniZincEdge : MiniZincLatest;
         if (MiniZinc !== toLoad) {
             busyCount++;
@@ -168,6 +174,7 @@
         });
     });
 
+    /** @param {Record<string, any> | null | undefined} project */
     export async function loadProject(project) {
         if (!project) {
             return;
@@ -222,6 +229,7 @@
         }
     }
 
+    /** @param {import('@codemirror/state').EditorState} state */
     function editorChanged(state) {
         if (!currentFile) {
             return;
@@ -231,6 +239,7 @@
         notifyProjectChanged();
     }
 
+    /** @param {{ files: Array<Record<string, any>>, tab?: number, solverId?: string }} e */
     async function importFiles(e) {
         const offset = files.length;
         openFiles(e.files);
@@ -274,6 +283,7 @@
 
     let currentSolverIndex = $state(-1);
 
+    /** @param {any[]} _solvers @param {number} _currentSolverIndex */
     async function enforceValidSolver(_solvers, _currentSolverIndex) {
         await loadSolvers();
         if (currentSolverIndex < 0 || currentSolverIndex >= solvers.length) {
@@ -291,6 +301,7 @@
         showSolverConfig = !showSolverConfig;
     }
 
+    /** @param {number} index @param {boolean} [focus] @param {boolean} [saveCurrentFile] */
     async function selectTab(index, focus = true, saveCurrentFile = true) {
         if (editor && saveCurrentFile) {
             if (currentIndex < files.length) {
@@ -324,6 +335,7 @@
         }
     }
 
+    /** @param {string} suffix */
     function newFile(suffix) {
         let name = `Untitled${suffix}`;
         let i = 2;
@@ -344,6 +356,7 @@
         notifyProjectChanged();
     }
 
+    /** @param {Array<Record<string, any>>} toOpen @param {boolean} [focus] @param {boolean} [saveCurrentFile] */
     function openFiles(toOpen, focus = true, saveCurrentFile = true) {
         let toAdd = [];
         for (const file of toOpen) {
@@ -401,6 +414,7 @@
         notifyProjectChanged();
     }
 
+    /** @param {number} index */
     function closeFile(index) {
         const createNew = visibleFileCount === 1 && !files[index].hidden;
         files = [
@@ -430,6 +444,7 @@
         notifyProjectChanged();
     }
 
+    /** @param {number} index @param {Record<string, any>} opts */
     function modifyFile(index, opts) {
         if (currentFile && !isLoadingProject) {
             currentFile.state = editor.getState();
@@ -446,6 +461,7 @@
         notifyProjectChanged();
     }
 
+    /** @param {number} src @param {number} dest */
     function reorder(src, dest) {
         let newFiles;
         if (src < dest) {
@@ -469,10 +485,12 @@
         notifyProjectChanged();
     }
 
+    /** @param {Record<string, any>} file @param {any} effect */
     function enqueueEffect(file, effect) {
         file.effects = file.effects ? [...file.effects, effect] : [effect];
     }
 
+    /** @param {Record<string, any> | null | undefined} file */
     async function applyEffects(file) {
         if (editor && file && file.effects && file.effects.length > 0) {
             await tick();
@@ -485,6 +503,7 @@
     }
 
     let getModelResolve = $state(null);
+    /** @param {boolean} addChecker */
     async function getModel(addChecker) {
         busyCount++;
         currentFile.state = editor.getState();
@@ -624,6 +643,7 @@
         await runWith(model, fileList, options);
     }
 
+    /** @param {any} model @param {string[]} fileList @param {Record<string, any>} options */
     async function runWith(model, fileList, options) {
         onrunStarted?.({ files: fileList });
         hasRun = true;
@@ -759,6 +779,7 @@
     }
 
     let visQueue = null;
+    /** @param {any} value @param {number} [time] */
     function addOutput(value, time) {
         if (visQueue) {
             visQueue.then(() => {
@@ -784,6 +805,7 @@
         visualisationOpen = false;
     }
 
+    /** @param {any} value @param {number} [time] */
     async function processVisMessage(value, time) {
         if (value.type === 'trace' && value.section.startsWith('mzn_vis_')) {
             if (!hasVisualisation) {
@@ -907,6 +929,7 @@
 
     let shareUrl = $state(null);
     let shareProject = $state(null);
+    /** @param {string} base */
     function getShareUrl(base) {
         const project = getProject();
         const url = new URL(base);
@@ -924,6 +947,7 @@
     }
 
     let prevText = null;
+    /** @param {any} editor */
     async function checkCode(editor) {
         const view = editor.view;
         if (
@@ -964,6 +988,7 @@
         }
     }
 
+    /** @param {{ filename: string, firstLine: number, firstColumn: number }} loc */
     function gotoLocation(loc) {
         const i = files.findIndex((f) => f.name === loc.filename);
         if (i !== -1) {
@@ -983,10 +1008,12 @@
         }
     }
 
+    /** @param {{ detail: { item: any } }} e */
     function selectVersion(e) {
         edgeMiniZinc = e.detail.item === minizincVersions.edge;
     }
 
+    /** @param {boolean} dark */
     function setTheme(dark) {
         if (currentFile && !isLoadingProject) {
             currentFile.state = editor.getState();
@@ -1004,6 +1031,7 @@
     let hasVisualisation = $state(false);
     let visualisationOpen = $state(false);
 
+    /** @param {{ modelFile: string, dataFiles?: string[], options?: Record<string, any> }} cfg */
     function visReSolve(cfg) {
         if (minizinc) {
             stop();

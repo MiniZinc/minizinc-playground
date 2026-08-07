@@ -29,6 +29,14 @@ const eventPayloadKeys = {
     'solvers-changed': 'solvers',
 };
 
+/**
+ * @typedef {{ requestId: string, type: string, payload: any, resultKey?: string, resolve: (value: any) => void, reject: (reason?: any) => void }} PendingEntry
+ */
+
+/**
+ * @param {HTMLIFrameElement} iframe
+ * @param {Window} hostWindow
+ */
 function getOrigin(iframe, hostWindow) {
     const base = hostWindow.document?.baseURI || hostWindow.location?.href;
     if (!iframe.src || !base) {
@@ -37,10 +45,14 @@ function getOrigin(iframe, hostWindow) {
     return new URL(iframe.src, base).origin;
 }
 
+/** @param {unknown} message */
 function createError(message) {
     return message instanceof Error ? message : new Error(String(message));
 }
 
+/**
+ * @param {HTMLIFrameElement} iframe
+ */
 export default function minizincPlayground(iframe) {
     if (!iframe || !iframe.contentWindow) {
         throw new TypeError('Expected an iframe with a contentWindow');
@@ -63,6 +75,7 @@ export default function minizincPlayground(iframe) {
         rejectReady = reject;
     });
 
+    /** @param {string} type @param {any} payload @param {string} requestId */
     function send(type, payload, requestId) {
         frameWindow.postMessage(
             createEmbedEnvelope(type, payload, requestId),
@@ -70,6 +83,7 @@ export default function minizincPlayground(iframe) {
         );
     }
 
+    /** @param {string} type @param {any} payload */
     function notifyListeners(type, payload) {
         const callbacks = listeners.get(type);
         if (!callbacks) return;
@@ -84,6 +98,7 @@ export default function minizincPlayground(iframe) {
         }
     }
 
+    /** @param {PendingEntry} entry @param {unknown} error */
     function rejectEntry(entry, error) {
         pending.delete(entry.requestId);
         const index = queued.indexOf(entry);
@@ -91,6 +106,7 @@ export default function minizincPlayground(iframe) {
         entry.reject(createError(error));
     }
 
+    /** @param {PendingEntry} entry */
     function sendEntry(entry) {
         if (destroyed) {
             rejectEntry(entry, 'Playground embed was destroyed');
@@ -104,6 +120,7 @@ export default function minizincPlayground(iframe) {
         while (queued.length > 0) sendEntry(queued.shift());
     }
 
+    /** @param {MessageEvent} event */
     function onMessage(event) {
         if (event.source !== frameWindow || event.origin !== targetOrigin)
             return;
@@ -147,6 +164,7 @@ export default function minizincPlayground(iframe) {
 
     hostWindow.addEventListener('message', onMessage);
 
+    /** @param {string} name @param {any} argument */
     function request(name, argument) {
         if (destroyed)
             return Promise.reject(new Error('Playground embed was destroyed'));
@@ -167,6 +185,7 @@ export default function minizincPlayground(iframe) {
         });
     }
 
+    /** @param {string} type @param {(payload: any) => void} callback */
     function on(type, callback) {
         if (!supportedEvents.has(type))
             throw new Error(`Unknown event: ${type}`);

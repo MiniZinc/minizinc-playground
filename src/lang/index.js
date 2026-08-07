@@ -166,6 +166,13 @@ export const editableEffect = editable.reconfigure(
 export const lightThemeEffect = theme.reconfigure(lightTheme);
 export const darkThemeEffect = theme.reconfigure(darkTheme);
 
+/**
+ * @param {string} suffix
+ * @param {(editor: any) => Promise<void>} codeCheck
+ * @param {boolean} darkMode
+ * @param {boolean} [readOnly]
+ * @param {Array<[number, number]>} [protectedLines]
+ */
 export function getExtensions(
     suffix,
     codeCheck,

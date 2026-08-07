@@ -3,14 +3,20 @@
     import { faAngleDown } from '@fortawesome/free-solid-svg-icons';
 
     /**
-     * @type {string | null}
+     * @typedef {Object} Props
+     * @property {string | null} [title]
+     * @property {any[]} [items]
+     * @property {any | null} [currentItem]
+     * @property {boolean} [active]
+     * @property {boolean} [disabled]
+     * @property {import('svelte').Snippet<[{ item: any }]>} [selected]
+     * @property {import('svelte').Snippet<[{ item: any }]>} [item]
+     * @property {(payload: { item: any }) => void} [onselectItem]
      */
+    /** @type {Props} */
     let {
         title = null,
         items = [],
-        /**
-         * @type {any | null}
-         */
         currentItem = null,
         active = $bindable(false),
         disabled = false,
@@ -21,11 +27,13 @@
 
     let element = $state();
 
+    /** @param {any} item */
     function selectItem(item) {
         onselectItem?.({ item });
         active = false;
     }
 
+    /** @param {MouseEvent} e */
     function bodyClick(e) {
         if (element && !element.contains(e.target)) {
             active = false;

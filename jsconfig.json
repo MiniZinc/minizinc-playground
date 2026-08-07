@@ -1,8 +1,9 @@
 {
     "compilerOptions": {
-        "moduleResolution": "Node",
+        "moduleResolution": "Bundler",
         "target": "ESNext",
         "module": "ESNext",
+        "noEmit": true,
         /**
          * svelte-preprocess cannot figure out whether you have
          * a value or a type, so tell TypeScript to enforce using
@@ -19,7 +20,6 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
-        "baseUrl": ".",
         /**
          * Typecheck JS in `.svelte` and `.js` files by default.
          * Disable this if you'd like to use dynamic types.
@@ -27,10 +27,10 @@
         "checkJs": true,
         "paths": {
             "https://cdn.jsdelivr.net/npm/minizinc/dist/minizinc.mjs": [
-                "node_modules/minizinc"
+                "./node_modules/minizinc"
             ],
             "https://cdn.jsdelivr.net/npm/minizinc@edge/dist/minizinc.mjs": [
-                "node_modules/minizinc"
+                "./node_modules/minizinc"
             ]
         }
     },

@@ -21,6 +21,7 @@
         embedded ? { ...DEFAULT_EMBED_OPTIONS, ...embedConfig.options } : {},
     );
     initialiseSettings({ persistence: !embedded });
+    /** @param {Record<string, any>} options */
     function updateEmbedOptions(options) {
         const nextOptions = normaliseEmbedOptions(options);
         embedOptions = { ...embedOptions, ...nextOptions };
@@ -47,6 +48,7 @@
     let openRecent = $state(false);
     let solvers = $state([]);
     let embedProtocol = null;
+    /** @param {any[]} solvers @param {any} $settings */
     function getRecentProjects(solvers, $settings) {
         if (embedded || !playground || !$settings) {
             return [];
@@ -84,6 +86,7 @@
         return id;
     }
 
+    /** @param {Record<string, any>} p */
     function migrateProject(p) {
         if (!p.solverId) {
             // For backwards compatibility with initial version
@@ -277,6 +280,7 @@
         }
     }
 
+    /** @param {string} key @param {Record<string, any>} proj */
     function openProject(key, proj) {
         saveProject();
         try {
@@ -291,6 +295,7 @@
         recentProjects = getRecentProjects(solvers, $settings);
     }
 
+    /** @param {any} $settings */
     function forkOnExternalChange($settings) {
         if (
             timestamp !== null &&
@@ -309,6 +314,7 @@
         }
     });
 
+    /** @param {string} type @param {any} payload */
     function notifyEmbed(type, payload) {
         embedProtocol?.notify(type, payload);
     }

@@ -2,6 +2,15 @@
     import { onMount, untrack } from 'svelte';
     import Split from 'split.js';
 
+    /**
+     * @typedef {Object} Props
+     * @property {'horizontal' | 'vertical'} [direction]
+     * @property {number} [split]
+     * @property {'a' | 'b' | 'all'} [showPanels]
+     * @property {import('svelte').Snippet<[]>} [panelA]
+     * @property {import('svelte').Snippet<[]>} [panelB]
+     */
+    /** @type {Props} */
     let {
         direction = 'horizontal',
         split = $bindable(50),
@@ -25,6 +34,7 @@
         untrack(() => resize(currentSplit));
     });
 
+    /** @param {'horizontal' | 'vertical'} direction @param {'a' | 'b' | 'all'} showPanels */
     function init(direction, showPanels) {
         cleanup();
         if (showPanels === 'all' && panelA && panelB) {
@@ -46,12 +56,14 @@
         }
     }
 
+    /** @param {number} split */
     function resize(split) {
         if (instance && instance.getSizes()[0] !== split) {
             instance.setSizes([split, 100 - split]);
         }
     }
 
+    /** @param {'a' | 'b'} panel @param {'a' | 'b' | 'all'} showPanels */
     function showPanel(panel, showPanels) {
         return showPanels === 'all' || showPanels === panel;
     }

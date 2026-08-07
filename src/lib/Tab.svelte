@@ -45,6 +45,7 @@
         editInput.focus();
     }
 
+    /** @param {KeyboardEvent} event */
     function editNameKeyUp(event) {
         if (event.key === 'Enter') {
             event.preventDefault();

@@ -6,9 +6,15 @@
 
     /**
      * @typedef {Object} Props
-     * @property {any} [files]
+     * @property {any[]} [files]
      * @property {number} [currentIndex]
      * @property {boolean} [readonly]
+     * @property {(payload: { index: number }) => void} [onselectTab]
+     * @property {(payload: { index: number, name: string, suffix: string }) => void} [onrename]
+     * @property {(payload: { src: number, dest: number }) => void} [onreorder]
+     * @property {(payload: { index: number }) => void} [onclose]
+     * @property {() => void} [onnewFile]
+     * @property {() => void} [onmanageFiles]
      */
 
     /** @type {Props} */
@@ -24,10 +30,12 @@
         onmanageFiles,
     } = $props();
 
+    /** @param {number} index */
     function onClick(index) {
         onselectTab?.({ index });
     }
 
+    /** @param {{ name: string, suffix: string }} payload @param {number} index */
     function renameTab(payload, index) {
         onrename?.({
             index,
@@ -36,16 +44,19 @@
     }
 
     let dragIndex = null;
+    /** @param {DragEvent} event @param {number} index */
     function onDragStart(event, index) {
         event.dataTransfer.effectAllowed = 'move';
         event.dataTransfer.dropEffect = 'move';
         dragIndex = index;
     }
+    /** @param {DragEvent} event */
     function onDragOver(event) {
         if (dragIndex !== null) {
             event.preventDefault();
         }
     }
+    /** @param {DragEvent} event @param {number} index */
     function onDrop(event, index) {
         if (dragIndex === null) {
             return;
@@ -58,6 +69,7 @@
         dragIndex = null;
     }
 
+    /** @param {number} index */
     function onClose(index) {
         onclose?.({ index });
     }

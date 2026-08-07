@@ -46,10 +46,15 @@ export const DEFAULT_EMBED_OPTIONS = {
     showOutputRightControls: false,
 };
 
+/** @param {unknown} value */
 function isObject(value) {
     return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
+/**
+ * @param {Record<string, any>} config
+ * @returns {Record<string, any>}
+ */
 export function normaliseEmbedOptions(config) {
     if (!isObject(config)) {
         throw new Error('Embed configuration must be an object');
@@ -62,6 +67,10 @@ export function normaliseEmbedOptions(config) {
     );
 }
 
+/**
+ * @param {Record<string, any>} project
+ * @returns {Record<string, any>}
+ */
 export function normaliseProject(project) {
     if (!isObject(project)) {
         throw new Error('Embed project must be an object');
@@ -74,6 +83,10 @@ export function normaliseProject(project) {
     };
 }
 
+/**
+ * @param {string} hash
+ * @returns {{ options: Record<string, any>, project?: Record<string, any>, url?: string } | null}
+ */
 export function parseEmbedConfig(hash) {
     if (!hash.startsWith('#embed=')) {
         return null;
