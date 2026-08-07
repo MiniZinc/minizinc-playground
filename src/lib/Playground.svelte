@@ -186,7 +186,7 @@
             edgeMiniZinc = project.minizincVersion === 'edge';
             await mounted;
             files = [];
-            openFiles(project.files, autoFocus, false);
+            await openFiles(project.files, autoFocus, false);
             currentIndex = project.tab || 0;
             await loadSolvers();
             if (project.solverId) {
@@ -244,9 +244,9 @@
     /** @param {{ files: Array<Record<string, any>>, tab?: number, solverId?: string }} e */
     async function importFiles(e) {
         const offset = files.length;
-        openFiles(e.files);
+        await openFiles(e.files);
         if (e.tab !== undefined && e.tab !== null && e.tab >= 0) {
-            selectTab(offset + e.tab);
+            await selectTab(offset + e.tab);
         }
         if (e.solverId) {
             await loadSolvers();
@@ -320,6 +320,10 @@
         currentIndex = index;
         await tick();
         if (editor && currentFile) {
+            // Do not rely on the child component's reactive update here. The
+            // next operation may serialise the project before that update has
+            // replaced CodeMirror's view state.
+            editor.setState(currentFile.state);
             if (focus) {
                 editor.focus();
             }
@@ -361,7 +365,7 @@
     }
 
     /** @param {Array<Record<string, any>>} toOpen @param {boolean} [focus] @param {boolean} [saveCurrentFile] */
-    function openFiles(toOpen, focus = true, saveCurrentFile = true) {
+    async function openFiles(toOpen, focus = true, saveCurrentFile = true) {
         let toAdd = [];
         for (const file of toOpen) {
             const dot = file.name.endsWith('.mzc.mzn')
@@ -395,9 +399,8 @@
             });
         }
         files = [...files, ...toAdd];
-        selectTab(files.length - 1, focus, saveCurrentFile);
+        await selectTab(files.length - 1, focus, saveCurrentFile);
         newFileRequested = false;
-        notifyProjectChanged();
     }
 
     function rename(e) {
@@ -424,7 +427,15 @@
     }
 
     /** @param {number} index */
-    function closeFile(index) {
+    async function closeFile(index) {
+        // Save the file that is currently displayed before removing anything.
+        // Once the array has changed, `currentIndex` can point at the next file;
+        // saving then would overwrite that file with the old editor state.
+        if (editor && currentFile && !isLoadingProject) {
+            currentFile.state = editor.getState();
+            currentFile.scrollTop = editor.getView().scrollDOM.scrollTop;
+            currentFile.scrollLeft = editor.getView().scrollDOM.scrollLeft;
+        }
         const createNew = visibleFileCount === 1 && !files[index].hidden;
         files = [
             ...files.slice(0, index),
@@ -444,17 +455,14 @@
                   ]
                 : []),
         ];
-        if (currentIndex >= files.length) {
-            selectTab(files.length - 1);
-        } else {
-            selectTab(currentIndex);
-        }
+        const newIndex = index < currentIndex ? currentIndex - 1 : currentIndex;
         deleteFileRequested = null;
+        await selectTab(Math.min(newIndex, files.length - 1), true, false);
         notifyProjectChanged();
     }
 
     /** @param {number} index @param {Record<string, any>} opts */
-    function modifyFile(index, opts) {
+    async function modifyFile(index, opts) {
         if (currentFile && !isLoadingProject) {
             currentFile.state = editor.getState();
         }
@@ -466,7 +474,7 @@
             );
         }
         files = [...files.slice(0, index), file, ...files.slice(index + 1)];
-        selectTab(currentIndex);
+        await selectTab(currentIndex, true, false);
         notifyProjectChanged();
     }
 
@@ -756,7 +764,7 @@
                     }),
                 },
             ];
-            selectTab(files.length - 1);
+            await selectTab(files.length - 1);
             notifyProjectChanged();
             addOutput({
                 type: 'exit',
@@ -879,7 +887,12 @@
     }
 
     export function getProject() {
-        if (currentFile && !isLoadingProject) {
+        if (
+            currentFile &&
+            editor &&
+            !isLoadingProject &&
+            editor.getState() === currentFile.state
+        ) {
             currentFile.state = editor.getState();
         }
         return {
@@ -998,14 +1011,14 @@
     }
 
     /** @param {{ filename: string, firstLine: number, firstColumn: number }} loc */
-    function gotoLocation(loc) {
+    async function gotoLocation(loc) {
         const i = files.findIndex((f) => f.name === loc.filename);
         if (i !== -1) {
-            selectTab(i);
+            await selectTab(i);
             const text = files[i].state.doc.toString();
             const pos = lineCharToPos(loc.firstLine, loc.firstColumn, text);
             editor.focus();
-            editor.setCursor(pos);
+            await editor.setCursor(pos);
         }
     }
 
