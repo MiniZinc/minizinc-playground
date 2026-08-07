@@ -1,27 +1,3 @@
-export const EMBED_OPTIONS = [
-    'theme',
-    'showVersionSwitcher',
-    'showSolverDropdown',
-    'showShareButton',
-    'showDownloadButton',
-    'showExternalPlaygroundButton',
-    'showTabs',
-    'canEditTabs',
-    'compilationEnabled',
-    'canEditSolverSettings',
-    'enabledSolvers',
-    'canSwitchOrientation',
-    'hideOutputOnStartup',
-    'autoFocus',
-    'splitterDirection',
-    'splitterSize',
-    'autoClearOutput',
-    'showClearOutput',
-    'showAutoClearOutput',
-    'showOutputSectionToggles',
-    'showOutputRightControls',
-];
-
 export const DEFAULT_EMBED_OPTIONS = {
     theme: 'auto',
     showVersionSwitcher: false,
@@ -44,7 +20,10 @@ export const DEFAULT_EMBED_OPTIONS = {
     showAutoClearOutput: false,
     showOutputSectionToggles: false,
     showOutputRightControls: false,
+    showCheckerOutput: true,
 };
+
+export const EMBED_OPTIONS = Object.keys(DEFAULT_EMBED_OPTIONS);
 
 /** @param {unknown} value */
 function isObject(value) {
@@ -76,7 +55,6 @@ export function normaliseProject(project) {
         throw new Error('Embed project must be an object');
     }
     return {
-        files: [],
         tab: 0,
         ...project,
         files: Array.isArray(project.files) ? project.files : [],

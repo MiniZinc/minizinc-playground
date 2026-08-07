@@ -351,6 +351,7 @@
         showAutoClearOutput={embedOptions.showAutoClearOutput}
         showOutputSectionToggles={embedOptions.showOutputSectionToggles}
         showOutputRightControls={embedOptions.showOutputRightControls}
+        showCheckerOutput={embedOptions.showCheckerOutput}
         bind:autoClearOutput={$settings.autoClearOutput}
         bind:splitterDirection={$settings.splitterDirection}
         bind:splitterSize={$settings.splitterSize}

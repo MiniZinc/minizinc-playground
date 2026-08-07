@@ -19,6 +19,7 @@ describe('parseEmbedConfig', () => {
                 showAutoClearOutput: false,
                 showOutputSectionToggles: false,
                 showOutputRightControls: false,
+                showCheckerOutput: false,
                 showExternalPlaygroundButton: true,
                 unsupported: true,
                 project: {
@@ -39,6 +40,7 @@ describe('parseEmbedConfig', () => {
                 showAutoClearOutput: false,
                 showOutputSectionToggles: false,
                 showOutputRightControls: false,
+                showCheckerOutput: false,
                 showExternalPlaygroundButton: true,
             },
             project: {
