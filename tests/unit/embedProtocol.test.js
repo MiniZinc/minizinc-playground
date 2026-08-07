@@ -68,6 +68,30 @@ describe('embed protocol', () => {
         );
     });
 
+    test('replies to readiness requests after becoming ready', () => {
+        const hostWindow = createWindow();
+        const parentWindow = { postMessage: vi.fn() };
+        const protocol = createEmbedProtocol({
+            hostWindow,
+            parentWindow,
+            operations: {},
+            getReadyPayload: () => ({ minizincVersion: 'latest' }),
+        });
+        protocol.start();
+        protocol.announceReady();
+        parentWindow.postMessage.mockClear();
+
+        hostWindow.dispatchMessage(
+            createEmbedEnvelope('ready-request'),
+            parentWindow,
+        );
+
+        expect(parentWindow.postMessage).toHaveBeenCalledWith(
+            createEmbedEnvelope('ready', { minizincVersion: 'latest' }),
+            '*',
+        );
+    });
+
     test('correlates requests and cleans up unresolved requests on teardown', async () => {
         const hostWindow = createWindow();
         const parentWindow = { postMessage: vi.fn() };

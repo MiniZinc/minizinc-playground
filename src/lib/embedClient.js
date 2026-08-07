@@ -163,6 +163,7 @@ export default function minizincPlayground(iframe) {
     }
 
     hostWindow.addEventListener('message', onMessage);
+    send('ready-request');
 
     /** @param {string} name @param {any} argument */
     function request(name, argument) {

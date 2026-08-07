@@ -124,6 +124,10 @@ export function createEmbedProtocol({
         if (event.source !== parentWindow) return;
         const message = parseEmbedEnvelope(event.data);
         if (!message) return;
+        if (message.type === 'ready-request') {
+            if (ready) send('ready', getReadyPayload());
+            return;
+        }
         if (message.type === 'response' || message.type === 'error') {
             const request = pending.get(message.requestId);
             if (!request) return;

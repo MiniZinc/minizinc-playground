@@ -48,18 +48,21 @@ describe('embed client', () => {
         const project = { files: [] };
         const request = embed.loadProject(project);
 
-        expect(frameWindow.postMessage).not.toHaveBeenCalled();
+        expect(frameWindow.postMessage).toHaveBeenCalledOnce();
+        expect(frameWindow.postMessage.mock.calls[0][0]).toMatchObject({
+            type: 'ready-request',
+        });
         ready(hostWindow);
         await expect(embed.ready).resolves.toEqual({
             minizincVersion: 'latest',
         });
 
-        const envelope = frameWindow.postMessage.mock.calls[0][0];
+        const envelope = frameWindow.postMessage.mock.calls[1][0];
         expect(envelope).toMatchObject({
             type: 'load-project',
             payload: { project },
         });
-        expect(frameWindow.postMessage.mock.calls[0][1]).toBe(
+        expect(frameWindow.postMessage.mock.calls[1][1]).toBe(
             'https://play.test',
         );
 
@@ -67,6 +70,25 @@ describe('embed client', () => {
             createEmbedEnvelope('response', { project }, envelope.requestId),
         );
         await expect(request).resolves.toEqual(project);
+        embed.destroy();
+    });
+
+    test('recovers when initialised after the iframe announced ready', async () => {
+        const { hostWindow, frameWindow, iframe } = createHost();
+        hostWindow.dispatch(
+            createEmbedEnvelope('ready', { minizincVersion: 'latest' }),
+        );
+
+        const embed = createEmbed(iframe, hostWindow);
+        expect(frameWindow.postMessage).toHaveBeenCalledWith(
+            createEmbedEnvelope('ready-request'),
+            'https://play.test',
+        );
+
+        ready(hostWindow);
+        await expect(embed.ready).resolves.toEqual({
+            minizincVersion: 'latest',
+        });
         embed.destroy();
     });
 

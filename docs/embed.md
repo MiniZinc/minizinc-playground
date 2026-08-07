@@ -62,8 +62,9 @@ For module-based hosts, use the ES module build instead:
 ```
 
 The factory must be given an iframe element whose `src` points at the
-playground. It installs its event listener immediately, so it is safe to call
-it before the iframe has finished loading.
+playground. It installs its event listener immediately and performs a readiness
+handshake, so it is safe to call it either before or after the iframe has
+finished loading.
 
 ### Readiness and versions
 
