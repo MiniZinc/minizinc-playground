@@ -172,8 +172,7 @@ embed.on('run-error', ({ error }) => {
 ### Errors and teardown
 
 Command promises reject with an `Error` when the playground reports a failure,
-when a request exceeds the client's built-in timeout, or after the client is
-destroyed. Readiness also rejects if the iframe does not become ready in time.
+or after the client is destroyed.
 
 Call `destroy()` when removing the iframe or leaving the host page:
 

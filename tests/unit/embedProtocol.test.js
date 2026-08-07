@@ -182,46 +182,43 @@ describe('embed protocol', () => {
         );
     });
 
-    test('returns operation errors and times out unanswered requests', async () => {
-        vi.useFakeTimers();
-        try {
-            const hostWindow = createWindow();
-            const parentWindow = { postMessage: vi.fn() };
-            const protocol = createEmbedProtocol({
-                hostWindow,
-                parentWindow,
-                operations: {
-                    clearOutput: vi.fn(() => {
-                        throw new Error('cannot clear');
-                    }),
-                },
-                requestTimeout: 10,
-            });
-            protocol.start();
-            protocol.announceReady();
+    test('returns operation errors and keeps unanswered requests pending', async () => {
+        const hostWindow = createWindow();
+        const parentWindow = { postMessage: vi.fn() };
+        const protocol = createEmbedProtocol({
+            hostWindow,
+            parentWindow,
+            operations: {
+                clearOutput: vi.fn(() => {
+                    throw new Error('cannot clear');
+                }),
+            },
+        });
+        protocol.start();
+        protocol.announceReady();
 
-            hostWindow.dispatchMessage(
-                createEmbedEnvelope('clear-output', {}, 'request-1'),
-                parentWindow,
-            );
-            await Promise.resolve();
-            expect(parentWindow.postMessage).toHaveBeenLastCalledWith(
-                createEmbedEnvelope(
-                    'error',
-                    { message: 'cannot clear' },
-                    'request-1',
-                ),
-                '*',
-            );
+        hostWindow.dispatchMessage(
+            createEmbedEnvelope('clear-output', {}, 'request-1'),
+            parentWindow,
+        );
+        await Promise.resolve();
+        expect(parentWindow.postMessage).toHaveBeenLastCalledWith(
+            createEmbedEnvelope(
+                'error',
+                { message: 'cannot clear' },
+                'request-1',
+            ),
+            '*',
+        );
 
-            const pending = protocol.request('host-command');
-            const assertion = expect(pending).rejects.toThrow(
-                'Request timed out: host-command',
-            );
-            await vi.advanceTimersByTimeAsync(10);
-            await assertion;
-        } finally {
-            vi.useRealTimers();
-        }
+        const pending = protocol.request('host-command');
+        let settled = false;
+        pending.then(undefined, () => {
+            settled = true;
+        });
+        await Promise.resolve();
+        expect(settled).toBe(false);
+        protocol.destroy();
+        await expect(pending).rejects.toThrow('destroyed');
     });
 });

@@ -38,7 +38,6 @@ export function createEmbedProtocol({
     parentWindow = hostWindow.parent,
     operations,
     getReadyPayload = () => ({}),
-    requestTimeout = 10000,
 }) {
     let ready = false;
     let nextRequestId = 0;
@@ -51,7 +50,6 @@ export function createEmbedProtocol({
     const rejectPending = (requestId, message) => {
         const request = pending.get(requestId);
         if (!request) return false;
-        hostWindow.clearTimeout(request.timeout);
         pending.delete(requestId);
         request.reject(new Error(message));
         return true;
@@ -114,7 +112,6 @@ export function createEmbedProtocol({
         if (message.type === 'response' || message.type === 'error') {
             const request = pending.get(message.requestId);
             if (!request) return;
-            hostWindow.clearTimeout(request.timeout);
             pending.delete(message.requestId);
             if (message.type === 'error')
                 request.reject(
@@ -138,12 +135,7 @@ export function createEmbedProtocol({
         request(type, payload = {}) {
             const requestId = `iframe-${++nextRequestId}`;
             return new Promise((resolve, reject) => {
-                const timeout = hostWindow.setTimeout(
-                    () =>
-                        rejectPending(requestId, `Request timed out: ${type}`),
-                    requestTimeout,
-                );
-                pending.set(requestId, { resolve, reject, timeout });
+                pending.set(requestId, { resolve, reject });
                 send(type, payload, requestId);
             });
         },

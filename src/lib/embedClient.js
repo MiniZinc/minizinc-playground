@@ -1,7 +1,5 @@
 import { createEmbedEnvelope, parseEmbedEnvelope } from './embedProtocol.js';
 
-const REQUEST_TIMEOUT = 10000;
-
 const commands = {
     loadProject: [
         'load-project',
@@ -64,9 +62,6 @@ export default function minizincPlayground(iframe) {
         resolveReady = resolve;
         rejectReady = reject;
     });
-    const readyTimeout = hostWindow.setTimeout(() => {
-        if (!ready) rejectReady(new Error('Playground ready timed out'));
-    }, REQUEST_TIMEOUT);
 
     function send(type, payload, requestId) {
         frameWindow.postMessage(
@@ -90,7 +85,6 @@ export default function minizincPlayground(iframe) {
     }
 
     function rejectEntry(entry, error) {
-        hostWindow.clearTimeout(entry.timeout);
         pending.delete(entry.requestId);
         const index = queued.indexOf(entry);
         if (index !== -1) queued.splice(index, 1);
@@ -120,7 +114,6 @@ export default function minizincPlayground(iframe) {
             if (ready) return;
             ready = true;
             readyInfo = message.payload || {};
-            hostWindow.clearTimeout(readyTimeout);
             resolveReady(readyInfo);
             notifyListeners('ready', readyInfo);
             flushQueue();
@@ -130,7 +123,6 @@ export default function minizincPlayground(iframe) {
         if (message.type === 'response' || message.type === 'error') {
             const entry = pending.get(message.requestId);
             if (!entry) return;
-            hostWindow.clearTimeout(entry.timeout);
             pending.delete(message.requestId);
             if (message.type === 'error')
                 entry.reject(
@@ -169,9 +161,6 @@ export default function minizincPlayground(iframe) {
                 resultKey,
                 resolve,
                 reject,
-                timeout: hostWindow.setTimeout(() => {
-                    rejectEntry(entry, `Request timed out: ${type}`);
-                }, REQUEST_TIMEOUT),
             };
             if (ready) sendEntry(entry);
             else queued.push(entry);
@@ -191,7 +180,6 @@ export default function minizincPlayground(iframe) {
     function destroy() {
         if (destroyed) return;
         destroyed = true;
-        hostWindow.clearTimeout(readyTimeout);
         hostWindow.removeEventListener('message', onMessage);
         if (!ready) rejectReady(new Error('Playground embed was destroyed'));
         for (const entry of [...queued, ...pending.values()])
