@@ -143,21 +143,18 @@ describe('embed client', () => {
         await expect(embed.run()).rejects.toThrow('destroyed');
     });
 
-    test('times out requests', async () => {
-        vi.useFakeTimers();
-        try {
-            const { hostWindow, iframe } = createHost();
-            const embed = createEmbed(iframe, hostWindow);
-            ready(hostWindow);
-            const request = embed.compile();
-            const assertion = expect(request).rejects.toThrow(
-                'Request timed out: compile',
-            );
-            await vi.advanceTimersByTimeAsync(10000);
-            await assertion;
-            embed.destroy();
-        } finally {
-            vi.useRealTimers();
-        }
+    test('keeps unanswered requests pending until destroy', async () => {
+        const { hostWindow, iframe } = createHost();
+        const embed = createEmbed(iframe, hostWindow);
+        ready(hostWindow);
+        const request = embed.compile();
+        let settled = false;
+        request.then(undefined, () => {
+            settled = true;
+        });
+        await Promise.resolve();
+        expect(settled).toBe(false);
+        embed.destroy();
+        await expect(request).rejects.toThrow('destroyed');
     });
 });
