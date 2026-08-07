@@ -3,6 +3,21 @@
     import Fa from 'svelte-fa';
     import { faEraser, faTrash } from '@fortawesome/free-solid-svg-icons';
     import ErrorOutput from './ErrorOutput.svelte';
+
+    /**
+     * @typedef {Object} Props
+     * @property {any[]} output
+     * @property {boolean} [autoClearOutput]
+     * @property {boolean} [showClearOutput]
+     * @property {boolean} [showAutoClearOutput]
+     * @property {boolean} [showSectionToggles]
+     * @property {boolean} [showRightControls]
+     * @property {boolean} [isTab]
+     * @property {import('svelte').Snippet<[]>} [beforeRightControls]
+     * @property {() => void} [onclear]
+     * @property {(payload: { location: any }) => void} [ongoto]
+     */
+    /** @type {Props} */
     let {
         output,
         autoClearOutput = $bindable(false),
@@ -55,6 +70,7 @@
         ),
     );
 
+    /** @param {any[]} output @returns {string[]} */
     function getUserSections(output) {
         const messages = output.flatMap((run) => run.output);
         const sections = new Set(
@@ -76,6 +92,7 @@
         return result;
     }
 
+    /** @param {string} section */
     function toggleSection(section) {
         if (hiddenSections.indexOf(section) === -1) {
             hiddenSections = [...hiddenSections, section];
@@ -117,6 +134,7 @@
         ERROR: '=====ERROR=====',
     };
 
+    /** @param {any[]} o */
     async function update(o) {
         if (!outputElement) {
             return;
@@ -125,6 +143,7 @@
         outputElement.scrollTo(0, outputElement.scrollHeight);
     }
 
+    /** @param {number} time */
     function formatRuntime(time) {
         const hours = Math.floor(time / 3600000);
         const minutes = Math.floor((time % 3600000) / 60000);
@@ -149,6 +168,7 @@
         return elapsed.trimEnd();
     }
 
+    /** @param {any} msg @param {string[]} hiddenSections */
     function processCheckerMessage(msg, hiddenSections) {
         const parts = [];
         let buffer = [];

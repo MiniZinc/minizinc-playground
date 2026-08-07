@@ -8,10 +8,15 @@ const commandTypes = new Set([
     'set-options',
 ]);
 
+/** @param {unknown} value */
 function isObject(value) {
     return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
+/**
+ * @param {unknown} value
+ * @returns {{ type: string, payload?: Record<string, any>, requestId?: string } | null}
+ */
 export function parseEmbedEnvelope(value) {
     if (!isObject(value)) return null;
     if (
@@ -25,6 +30,11 @@ export function parseEmbedEnvelope(value) {
     return value;
 }
 
+/**
+ * @param {string} type
+ * @param {Record<string, any> | undefined} payload
+ * @param {string | undefined} requestId
+ */
 export function createEmbedEnvelope(type, payload, requestId) {
     return {
         type,
@@ -33,6 +43,9 @@ export function createEmbedEnvelope(type, payload, requestId) {
     };
 }
 
+/**
+ * @param {{ hostWindow: Window, parentWindow?: Window, operations: Record<string, Function>, getReadyPayload?: () => Record<string, any> }} options
+ */
 export function createEmbedProtocol({
     hostWindow,
     parentWindow = hostWindow.parent,
@@ -55,6 +68,7 @@ export function createEmbedProtocol({
         return true;
     };
 
+    /** @param {{ type: string, payload?: Record<string, any>, requestId?: string }} message */
     async function handleCommand({ type, payload = {}, requestId }) {
         if (!commandTypes.has(type)) {
             if (requestId)
@@ -105,6 +119,7 @@ export function createEmbedProtocol({
         }
     }
 
+    /** @param {MessageEvent} event */
     function onMessage(event) {
         if (event.source !== parentWindow) return;
         const message = parseEmbedEnvelope(event.data);

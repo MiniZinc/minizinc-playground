@@ -1,5 +1,6 @@
 import { writable } from 'svelte/store';
 
+/** @param {string} query */
 const mediaQueryStore = (query) => {
     const match = window.matchMedia(query);
     return writable(match.matches, (set) => {

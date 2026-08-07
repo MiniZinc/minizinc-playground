@@ -3,6 +3,13 @@
     import Fa from 'svelte-fa';
     import { fly } from 'svelte/transition';
 
+    /**
+     * @typedef {Object} Props
+     * @property {boolean} active
+     * @property {string[]} [stdFlags]
+     * @property {() => void} [onclose]
+     */
+    /** @type {Props} */
     let { active, stdFlags = [], onclose } = $props();
 
     const defaultConfig = {
@@ -21,6 +28,7 @@
         ...defaultConfig,
     });
 
+    /** @param {number} t */
     function validateTimeLimit(t) {
         const ms = t * 1000;
         if (ms !== Math.floor(ms)) {
@@ -28,6 +36,7 @@
         }
     }
 
+    /** @param {string[]} stdFlags @param {string} f */
     function hasStdFlag(stdFlags, f) {
         return stdFlags.indexOf(f) !== -1;
     }
@@ -45,6 +54,7 @@
         config = { ...defaultConfig };
     }
 
+    /** @param {Record<string, boolean | number>} settings */
     export function load(settings) {
         const cfg = { ...defaultConfig };
         for (const key in defaultConfig) {
@@ -59,6 +69,7 @@
         return { ...config };
     }
 
+    /** @param {string} solver */
     export function getSolvingConfiguration(solver) {
         const options = { solver };
         if (config.enableTimeLimit && config.timeLimit > 0) {
@@ -88,6 +99,7 @@
         return options;
     }
 
+    /** @param {string} solver */
     export function getCompilationConfiguration(solver) {
         const options = { solver };
         if (config.verboseCompilation) {

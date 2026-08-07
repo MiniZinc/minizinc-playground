@@ -12,6 +12,10 @@ const readOnlyLineMark = Decoration.line({
  * project format. Each line is kept separately so that inserted lines can be
  * mapped without losing the identity of later protected lines.
  */
+/**
+ * @param {import('@codemirror/state').Text} doc
+ * @param {Array<[number, number]>} ranges
+ */
 function lineSpans(doc, ranges) {
     const spans = [];
     for (const [first, last] of ranges || []) {
@@ -23,6 +27,10 @@ function lineSpans(doc, ranges) {
     return spans;
 }
 
+/**
+ * @param {import('@codemirror/state').Text} doc
+ * @param {Array<{ from: number, to: number }>} spans
+ */
 function decorationsFor(doc, spans) {
     return Decoration.set(
         spans.map((span) => readOnlyLineMark.range(doc.lineAt(span.from).from)),
@@ -30,18 +38,28 @@ function decorationsFor(doc, spans) {
     );
 }
 
+/**
+ * @param {import('@codemirror/state').Text} inserted
+ * @param {import('@codemirror/state').EditorState} state
+ */
 function isSingleLineBreak(inserted, state) {
     return inserted.toString() === state.lineBreak;
 }
 
+/** @param {number} from @param {number} to @param {number} rangeFrom @param {number} rangeTo */
 function intersects(from, to, rangeFrom, rangeTo) {
     return from < rangeTo && to > rangeFrom;
 }
 
+/** @param {number} pos @param {number} from @param {number} to */
 function pointInRange(pos, from, to) {
     return from === to ? pos === from : pos >= from && pos < to;
 }
 
+/**
+ * @param {Array<{ lineNumber: number }>} spans
+ * @param {number} lineNumber
+ */
 function isProtectedLine(spans, lineNumber) {
     return spans.some((span) => span.lineNumber === lineNumber);
 }
@@ -53,6 +71,11 @@ function isProtectedLine(spans, lineNumber) {
  * newline inserted at the end of a protected line is the one exception to
  * the normal protected-content rule: it is equivalent to pressing Return at
  * the start of the following editable line.
+ */
+/**
+ * @param {import('@codemirror/state').EditorState} state
+ * @param {Array<{ from: number, to: number }>} spans
+ * @param {import('@codemirror/state').ChangeSet} changes
  */
 export function changesAllowed(state, spans, changes) {
     const lineSpansWithNumbers = spans.map((span) => ({

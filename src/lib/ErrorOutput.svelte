@@ -1,6 +1,13 @@
 <script>
+    /**
+     * @typedef {Object} Props
+     * @property {any} msg
+     * @property {(payload: { location: any }) => void} [ongoto]
+     */
+    /** @type {Props} */
     let { msg, ongoto } = $props();
 
+    /** @param {{ filename: string, firstLine: number, firstColumn: number, lastLine: number, lastColumn: number }} loc */
     function displayLocation(loc) {
         if (loc.firstLine == loc.lastLine) {
             if (loc.firstColumn == loc.lastColumn) {

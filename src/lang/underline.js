@@ -66,8 +66,8 @@ export function lineCharToPos(line, char, text) {
 }
 
 /**
- *
- * @param {*[]} msgs
+ * @param {string} text
+ * @param {Array<{ location: { firstLine: number, firstColumn: number, lastLine: number, lastColumn: number }, type: string, what: string, message: string }>} msgs
  * @param {EditorView} view
  */
 export function addErrors(text, msgs, view) {

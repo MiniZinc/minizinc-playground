@@ -13,6 +13,9 @@ export const settings = writable({
     sessions: {},
 });
 
+/**
+ * @param {{ persistence?: boolean }} [options]
+ */
 export function initialiseSettings({ persistence = true } = {}) {
     if (initialised) return;
     initialised = true;

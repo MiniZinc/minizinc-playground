@@ -3,14 +3,17 @@
 
     /**
      * @typedef {Object} Props
-     * @property {any} modelFiles
+     * @property {any[]} modelFiles
      * @property {boolean} [active]
+     * @property {(payload: { modelFile: any }) => void} [onaccept]
+     * @property {() => void} [oncancel]
      */
 
     /** @type {Props} */
     let { modelFiles, active = false, onaccept, oncancel } = $props();
     let selectedModel = $state(null);
 
+    /** @param {any[]} modelFiles */
     function init(modelFiles) {
         if (!selectedModel && modelFiles && modelFiles.length > 0) {
             selectedModel = modelFiles[0];

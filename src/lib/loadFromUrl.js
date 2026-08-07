@@ -8,6 +8,10 @@ const allowedExtensions = [
     '.css',
 ];
 
+/**
+ * @param {string} url
+ * @returns {Promise<{ files: Array<Record<string, any>>, tab?: number, solverId?: string, timestamp: number }>}
+ */
 export async function loadFromUrl(url) {
     const src =
         url.startsWith('http://') || url.startsWith('https://')

@@ -14,8 +14,15 @@
 
     // Nested visualisations receive JSON-shaped MiniZinc data. Serialising here
     // removes Svelte's reactive proxies before the browser structured-clones it.
+    /** @param {any} message */
     const serialiseMessage = (message) => JSON.parse(JSON.stringify(message));
 
+    /**
+     * @typedef {Object} Props
+     * @property {any[]} [files]
+     * @property {(payload: { modelFile: any, dataFiles: any[], options: object }) => void} [onsolve]
+     */
+    /** @type {Props} */
     let { files = [], onsolve } = $props();
 
     let prevFollowLatest = true;
@@ -45,6 +52,7 @@
         finishTime = null;
     }
 
+    /** @param {string} key @param {string} html @param {any} userData */
     export function addVisualisation(key, html, userData) {
         let makeReady;
         const ready = new Promise((res, rej) => {
@@ -111,6 +119,7 @@
         ];
     }
 
+    /** @param {Record<string, any>} solution @param {number} time */
     export function addSolution(solution, time) {
         for (const key in solution) {
             const vis = visualisations.find((x) => x.key === key);
@@ -128,6 +137,7 @@
         numSolutions++;
     }
 
+    /** @param {string} status @param {number} time */
     export function status(status, time) {
         finalStatus = { status, time };
         for (let i = 0; i < visualisations.length; i++) {
@@ -138,6 +148,7 @@
         }
     }
 
+    /** @param {number} time */
     export function finish(time) {
         finishTime = time;
         for (let i = 0; i < visualisations.length; i++) {
@@ -148,6 +159,7 @@
         }
     }
 
+    /** @param {MessageEvent} e */
     function onMessage(e) {
         const message = e.data;
         const vis = visualisations.find(
@@ -246,11 +258,13 @@
         }
     }
 
+    /** @param {any} message @param {any} vis */
     async function sendMessage(message, vis) {
         await vis.ready;
         vis.element.contentWindow.postMessage(serialiseMessage(message), '*');
     }
 
+    /** @param {number} c @param {boolean} f @param {number} n */
     function updateControls(c, f, n) {
         if (followLatest && prevSolution === currentSolution) {
             prevSolution = numSolutions;

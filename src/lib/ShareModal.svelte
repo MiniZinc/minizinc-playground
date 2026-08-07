@@ -4,7 +4,14 @@
     import Modal from './Modal.svelte';
     import { DEFAULT_EMBED_OPTIONS, EMBED_OPTIONS } from './embedConfig.js';
 
-    /** @type {{ active?: boolean, shareUrl: string, project: any }} */
+    /**
+     * @typedef {Object} Props
+     * @property {boolean} [active]
+     * @property {string} shareUrl
+     * @property {any} project
+     * @property {() => void} [oncancel]
+     */
+    /** @type {Props} */
     let { active = false, shareUrl, project, oncancel } = $props();
 
     let activeTab = $state('link');
@@ -76,6 +83,7 @@
             : '',
     );
 
+    /** @param {string} value @param {HTMLInputElement | HTMLTextAreaElement} [input] */
     function copy(value, input) {
         if (input) input.select();
         navigator.clipboard.writeText(value);

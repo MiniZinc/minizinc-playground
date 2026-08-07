@@ -4,10 +4,10 @@
 
     /**
      * @typedef {Object} Props
-     * @property {any} title
+     * @property {string} title
      * @property {boolean} [active]
-     * @property {import('svelte').Snippet} [children]
-     * @property {import('svelte').Snippet} [footer]
+     * @property {import('svelte').Snippet<[]>} [children]
+     * @property {import('svelte').Snippet<[]>} [footer]
      * @property {() => void} [onactivate]
      * @property {() => void} [oncancel]
      * @property {() => void} [onsubmit]
@@ -25,6 +25,7 @@
     } = $props();
     let form = $state();
 
+    /** @param {boolean} active */
     async function setFocus(active) {
         if (active) {
             await tick();

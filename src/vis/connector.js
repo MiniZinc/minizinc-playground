@@ -24,6 +24,7 @@ const MiniZincIDE = (() => {
         }
     });
 
+    /** @param {number} index @param {any} payload */
     function resolveResponse(index, payload) {
         const { resolve } = responses[index];
         resolve(payload);
@@ -31,6 +32,7 @@ const MiniZincIDE = (() => {
         freeSlots.push(index);
     }
 
+    /** @param {number} index @param {any} message */
     function rejectResponse(index, message) {
         const { reject } = responses[index];
         reject(message);
@@ -38,6 +40,7 @@ const MiniZincIDE = (() => {
         freeSlots.push(index);
     }
 
+    /** @param {Record<string, any>} message */
     function createPromise(message) {
         return new Promise((resolve, reject) => {
             const id =
@@ -53,12 +56,14 @@ const MiniZincIDE = (() => {
         });
     }
 
+    /** @param {string} event @param {(payload: any) => void} callback */
     function on(event, callback) {
         if (!(event in callbacks)) {
             callbacks[event] = new Set();
         }
         callbacks[event].add(callback);
     }
+    /** @param {string} event @param {(payload: any) => void} callback */
     function off(event, callback) {
         if (event in callbacks) {
             callbacks[event].delete(callback);
@@ -76,6 +81,7 @@ const MiniZincIDE = (() => {
             }
         });
     }
+    /** @param {number} idx */
     function goToSolution(idx) {
         window.parent.postMessage(
             {
@@ -88,6 +94,7 @@ const MiniZincIDE = (() => {
             '*',
         );
     }
+    /** @param {string} modelFile @param {string[]} dataFiles @param {Record<string, any>} options */
     function solve(modelFile, dataFiles, options) {
         window.parent.postMessage(
             {
@@ -104,6 +111,7 @@ const MiniZincIDE = (() => {
             event: 'getNumSolutions',
         });
     }
+    /** @param {number} index */
     function getSolution(index) {
         return createPromise({
             event: 'getSolution',

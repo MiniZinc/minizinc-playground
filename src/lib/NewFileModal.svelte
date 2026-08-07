@@ -5,6 +5,10 @@
     /**
      * @typedef {Object} Props
      * @property {boolean} [active]
+     * @property {() => void} [onactivate]
+     * @property {() => void} [oncancel]
+     * @property {(payload: { files: any[], tab?: number, solverId?: string, timestamp: number }) => void} [onopen]
+     * @property {(payload: { type: string }) => void} [onnew]
      */
 
     /** @type {Props} */
@@ -17,6 +21,7 @@
     let importingFromUrl = $state(false);
     let error = $state(null);
 
+    /** @param {boolean} active */
     function reset(active) {
         importingFromUrl = false;
         url = '';
@@ -38,6 +43,7 @@
                     reader.onload = () => {
                         resolve({ name: file.name, contents: reader.result });
                     };
+                    /** @param {ProgressEvent<FileReader>} e */
                     reader.onerror = (e) => reject(e);
                     reader.readAsText(file);
                 }),

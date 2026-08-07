@@ -5,8 +5,11 @@
     /**
      * @typedef {Object} Props
      * @property {boolean} [active]
-     * @property {any} parameters
-     * @property {any} dataFiles
+     * @property {Record<string, any>} parameters
+     * @property {any[]} dataFiles
+     * @property {() => void} [onactivate]
+     * @property {(payload: { dataFiles?: any[], parameters?: object }) => void} [onaccept]
+     * @property {() => void} [oncancel]
      */
 
     /** @type {Props} */
@@ -31,6 +34,7 @@
         }
     }
 
+    /** @param {Record<string, any>} parameters */
     function createParameterValues(parameters) {
         parameterValues = Object.keys(parameters)
             .sort()

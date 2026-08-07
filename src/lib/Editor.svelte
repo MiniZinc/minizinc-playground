@@ -3,6 +3,12 @@
 
     import { onMount, tick } from 'svelte';
 
+    /**
+     * @typedef {Object} Props
+     * @property {import('@codemirror/state').EditorState} [state]
+     * @property {(state: import('@codemirror/state').EditorState) => void} [onChange]
+     */
+    /** @type {Props} */
     let { state: editorState, onChange = () => {} } = $props();
 
     let div = $state();
@@ -41,12 +47,14 @@
         return null;
     }
 
+    /** @param {import('@codemirror/state').EditorState} state */
     export function setState(state) {
         if (view && view.state !== state) {
             view.setState(state);
         }
     }
 
+    /** @param {number} pos */
     export async function setCursor(pos) {
         if (view) {
             await tick();
