@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
+import Dropdown from '../../src/lib/Dropdown.svelte';
 import Tabs from '../../src/lib/Tabs.svelte';
 
 test('renders project files and exposes file-management controls', async () => {
@@ -27,4 +28,34 @@ test('hides editing controls for a read-only playground', () => {
 
     expect(screen.queryByTitle('Add new file')).not.toBeInTheDocument();
     expect(screen.queryByTitle('Manage files')).not.toBeInTheDocument();
+});
+
+test('passes the rename payload directly to the callback', async () => {
+    let renamed;
+    render(Tabs, {
+        files: [{ name: 'model.mzn' }],
+        onrename: (payload) => (renamed = payload),
+    });
+
+    await fireEvent.click(screen.getByText('model.mzn'));
+    const input = screen.getByDisplayValue('model');
+    await fireEvent.input(input, { target: { value: 'renamed' } });
+    await fireEvent.blur(input);
+
+    expect(renamed).toEqual({ index: 0, name: 'renamed', suffix: '.mzn' });
+});
+
+test('passes the selected dropdown item directly to the callback', async () => {
+    let selected;
+    const items = [{ label: 'Latest' }, { label: 'Edge' }];
+    render(Dropdown, {
+        items,
+        currentItem: items[0],
+        onselectItem: (payload) => (selected = payload),
+    });
+
+    await fireEvent.click(screen.getAllByRole('button', { name: /Latest/ })[0]);
+    await fireEvent.click(screen.getByRole('button', { name: 'Edge' }));
+
+    expect(selected).toEqual({ item: items[1] });
 });

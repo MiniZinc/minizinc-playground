@@ -134,8 +134,8 @@
         edge: { label: 'Edge', detail: 'development' },
     });
 
-    function loadSolvers() {
-        const toLoad = edgeMiniZinc ? MiniZincEdge : MiniZincLatest;
+    function loadSolvers(useEdge = edgeMiniZinc) {
+        const toLoad = useEdge ? MiniZincEdge : MiniZincLatest;
         if (MiniZinc !== toLoad) {
             busyCount++;
             const pendingLoad = solversLoaded;
@@ -153,7 +153,7 @@
                     /version \d+\.\d+\.\d+(?:, build .*)?$/m.exec(
                         await MiniZinc.version(),
                     );
-                const key = edgeMiniZinc ? 'edge' : 'latest';
+                const key = useEdge ? 'edge' : 'latest';
                 minizincVersions = {
                     ...minizincVersions,
                     [key]: { ...minizincVersions[key], detail: mznVersion },
@@ -284,10 +284,9 @@
     let currentSolverIndex = $state(-1);
 
     /** @param {any[]} _solvers @param {number} _currentSolverIndex */
-    async function enforceValidSolver(_solvers, _currentSolverIndex) {
-        await loadSolvers();
-        if (currentSolverIndex < 0 || currentSolverIndex >= solvers.length) {
-            const idx = solvers.findIndex(
+    function enforceValidSolver(_solvers, _currentSolverIndex) {
+        if (_currentSolverIndex < 0 || _currentSolverIndex >= _solvers.length) {
+            const idx = _solvers.findIndex(
                 (s) => s.extraInfo && s.extraInfo.isDefault,
             );
             if (idx !== -1) {
@@ -336,7 +335,7 @@
     }
 
     /** @param {string} suffix */
-    function newFile(suffix) {
+    async function newFile(suffix) {
         let name = `Untitled${suffix}`;
         let i = 2;
         while (files.find((f) => f.name === name)) {
@@ -351,7 +350,10 @@
                 }),
             },
         ];
-        selectTab(files.length - 1);
+        // The active index changes before the editor component has switched its
+        // CodeMirror view. Wait for that switch before serialising the project,
+        // otherwise getProject() captures the previous file's contents here.
+        await selectTab(files.length - 1);
         newFileRequested = false;
         notifyProjectChanged();
     }
@@ -397,10 +399,15 @@
     }
 
     function rename(e) {
-        const { index, name, suffix } = e.detail;
+        const { index, name, suffix } = e;
         let dest = name;
         let i = 2;
-        while (files.some((f) => f === dest + suffix)) {
+        while (
+            files.some(
+                (f, fileIndex) =>
+                    fileIndex !== index && f.name === dest + suffix,
+            )
+        ) {
             dest = `${name}-${i++}`;
         }
         if (currentFile && !isLoadingProject) {
@@ -408,7 +415,7 @@
         }
         files = [
             ...files.slice(0, index),
-            { ...files[index], name: name + suffix },
+            { ...files[index], name: dest + suffix },
             ...files.slice(index + 1),
         ];
         notifyProjectChanged();
@@ -1008,9 +1015,9 @@
         }
     }
 
-    /** @param {{ detail: { item: any } }} e */
-    function selectVersion(e) {
-        edgeMiniZinc = e.detail.item === minizincVersions.edge;
+    /** @param {{ item: any }} payload */
+    function selectVersion({ item }) {
+        edgeMiniZinc = item === minizincVersions.edge;
     }
 
     /** @param {boolean} dark */
@@ -1087,7 +1094,8 @@
         minizincVersions.edge,
     ]);
     $effect(() => {
-        loadSolvers(edgeMiniZinc);
+        const useEdge = edgeMiniZinc;
+        untrack(() => loadSolvers(useEdge));
     });
     $effect(() => {
         projectLoad = loadProject(project);
