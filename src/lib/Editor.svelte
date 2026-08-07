@@ -67,6 +67,7 @@
             await tick();
             view.dispatch({
                 selection: { anchor: pos },
+                scrollIntoView: true,
             });
         }
     }
