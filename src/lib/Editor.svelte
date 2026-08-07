@@ -17,13 +17,20 @@
     onMount(() => {
         view = new EditorView({
             parent: div,
-            extensions: [
-                EditorView.updateListener.of((update) => {
-                    if (update.docChanged) {
-                        onChange(update.state);
-                    }
-                }),
-            ],
+            // The change hook has to live on the VIEW, not in the state's extensions.
+            // `setState` replaces the whole state, configuration included, and the states
+            // it is given are built in Playground.svelte without this listener — so an
+            // `EditorView.updateListener` passed here would be discarded by the first
+            // file switch or project load and never fire again.
+            //
+            // `setState` deliberately does not run through here: swapping files is not a
+            // user edit, and Playground reports project loads by itself.
+            dispatchTransactions: (transactions, editorView) => {
+                editorView.update(transactions);
+                if (transactions.some((tr) => tr.docChanged)) {
+                    onChange(editorView.state);
+                }
+            },
         });
     });
 
