@@ -44,3 +44,33 @@ test('runs the current model with its files', async () => {
     getLastOperation().resolve();
     await run;
 });
+
+test('keeps a generated FlatZinc file intact when it becomes the selected file', async () => {
+    const projectChanges = [];
+    const { component, container } = render(Playground, {
+        project: null,
+        autoFocus: false,
+        hideOutputOnStartup: false,
+        onprojectChanged: ({ project }) => projectChanges.push(project),
+    });
+
+    await component.loadProject({
+        files: [{ name: 'model.mzn', contents: 'solve satisfy;' }],
+        solverId: 'org.minizinc.gecode_presolver',
+    });
+
+    const compile = component.compile();
+    await waitFor(() => expect(getLastOperation()).toBeTruthy());
+    getLastOperation().resolve('var 1..1: x;');
+    await compile;
+
+    await waitFor(() => {
+        expect(container.querySelector('.cm-content')).toHaveTextContent(
+            'var 1..1: x;',
+        );
+    });
+    expect(projectChanges.at(-1).files).toEqual([
+        { name: 'model.mzn', contents: 'solve satisfy;' },
+        { name: 'model.fzn', contents: 'var 1..1: x;' },
+    ]);
+});
