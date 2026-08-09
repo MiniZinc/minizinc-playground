@@ -3,6 +3,7 @@
     import Fa from 'svelte-fa';
     import { faEraser, faTrash } from '@fortawesome/free-solid-svg-icons';
     import ErrorOutput from './ErrorOutput.svelte';
+    import LinkifiedText from './LinkifiedText.svelte';
 
     /**
      * @typedef {Object} Props
@@ -370,14 +371,18 @@
                                 {#each msg.sections as section}
                                     {#if hiddenSections.indexOf(section) === -1 && !section.startsWith('mzn_vis_')}
                                         {#if typeof msg.output[section] !== 'string'}
-                                            <pre>{JSON.stringify(
-                                                    msg.output[section],
-                                                    null,
-                                                    2,
-                                                )}</pre>
+                                            <pre><LinkifiedText
+                                                    text={JSON.stringify(
+                                                        msg.output[section],
+                                                        null,
+                                                        2,
+                                                    )}
+                                                /></pre>
                                             <br />
                                         {:else if section !== 'raw'}
-                                            <pre>{msg.output[section]}</pre>
+                                            <pre><LinkifiedText
+                                                    text={msg.output[section]}
+                                                /></pre>
                                         {/if}
                                     {/if}
                                 {/each}
@@ -390,7 +395,9 @@
                                         <br />
                                         {#each processCheckerMessage(msg, hiddenSections) as part}
                                             {#if part.type === 'text'}
-                                                <pre>{part.message}</pre>
+                                                <pre><LinkifiedText
+                                                        text={part.message}
+                                                    /></pre>
                                             {:else if part.type === 'error' || part.type === 'warning'}
                                                 {#if (part.type === 'error' && showErrors) || (part.type === 'warning' && showWarnings)}
                                                     <ErrorOutput
@@ -413,22 +420,29 @@
                             {:else if msg.type === 'trace'}
                                 {#if hiddenSections.indexOf(msg.section) === -1 && !msg.section.startsWith('mzn_vis_')}
                                     {#if typeof msg.message !== 'string'}
-                                        <pre>{JSON.stringify(
-                                                msg.message,
-                                                null,
-                                                2,
-                                            )}</pre>
+                                        <pre><LinkifiedText
+                                                text={JSON.stringify(
+                                                    msg.message,
+                                                    null,
+                                                    2,
+                                                )}
+                                            /></pre>
                                         <br />
                                     {:else}
-                                        <pre
-                                            class="mzn-trace">{msg.message}</pre>
+                                        <pre class="mzn-trace"><LinkifiedText
+                                                text={msg.message}
+                                            /></pre>
                                     {/if}
                                 {/if}
                             {:else if msg.type === 'comment'}
-                                <pre class="mzn-comment">{msg.comment}</pre>
+                                <pre class="mzn-comment"><LinkifiedText
+                                        text={msg.comment}
+                                    /></pre>
                             {:else if msg.type === 'stderr'}
                                 {#if showStderr}
-                                    <pre class="mzn-stderr">{msg.value}</pre>
+                                    <pre class="mzn-stderr"><LinkifiedText
+                                            text={msg.value}
+                                        /></pre>
                                 {/if}
                             {:else if msg.type === 'statistics'}
                                 {#if showStatistics}

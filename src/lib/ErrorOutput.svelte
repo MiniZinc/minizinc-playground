@@ -1,4 +1,6 @@
 <script>
+    import LinkifiedText from './LinkifiedText.svelte';
+
     /**
      * @typedef {Object} Props
      * @property {any} msg
@@ -69,7 +71,7 @@
 {#if msg.what}
     <pre>{msg.what}: </pre>
 {/if}
-<pre>{msg.message}</pre>
+<pre><LinkifiedText text={msg.message} /></pre>
 {#if msg.cycle}
     {#each msg.cycle as it}
         <pre> {it}</pre>
