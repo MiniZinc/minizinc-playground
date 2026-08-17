@@ -122,6 +122,22 @@ const currentProject = await embed.getProject();
 saveProject(currentProject);
 ```
 
+A project that separates its model from its data should say which data files to
+run with, by marking them `useAsData`:
+
+```js
+await embed.loadProject({
+    files: [
+        { name: 'model.mzn', contents: 'int: n;\nsolve satisfy;' },
+        { name: 'data.dzn', contents: 'n = 1;', useAsData: true },
+    ],
+});
+```
+
+Without it the playground has to ask the user which instance to run, which in an
+embed means a modal in front of every run. See
+[the project format](project.md#data-files).
+
 `setOptions()` changes runtime options only. It cannot change the project's
 initial `url` or inline `project`; load a new project with `loadProject()`.
 

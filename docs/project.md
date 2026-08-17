@@ -23,6 +23,7 @@ The playground emits an object with this shape:
             hidden: true,
             readOnly: true,
             readOnlyLines: [[1, 1]],
+            useAsData: true,
         },
     ],
     tab: 0,
@@ -78,6 +79,7 @@ Each entry in `files` has the following fields:
 | `hidden`        | boolean                        | If true, retain the file in the project but do not show it as a tab. Files ending in `.mzc` are hidden automatically. Omitted means false. |
 | `readOnly`      | boolean                        | If true, prevent editing the file. Omitted means false.                                                                                    |
 | `readOnlyLines` | array of `[first, last]` pairs | Inclusive, 1-based line ranges that cannot be edited. Omitted means no protected lines.                                                    |
+| `useAsData`     | boolean                        | If true, run the model with this file as data. See [data files](#data-files). Omitted means false.                                         |
 
 Only `name` and `contents` are emitted for an ordinary editable visible file.
 The optional flags are emitted only when active. A hidden file is still passed
@@ -100,6 +102,37 @@ runtime data and are never part of the serialized project object.
 Files are kept in array order. The loader may rename duplicate or path-like
 names for display, so consumers should not rely on the input name being
 unchanged after loading.
+
+## Data files
+
+Being in `files` makes a file available; it does not put it on the MiniZinc
+command line. A project holding several `.dzn` files does not say which instance
+to run, and running a model whose parameters are not all assigned needs one.
+`useAsData` marks the files to run with:
+
+```js
+{
+    files: [
+        { name: 'model.mzn', contents: 'int: n;\nsolve satisfy;' },
+        { name: 'small.dzn', contents: 'n = 1;', useAsData: true },
+        { name: 'large.dzn', contents: 'n = 1000;' },
+    ],
+}
+```
+
+Data files are otherwise ordinary project files, so they appear as tabs unless
+marked `hidden`, and because the mark travels with the file it follows a rename
+and goes away with a deletion.
+
+The playground asks the user which data to use only when it has to — when the
+model still has undefined parameters and the marked files do not account for all
+of them. Whatever the user picks is then marked, so the question is asked once
+rather than on every run, and the answer is reported by `getProject()` and
+carried through share URLs.
+
+A mark is only ever applied to a model that needs it. A model that assigns all of
+its own parameters runs without the marked data files, rather than being handed
+an assignment twice.
 
 ## Solver configuration
 

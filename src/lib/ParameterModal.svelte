@@ -7,6 +7,7 @@
      * @property {boolean} [active]
      * @property {Record<string, any>} parameters
      * @property {any[]} dataFiles
+     * @property {string[]} [selected] Data files to start with ticked.
      * @property {() => void} [onactivate]
      * @property {(payload: { dataFiles?: any[], parameters?: object }) => void} [onaccept]
      * @property {() => void} [oncancel]
@@ -17,6 +18,7 @@
         active = false,
         parameters,
         dataFiles,
+        selected = [],
         onactivate,
         onaccept,
         oncancel,
@@ -59,6 +61,14 @@
     }
     $effect(() => {
         createParameterValues(parameters);
+    });
+    $effect(() => {
+        // Show the caller's selection ticked, minus anything no longer in the
+        // project, so answering the modal means adjusting a choice rather than
+        // making it again from scratch.
+        selectedFiles = selected.filter(
+            (name) => dataFiles.indexOf(name) !== -1,
+        );
     });
     let hasDataFiles = $derived(dataFiles.length > 0);
     let dataTabActive = $derived(hasDataFiles && dataTab);
