@@ -188,6 +188,7 @@
             files = [];
             await openFiles(project.files, autoFocus, false);
             currentIndex = project.tab || 0;
+            parameterModalParameters = {};
             await loadSolvers();
             if (project.solverId) {
                 currentSolverIndex = solvers.findIndex(
@@ -280,7 +281,14 @@
     let output = $state([]);
     let minizinc = $state(null);
 
-    let parameterModalDataFiles = [];
+    // Which data files to put on the command line. This lives on the files
+    // themselves, so it follows a rename and disappears with a deletion.
+    let dataFileSelection = $derived(
+        files.filter((f) => f.useAsData).map((f) => f.name),
+    );
+    // What the parameter modal starts with ticked. Transient: the answer is what
+    // updates the files, not this.
+    let parameterModalSelection = $state([]);
     let parameterModalParameters = $state({});
 
     let currentSolverIndex = $state(-1);
@@ -551,8 +559,7 @@
             }
         }
 
-        const model = new MiniZinc.Model();
-        const fileList = [modelFile.name];
+        const baseFileList = [modelFile.name];
         if (addChecker) {
             const modelFileName = modelFile.name.substring(
                 0,
@@ -564,41 +571,76 @@
                     f.name === `${modelFileName}.mzc.mzn`,
             );
             if (checker) {
-                fileList.push(checker.name);
+                baseFileList.push(checker.name);
             }
         }
         if (modelFile !== currentFile) {
-            fileList.push(currentFile.name);
+            baseFileList.push(currentFile.name);
         }
-        for (const file of files) {
-            model.addFile(
-                file.name,
-                file.state.doc.toString(),
-                fileList.indexOf(file.name) !== -1,
-            );
+
+        /**
+         * Assemble a model whose command line is the base file list plus
+         * `extraFiles`. Every project file goes into the virtual filesystem either
+         * way — the flag only decides what MiniZinc is invoked with — so an
+         * unlisted file is still reachable by `include`.
+         * @param {string[]} extraFiles
+         */
+        function buildModel(extraFiles) {
+            const fileList = [
+                ...baseFileList,
+                ...extraFiles.filter(
+                    (name) => baseFileList.indexOf(name) === -1,
+                ),
+            ];
+            const model = new MiniZinc.Model();
+            for (const file of files) {
+                model.addFile(
+                    file.name,
+                    file.state.doc.toString(),
+                    fileList.indexOf(file.name) !== -1,
+                );
+            }
+            return { model, fileList };
         }
+
+        let built = buildModel([]);
         try {
-            const { input } = await model.interface({
+            const compilationOptions = {
                 options: solverConfig.getCompilationConfiguration(
                     currentSolver.id,
                 ),
-            });
+            };
+            let { input } = await built.model.interface(compilationOptions);
+            if (Object.keys(input).length > 0 && dataFileSelection.length > 0) {
+                // The selection carried by the project, or made the last time we
+                // asked, is a standing answer to "which instance?". Try it before
+                // interrupting: only if it still leaves a parameter undefined is
+                // there a question worth putting to the user.
+                const selected = dataFileSelection.filter(
+                    (name) => baseFileList.indexOf(name) === -1,
+                );
+                if (selected.length > 0) {
+                    const withData = buildModel(selected);
+                    const retry =
+                        await withData.model.interface(compilationOptions);
+                    if (Object.keys(retry.input).length === 0) {
+                        built = withData;
+                        input = retry.input;
+                    }
+                }
+            }
             if (Object.keys(input).length > 0) {
+                const { model, fileList } = built;
                 const params = {};
                 for (const key in input) {
                     params[key] = parameterModalParameters[key];
                 }
                 parameterModalParameters = params;
-                if (
-                    isData &&
-                    parameterModalDataFiles.indexOf(currentFile.name) === -1
-                ) {
-                    // Ensure the currently running file is selected
-                    parameterModalDataFiles = [
-                        ...parameterModalDataFiles,
-                        currentFile.name,
-                    ];
-                }
+                parameterModalSelection =
+                    isData && dataFileSelection.indexOf(currentFile.name) === -1
+                        ? // Ensure the currently running file is selected
+                          [...dataFileSelection, currentFile.name]
+                        : dataFileSelection;
                 try {
                     const result = await new Promise((resolve, _reject) => {
                         getModelResolve = resolve;
@@ -625,7 +667,14 @@
                                 fileList.push(file);
                             }
                         }
-                        parameterModalDataFiles = result.dataFiles;
+                        // Record the answer on the files, so the next run does not
+                        // have to ask the same question again.
+                        const chosen = new Set(result.dataFiles);
+                        files = files.map((f) =>
+                            chosen.has(f.name) === !!f.useAsData
+                                ? f
+                                : { ...f, useAsData: chosen.has(f.name) },
+                        );
                     }
                 } finally {
                     needsData = false;
@@ -636,7 +685,7 @@
             console.error(e);
         }
         busyCount--;
-        return { model, fileList };
+        return built;
     }
 
     export async function run() {
@@ -902,6 +951,7 @@
                 ...(f.hidden ? { hidden: true } : {}),
                 ...(f.readOnly ? { readOnly: true } : {}),
                 ...(f.readOnlyLines ? { readOnlyLines: f.readOnlyLines } : {}),
+                ...(f.useAsData ? { useAsData: true } : {}),
             })),
             tab: currentIndex,
             solverId: currentSolver.id,
@@ -1702,6 +1752,7 @@
         <ParameterModal
             active={needsData}
             {dataFiles}
+            selected={parameterModalSelection}
             parameters={parameterModalParameters}
             onaccept={getModelResolve}
             oncancel={() => getModelResolve(false)}
