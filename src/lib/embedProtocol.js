@@ -1,3 +1,5 @@
+import { snapshotEmbedMessage } from './embedMessage.svelte.js';
+
 const commandTypes = new Set([
     'load-project',
     'get-project',
@@ -57,7 +59,7 @@ export function createEmbedProtocol({
     const pending = new Map();
     const send = (type, payload, requestId) =>
         parentWindow.postMessage(
-            createEmbedEnvelope(type, payload, requestId),
+            snapshotEmbedMessage(createEmbedEnvelope(type, payload, requestId)),
             '*',
         );
     const rejectPending = (requestId, message) => {
