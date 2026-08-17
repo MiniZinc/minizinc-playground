@@ -950,7 +950,14 @@
                 contents: f.state.doc.toString(),
                 ...(f.hidden ? { hidden: true } : {}),
                 ...(f.readOnly ? { readOnly: true } : {}),
-                ...(f.readOnlyLines ? { readOnlyLines: f.readOnlyLines } : {}),
+                // Snapshotted, not passed through: `files` is $state, so this
+                // nested array is a proxy, and a proxy cannot be structured-cloned.
+                // Handing one out makes every postMessage carrying the project —
+                // the embed client's getProject(), and project-changed on each
+                // keystroke — fail with DataCloneError.
+                ...(f.readOnlyLines
+                    ? { readOnlyLines: $state.snapshot(f.readOnlyLines) }
+                    : {}),
                 ...(f.useAsData ? { useAsData: true } : {}),
             })),
             tab: currentIndex,
