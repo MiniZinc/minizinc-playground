@@ -34,7 +34,7 @@
         "vitest": "^4.1.10"
     },
     "dependencies": {
-        "@codemirror/commands": "^6.10.4",
+        "@codemirror/commands": "^6.11.0",
         "@codemirror/lang-html": "^6.4.12",
         "@codemirror/lang-json": "^6.0.2",
         "@fortawesome/fontawesome-svg-core": "^7.3.1",
