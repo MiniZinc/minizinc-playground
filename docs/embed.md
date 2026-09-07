@@ -18,7 +18,7 @@ fragment:
 
 ```html
 <iframe
-    src="https://play.minizinc.dev/#embed=%7B%22theme%22%3A%22dark%22%7D"
+    src="https://play.minizinc.org/#embed=%7B%22theme%22%3A%22dark%22%7D"
     title="MiniZinc Playground"
     width="100%"
     height="700"
@@ -37,11 +37,11 @@ store the project in the host application.
 ## JavaScript client
 
 The client is also available as a browser script at
-`https://play.minizinc.dev/embed.js`. It exposes the `MiniZincPlayground`
+`https://play.minizinc.org/embed.js`. It exposes the `MiniZincPlayground`
 global:
 
 ```html
-<script src="https://play.minizinc.dev/embed.js"></script>
+<script src="https://play.minizinc.org/embed.js"></script>
 <script>
     const iframe = document.querySelector('#playground');
     const embed = MiniZincPlayground(iframe);
@@ -55,7 +55,7 @@ For module-based hosts, use the ES module build instead:
 
 ```html
 <script type="module">
-    import minizincPlayground from 'https://play.minizinc.dev/embed.module.js';
+    import minizincPlayground from 'https://play.minizinc.org/embed.module.js';
 
     const embed = minizincPlayground(document.querySelector('#playground'));
 </script>
@@ -263,6 +263,6 @@ const config = {
         tab: 0,
     },
 };
-const url = new URL('https://play.minizinc.dev/');
+const url = new URL('https://play.minizinc.org/');
 url.hash = `#embed=${encodeURIComponent(JSON.stringify(config))}`;
 ```
