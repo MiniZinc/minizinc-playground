@@ -10,7 +10,7 @@ const project = {
 test('offers a link tab and generates iframe code from the embed configuration', async () => {
     render(ShareModal, {
         active: true,
-        shareUrl: 'https://play.minizinc.dev/#project=example',
+        shareUrl: 'https://play.minizinc.org/#project=example',
         project,
     });
 
