@@ -69,5 +69,17 @@ export default defineConfig(({ command, mode }) => ({
     // The development embed build writes here and Vite exposes publicDir at
     // the server root, making the watched bundle available at /embed.js.
     publicDir: command === 'serve' ? '.vite-embed' : 'public',
+    resolve: {
+        alias: {
+            '@shackle-wasm':
+                process.env.VITE_SHACKLE === 'true'
+                    ? path.resolve('pkg/shackle_wasm.js')
+                    : path.resolve('src/lib/shackle-disabled.js'),
+            '@shackle-ls':
+                process.env.VITE_SHACKLE === 'true'
+                    ? path.resolve('src/lib/shackle-ls.js')
+                    : path.resolve('src/lib/shackle-ls-disabled.js'),
+        },
+    },
     plugins: [lezer(), svelte()],
 }));
