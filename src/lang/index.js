@@ -172,6 +172,8 @@ export const darkThemeEffect = theme.reconfigure(darkTheme);
  * @param {boolean} darkMode
  * @param {boolean} [readOnly]
  * @param {Array<[number, number]>} [protectedLines]
+ * @param {any} [lspClient]
+ * @param {string} [fileUri]
  */
 export function getExtensions(
     suffix,
@@ -179,6 +181,8 @@ export function getExtensions(
     darkMode,
     readOnly = false,
     protectedLines = [],
+    lspClient = null,
+    fileUri = null,
 ) {
     const extensions = [
         basicSetup,
@@ -259,6 +263,9 @@ export function getExtensions(
         ...extensions,
         editable.of(EditorView.editable.of(!readOnly)),
         MiniZinc(),
+        ...(lspClient && fileUri
+            ? [lspClient.plugin(fileUri, 'minizinc')]
+            : []),
         EditorView.updateListener.of(debounce(codeCheck, 250)),
     ];
 }

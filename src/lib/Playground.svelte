@@ -38,6 +38,8 @@
     import * as MiniZincLatest from 'https://cdn.jsdelivr.net/npm/minizinc/dist/minizinc.mjs';
     import * as MiniZincEdge from 'https://cdn.jsdelivr.net/npm/minizinc@edge/dist/minizinc.mjs';
     import { browserDarkMode, screenMobile } from './mediaQueries';
+    import * as shackle from './shackle.js';
+    import { createShackleLanguageServer, fileUri } from '@shackle-ls';
 
     /**
      * @typedef {Object} Props
@@ -48,6 +50,7 @@
      * @property {boolean} [showTabs]
      * @property {boolean} [canEditTabs]
      * @property {boolean} [compilationEnabled]
+     * @property {boolean} [shackleEnabled]
      * @property {any} project
      * @property {any[] | null} [enabledSolvers]
      * @property {boolean} [canEditSolverSettings]
@@ -90,6 +93,7 @@
         showTabs = true,
         canEditTabs = true,
         compilationEnabled = true,
+        shackleEnabled = import.meta.env.VITE_SHACKLE === 'true',
         project,
         enabledSolvers = null,
         canEditSolverSettings = true,
@@ -130,13 +134,20 @@
      * @type typeof MiniZincLatest
      */
     let MiniZinc;
+    let shackleLs = $state(null);
+    let languageServerLoading = Promise.resolve();
 
     let minizincVersions = $state({
         latest: { label: 'Latest', detail: 'stable' },
         edge: { label: 'Edge', detail: 'development' },
     });
+    let transpilationTargets = $state({
+        minizinc: { label: 'MiniZinc' },
+        microzinc: { label: 'MicroZinc' },
+    });
+    let transpilationTarget = $state('minizinc');
 
-    function loadSolvers(useEdge = edgeMiniZinc) {
+    function loadSolvers(useEdge = shackleEnabled || edgeMiniZinc) {
         const toLoad = useEdge ? MiniZincEdge : MiniZincLatest;
         if (MiniZinc !== toLoad) {
             busyCount++;
@@ -172,7 +183,18 @@
     const mounted = new Promise((resolve, _reject) => {
         onMount(() => {
             loadSolvers();
-            resolve();
+            if (shackleEnabled) {
+                languageServerLoading = createShackleLanguageServer()
+                    .then((server) => (shackleLs = server))
+                    .catch((error) => {
+                        // The solver remains usable when the optional diagnostics host fails.
+                        console.error(
+                            'Unable to start Shackle language server',
+                            error,
+                        );
+                    });
+            }
+            languageServerLoading.finally(resolve);
         });
     });
 
@@ -183,10 +205,11 @@
         }
         isLoadingProject = true;
         try {
-            edgeMiniZinc = project.minizincVersion === 'edge';
+            edgeMiniZinc = shackleEnabled || project.minizincVersion === 'edge';
             await mounted;
             files = [];
             await openFiles(project.files, autoFocus, false);
+            registerWorkspaceFiles();
             currentIndex = project.tab || 0;
             parameterModalParameters = {};
             await loadSolvers();
@@ -239,7 +262,31 @@
         }
         files[currentIndex] = { ...currentFile, state };
         files = files;
+        if (shackleLs && currentFile?.name.endsWith('.mzn')) {
+            shackleLs.client.notification('textDocument/didChange', {
+                textDocument: {
+                    uri: fileUri(currentFile.name),
+                    version: Date.now(),
+                },
+                contentChanges: [{ text: state.doc.toString() }],
+            });
+        }
         notifyProjectChanged();
+    }
+
+    function registerWorkspaceFiles() {
+        if (!shackleLs) return;
+        for (const file of files) {
+            if (!file.name.endsWith('.mzn')) continue;
+            shackleLs.client.notification('textDocument/didOpen', {
+                textDocument: {
+                    uri: fileUri(file.name),
+                    languageId: 'minizinc',
+                    version: 0,
+                    text: file.state.doc.toString(),
+                },
+            });
+        }
     }
 
     /** @param {{ files: Array<Record<string, any>>, tab?: number, solverId?: string }} e */
@@ -292,6 +339,23 @@
     let parameterModalParameters = $state({});
 
     let currentSolverIndex = $state(-1);
+
+    function extensionsFor(
+        suffix,
+        name,
+        readOnly = false,
+        protectedLines = [],
+    ) {
+        return getExtensions(
+            suffix,
+            checkCode,
+            darkMode,
+            readOnly,
+            protectedLines,
+            shackleLs?.client,
+            suffix === '.mzn' ? fileUri(name) : null,
+        );
+    }
 
     /** @param {any[]} _solvers @param {number} _currentSolverIndex */
     function enforceValidSolver(_solvers, _currentSolverIndex) {
@@ -360,10 +424,11 @@
             {
                 name,
                 state: EditorState.create({
-                    extensions: getExtensions(suffix, checkCode, darkMode),
+                    extensions: extensionsFor(suffix, name),
                 }),
             },
         ];
+        registerWorkspaceFiles();
         // The active index changes before the editor component has switched its
         // CodeMirror view. Wait for that switch before serialising the project,
         // otherwise getProject() captures the previous file's contents here.
@@ -388,10 +453,9 @@
             while (files.find((f) => f.name === name)) {
                 name = `${stem}-${i++}${suffix}`;
             }
-            const extensions = getExtensions(
+            const extensions = extensionsFor(
                 suffix,
-                checkCode,
-                darkMode,
+                name,
                 file.readOnly,
                 file.readOnlyLines,
             );
@@ -407,6 +471,7 @@
             });
         }
         files = [...files, ...toAdd];
+        registerWorkspaceFiles();
         await selectTab(files.length - 1, focus, saveCurrentFile);
         newFileRequested = false;
     }
@@ -426,11 +491,16 @@
         if (currentFile && !isLoadingProject) {
             currentFile.state = editor.getState();
         }
+        const oldName = files[index].name;
         files = [
             ...files.slice(0, index),
             { ...files[index], name: dest + suffix },
             ...files.slice(index + 1),
         ];
+        if (shackleLs && oldName.endsWith('.mzn')) {
+            shackleLs.removeProjectFile(oldName);
+            registerWorkspaceFiles();
+        }
         notifyProjectChanged();
     }
 
@@ -445,6 +515,7 @@
             currentFile.scrollLeft = editor.getView().scrollDOM.scrollLeft;
         }
         const createNew = visibleFileCount === 1 && !files[index].hidden;
+        const removed = files[index];
         files = [
             ...files.slice(0, index),
             ...files.slice(index + 1),
@@ -463,6 +534,9 @@
                   ]
                 : []),
         ];
+        registerWorkspaceFiles();
+        if (shackleLs && removed.name.endsWith('.mzn'))
+            shackleLs.removeProjectFile(removed.name);
         const newIndex = index < currentIndex ? currentIndex - 1 : currentIndex;
         deleteFileRequested = null;
         await selectTab(Math.min(newIndex, files.length - 1), true, false);
@@ -528,18 +602,13 @@
     }
 
     let getModelResolve = $state(null);
-    /** @param {boolean} addChecker */
-    async function getModel(addChecker) {
-        busyCount++;
-        currentFile.state = editor.getState();
+    /** Select the model/checker command line before assembling a native model. */
+    async function selectModel(addChecker) {
         let modelFile = isModel ? currentFile : null;
         if (!modelFile) {
             if (modelFiles.length === 0) {
-                // No models to run
-                busyCount--;
                 return false;
             } else if (modelFiles.length === 1) {
-                // Only one model, so use it
                 modelFile = files.find((f) => f.name === modelFiles[0]);
             } else {
                 try {
@@ -548,8 +617,6 @@
                         needsModel = true;
                     });
                     if (!result) {
-                        // Cancelled
-                        busyCount--;
                         return false;
                     }
                     modelFile = files.find((f) => f.name === result.modelFile);
@@ -561,9 +628,12 @@
 
         const baseFileList = [modelFile.name];
         if (addChecker) {
-            const modelFileName = modelFile.name.substring(
+            const sourceFileName = modelFile.name.endsWith('.shackle.mzn')
+                ? `${modelFile.name.slice(0, -'.shackle.mzn'.length)}.mzn`
+                : modelFile.name;
+            const modelFileName = sourceFileName.substring(
                 0,
-                modelFile.name.length - 4,
+                sourceFileName.length - 4,
             );
             const checker = files.find(
                 (f) =>
@@ -577,6 +647,23 @@
         if (modelFile !== currentFile) {
             baseFileList.push(currentFile.name);
         }
+        return { modelFile, baseFileList };
+    }
+
+    /**
+     * @param {boolean} addChecker
+     * @param {Record<string, string>} [overrides]
+     * @param {{ modelFile: Record<string, any>, baseFileList: string[] } | false} [selected]
+     */
+    async function getModel(addChecker, overrides = {}, selected = null) {
+        busyCount++;
+        currentFile.state = editor.getState();
+        const choice = selected || (await selectModel(addChecker));
+        if (!choice) {
+            busyCount--;
+            return false;
+        }
+        const { baseFileList } = choice;
 
         /**
          * Assemble a model whose command line is the base file list plus
@@ -596,7 +683,7 @@
             for (const file of files) {
                 model.addFile(
                     file.name,
-                    file.state.doc.toString(),
+                    overrides[file.name] ?? file.state.doc.toString(),
                     fileList.indexOf(file.name) !== -1,
                 );
             }
@@ -688,7 +775,28 @@
         return built;
     }
 
+    /** Let the browser paint disabled controls before synchronous WASM work. */
+    async function paintBusyState() {
+        await tick();
+        const nextFrame =
+            typeof requestAnimationFrame === 'function'
+                ? requestAnimationFrame
+                : (callback) => setTimeout(callback, 0);
+        await new Promise((resolve) => nextFrame(() => setTimeout(resolve, 0)));
+    }
+
     export async function run() {
+        if (busyCount !== 0 || isRunning) return;
+        busyCount++;
+        try {
+            if (shackleEnabled) await paintBusyState();
+            await runInner();
+        } finally {
+            busyCount--;
+        }
+    }
+
+    async function runInner() {
         if (isFzn) {
             const model = new MiniZinc.Model();
             model.addFile(currentFile.name, currentFile.state.doc.toString());
@@ -699,18 +807,115 @@
             await runWith(model, fileList, options);
             return;
         }
-        const mznModel = await getModel(true);
+        let overrides = {};
+        let shackleWarnings = [];
+        let selected = null;
+        if (shackleEnabled) {
+            selected = await selectModel(true);
+            if (!selected) return;
+            if (!selected.modelFile.name.endsWith('.shackle.mzn')) {
+                try {
+                    currentFile.state = editor.getState();
+                    const result = await shackle.transpile({
+                        entry: selected.modelFile.name,
+                        target: transpilationTarget,
+                        files: Object.fromEntries(
+                            files.map((file) => [
+                                file.name,
+                                file.state.doc.toString(),
+                            ]),
+                        ),
+                    });
+                    if (!result.ok) {
+                        shackleFailure(
+                            selected.baseFileList,
+                            result.diagnostics,
+                        );
+                        return;
+                    }
+                    overrides = { [selected.modelFile.name]: result.model };
+                    shackleWarnings = (result.warnings ?? []).map(
+                        (diagnostic) => shackleOutput(diagnostic, 'warning'),
+                    );
+                } catch (error) {
+                    shackleFailure(selected.baseFileList, [
+                        {
+                            message:
+                                error instanceof Error
+                                    ? error.message
+                                    : String(error),
+                        },
+                    ]);
+                    return;
+                }
+            }
+        }
+        const mznModel = await getModel(true, overrides, selected);
         if (!mznModel) {
             // Cancelled
             return;
         }
         const { model, fileList } = mznModel;
         const options = solverConfig.getSolvingConfiguration(currentSolver.id);
-        await runWith(model, fileList, options);
+        await runWith(model, fileList, options, shackleWarnings);
     }
 
-    /** @param {any} model @param {string[]} fileList @param {Record<string, any>} options */
-    async function runWith(model, fileList, options) {
+    /** Convert a WASM diagnostic into the output event shape. */
+    function shackleOutput(diagnostic, type = 'error') {
+        const location = diagnostic.filename
+            ? {
+                  filename: diagnostic.filename,
+                  firstLine: diagnostic.line ?? 1,
+                  firstColumn: diagnostic.column ?? 1,
+                  lastLine: diagnostic.line ?? 1,
+                  lastColumn:
+                      (diagnostic.column ?? 1) + (diagnostic.length ?? 0),
+              }
+            : undefined;
+        return { type, message: diagnostic.message, location };
+    }
+
+    /** Finish a failed WASM run using the normal Playground failure lifecycle. */
+    function shackleFailure(fileList, diagnostics, isCompile = false) {
+        const event = isCompile
+            ? { files: fileList, isCompile: true }
+            : { files: fileList };
+        onrunStarted?.(event);
+        hasRun = true;
+        if (autoClearOutput) output = [];
+        output = [
+            ...output,
+            isCompile
+                ? { files: fileList, isCompile: true, output: [] }
+                : { files: fileList, output: [] },
+        ];
+        for (const diagnostic of diagnostics)
+            addOutput(shackleOutput(diagnostic));
+        addOutput({ type: 'exit', code: 1, runTime: 0 });
+        onrunError?.(
+            isCompile
+                ? {
+                      files: fileList,
+                      isCompile: true,
+                      error: {
+                          message: diagnostics
+                              .map((item) => item.message)
+                              .join('\n'),
+                      },
+                  }
+                : {
+                      files: fileList,
+                      error: {
+                          message: diagnostics
+                              .map((item) => item.message)
+                              .join('\n'),
+                      },
+                  },
+        );
+    }
+
+    /** @param {any} model @param {string[]} fileList @param {Record<string, any>} options @param {any[]} [initialOutput] */
+    async function runWith(model, fileList, options, initialOutput = []) {
         onrunStarted?.({ files: fileList });
         hasRun = true;
         const startTime = Date.now();
@@ -724,6 +929,7 @@
                 output: [],
             },
         ];
+        for (const value of initialOutput) addOutput(value);
         minizinc = model.solve({
             options,
             jsonOutput: false,
@@ -763,6 +969,22 @@
     }
 
     export async function compile() {
+        if (busyCount !== 0 || isRunning) return;
+        busyCount++;
+        try {
+            if (shackleEnabled) await paintBusyState();
+            await compileInner();
+        } finally {
+            busyCount--;
+        }
+    }
+
+    async function compileInner() {
+        if (isFzn || isShackleModel) return;
+        if (shackleEnabled) {
+            await compileWithShackle();
+            return;
+        }
         hasRun = true;
         const mznModel = await getModel(true);
         if (!mznModel) {
@@ -834,6 +1056,79 @@
             });
         }
         minizinc = null;
+    }
+
+    async function compileWithShackle() {
+        const selected = await selectModel(true);
+        if (!selected) return;
+        currentFile.state = editor.getState();
+        const startTime = Date.now();
+        try {
+            const result = await shackle.transpile({
+                entry: selected.modelFile.name,
+                target: transpilationTarget,
+                files: Object.fromEntries(
+                    files.map((file) => [file.name, file.state.doc.toString()]),
+                ),
+            });
+            if (!result.ok) {
+                shackleFailure(selected.baseFileList, result.diagnostics, true);
+                return;
+            }
+            hasRun = true;
+            resetVisualisation();
+            onrunStarted?.({ files: selected.baseFileList, isCompile: true });
+            if (autoClearOutput) output = [];
+            output = [
+                ...output,
+                {
+                    files: selected.baseFileList,
+                    isCompile: true,
+                    output: [],
+                },
+            ];
+            for (const warning of result.warnings ?? []) {
+                addOutput(shackleOutput(warning, 'warning'));
+            }
+            const stem = selected.modelFile.name.slice(0, -4);
+            let outputName = `${stem}.shackle.mzn`;
+            let i = 1;
+            while (files.some((file) => file.name === outputName)) {
+                outputName = `${stem}-${i}.shackle.mzn`;
+                i++;
+            }
+            files = [
+                ...files,
+                {
+                    name: outputName,
+                    state: EditorState.create({
+                        extensions: getExtensions('.mzn', checkCode, darkMode),
+                        doc: result.model,
+                    }),
+                },
+            ];
+            await selectTab(files.length - 1);
+            notifyProjectChanged();
+            addOutput({
+                type: 'exit',
+                code: 0,
+                runTime: Date.now() - startTime,
+            });
+            onrunFinished?.({ files: selected.baseFileList, isCompile: true });
+        } catch (error) {
+            shackleFailure(
+                selected.baseFileList,
+                [
+                    {
+                        message:
+                            error instanceof Error
+                                ? error.message
+                                : String(error),
+                    },
+                ],
+                true,
+            );
+        }
     }
 
     function stop() {
@@ -1021,6 +1316,11 @@
     let prevText = null;
     /** @param {any} editor */
     async function checkCode(editor) {
+        if (shackleEnabled && shackleLs) {
+            // The LSP plugin owns document versions and diagnostics. In particular,
+            // do not run MiniZinc.Model#check in a flagged build.
+            return;
+        }
         const view = editor.view;
         if (
             busyCount !== 0 ||
@@ -1082,7 +1382,14 @@
 
     /** @param {{ item: any }} payload */
     function selectVersion({ item }) {
+        if (shackleEnabled) return;
         edgeMiniZinc = item === minizincVersions.edge;
+    }
+
+    /** @param {{ item: any }} payload */
+    function selectTranspilationTarget({ item }) {
+        transpilationTarget =
+            item === transpilationTargets.microzinc ? 'microzinc' : 'minizinc';
     }
 
     /** @param {boolean} dark */
@@ -1191,11 +1498,18 @@
                 currentFile.name.endsWith('.json')),
     );
     let isFzn = $derived(currentFile && currentFile.name.endsWith('.fzn'));
+    let isShackleModel = $derived(
+        currentFile && currentFile.name.endsWith('.shackle.mzn'),
+    );
     let canRun = $derived(
         busyCount === 0 && currentSolver && (isModel || isData || isFzn),
     );
     let canCompile = $derived(
-        busyCount === 0 && currentSolver && (isModel || isData),
+        busyCount === 0 &&
+            currentSolver &&
+            !isFzn &&
+            !isShackleModel &&
+            (isModel || isData),
     );
     let splitterShowPanel = $derived(
         !hideOutputOnStartup || hasRun ? 'all' : 'a',
@@ -1281,7 +1595,7 @@
                                         </button>
                                     </div>
                                 {/if}
-                                {#if !$screenMobile && showVersionSwitcher}
+                                {#if !$screenMobile && showVersionSwitcher && !shackleEnabled}
                                     <div class="control">
                                         <Dropdown
                                             items={versionItems}
@@ -1298,6 +1612,21 @@
                                                 </span>
                                             {/snippet}
                                         </Dropdown>
+                                    </div>
+                                {/if}
+                                {#if !$screenMobile && shackleEnabled}
+                                    <div class="control">
+                                        <Dropdown
+                                            items={Object.values(
+                                                transpilationTargets,
+                                            )}
+                                            currentItem={transpilationTargets[
+                                                transpilationTarget
+                                            ]}
+                                            onselectItem={selectTranspilationTarget}
+                                            disabled={isRunning}
+                                            title="Configure transpilation target"
+                                        />
                                     </div>
                                 {/if}
                                 {@render navbarRunButtons?.({
@@ -1422,7 +1751,7 @@
                                         <span>Solver configuration</span>
                                     </a>
                                 {/if}
-                                {#if showVersionSwitcher && !isRunning}
+                                {#if showVersionSwitcher && !shackleEnabled && !isRunning}
                                     <!-- svelte-ignore a11y_invalid_attribute -->
                                     <a
                                         class="navbar-item mobile-menu-item"

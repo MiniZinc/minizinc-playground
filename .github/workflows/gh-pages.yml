@@ -42,8 +42,13 @@ jobs:
         include:
           - branch: main
             base_path: ${{ vars.BASE_PATH }}
+            shackle: false
           - branch: develop
             base_path: ${{ vars.BASE_PATH }}/develop
+            shackle: false
+          - branch: develop
+            base_path: ${{ vars.BASE_PATH }}/shackle
+            shackle: true
     if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
     steps:
       - name: Checkout repo
@@ -54,6 +59,19 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: lts/*
+      - name: Download shackle-wasm package
+        if: matrix.shackle
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHACKLE_WASM_REPOSITORY: ${{ vars.SHACKLE_WASM_REPOSITORY || 'shackle-rs/shackle' }}
+        run: |
+          set -euo pipefail
+          tag="$(gh api --paginate "repos/$SHACKLE_WASM_REPOSITORY/releases?per_page=100" \
+            --jq '.[] | select(.tag_name | startswith("shackle-wasm-v")) | .tag_name' | head -1)"
+          test -n "$tag"
+          gh release download "$tag" --repo "$SHACKLE_WASM_REPOSITORY" \
+            --pattern shackle-wasm-pkg.tar.gz --dir "$RUNNER_TEMP"
+          tar -xzf "$RUNNER_TEMP/shackle-wasm-pkg.tar.gz"
       - name: Install dependencies
         run: npm ci
       - name: Check formatting
@@ -66,10 +84,13 @@ jobs:
         run: npm run build
         env:
           BASE_PATH: ${{ matrix.base_path }}
+          VITE_SHACKLE: ${{ matrix.shackle && 'true' || 'false' }}
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: playground-${{ matrix.branch }}
+          # The Shackle build has a distinct artifact name despite using the
+          # same source branch as the normal development deployment.
+          name: playground-${{ matrix.shackle && 'shackle' || matrix.branch }}
           path: dist/
 
   deploy:
@@ -92,6 +113,11 @@ jobs:
         with:
           name: playground-develop
           path: ${{ github.workspace }}/dist/develop
+      - name: Fetch Shackle build
+        uses: actions/download-artifact@v8
+        with:
+          name: playground-shackle
+          path: ${{ github.workspace }}/dist/shackle
       - name: Upload combined site as artifact
         uses: actions/upload-pages-artifact@v5
         with:
