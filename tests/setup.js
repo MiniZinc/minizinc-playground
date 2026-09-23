@@ -2,6 +2,11 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/svelte';
 import { afterEach, vi } from 'vitest';
 
+// jsdom does not implement URL.createObjectURL, while Node's implementation
+// rejects jsdom blobs. Component tests only need stable object URL placeholders.
+URL.createObjectURL = () => 'blob:mock';
+URL.revokeObjectURL = () => {};
+
 if (!window.matchMedia) {
     window.matchMedia = (media) => ({
         matches: false,
