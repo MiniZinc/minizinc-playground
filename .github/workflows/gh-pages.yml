@@ -64,12 +64,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           SHACKLE_WASM_REPOSITORY: ${{ vars.SHACKLE_WASM_REPOSITORY || 'shackle-rs/shackle' }}
+          SHACKLE_WASM_TAG: shackle-wasm-edge
         run: |
           set -euo pipefail
-          tag="$(gh api --paginate "repos/$SHACKLE_WASM_REPOSITORY/releases?per_page=100" \
-            --jq '.[] | select(.tag_name | startswith("shackle-wasm-v")) | .tag_name' | head -1)"
-          test -n "$tag"
-          gh release download "$tag" --repo "$SHACKLE_WASM_REPOSITORY" \
+          gh release download "$SHACKLE_WASM_TAG" --repo "$SHACKLE_WASM_REPOSITORY" \
             --pattern shackle-wasm-pkg.tar.gz --dir "$RUNNER_TEMP"
           tar -xzf "$RUNNER_TEMP/shackle-wasm-pkg.tar.gz"
       - name: Install dependencies
