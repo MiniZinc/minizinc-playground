@@ -161,6 +161,34 @@ test('disables Run and Compile while Shackle transpilation is pending', async ()
     await run;
 });
 
+test('keeps the edge runtime after Shackle initialisation', async () => {
+    transpile.mockResolvedValue({
+        ok: true,
+        model: 'solve satisfy;',
+        warnings: [],
+    });
+    const { component } = render(Playground, {
+        project: null,
+        autoFocus: false,
+        hideOutputOnStartup: false,
+        shackleEnabled: true,
+    });
+
+    await component.loadProject({
+        files: [{ name: 'model.mzn', contents: 'solve satisfy;' }],
+        solverId: 'org.minizinc.gecode_presolver',
+    });
+    const run = component.run();
+    await waitFor(() => expect(getLastOperation()).toBeTruthy());
+
+    expect(getLastOperation().model.runtime).toBe('edge');
+    expect(component.getMiniZincVersion()).toBe('version 4.5.1');
+    expect(component.getProject().minizincVersion).toBe('edge');
+
+    getLastOperation().resolve();
+    await run;
+});
+
 test('passes the selected MicroZinc target to Shackle', async () => {
     transpile.mockResolvedValue({
         ok: true,

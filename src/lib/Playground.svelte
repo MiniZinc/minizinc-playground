@@ -245,7 +245,7 @@
     }
 
     export function getMiniZincVersion() {
-        const key = edgeMiniZinc ? 'edge' : 'latest';
+        const key = shackleEnabled || edgeMiniZinc ? 'edge' : 'latest';
         return minizincVersions[key].detail;
     }
 
@@ -1251,7 +1251,7 @@
             tab: currentIndex,
             solverId: currentSolver.id,
             solverConfig: solverConfig.save(),
-            minizincVersion: edgeMiniZinc ? 'edge' : 'latest',
+            minizincVersion: shackleEnabled || edgeMiniZinc ? 'edge' : 'latest',
         };
     }
 
@@ -1466,7 +1466,7 @@
         minizincVersions.edge,
     ]);
     $effect(() => {
-        const useEdge = edgeMiniZinc;
+        const useEdge = shackleEnabled || edgeMiniZinc;
         untrack(() => loadSolvers(useEdge));
     });
     $effect(() => {
