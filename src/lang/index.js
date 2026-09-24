@@ -1,7 +1,7 @@
 import { parser } from './minizinc.grammar';
 import { basicSetup } from 'codemirror';
 import { Compartment } from '@codemirror/state';
-import { EditorView, keymap } from '@codemirror/view';
+import { EditorView, keymap, ViewPlugin } from '@codemirror/view';
 import { indentLess, indentMore } from '@codemirror/commands';
 import { createTheme } from 'thememirror';
 import {
@@ -167,6 +167,27 @@ export const lightThemeEffect = theme.reconfigure(lightTheme);
 export const darkThemeEffect = theme.reconfigure(darkTheme);
 
 /**
+ * Debounce code checks without letting their timers outlive the editor view.
+ *
+ * @param {(update: import('@codemirror/view').ViewUpdate) => Promise<void>} codeCheck
+ */
+function debouncedCodeCheck(codeCheck) {
+    return ViewPlugin.fromClass(
+        class {
+            check = debounce(codeCheck, 250);
+
+            update(update) {
+                this.check(update);
+            }
+
+            destroy() {
+                this.check.cancel();
+            }
+        },
+    );
+}
+
+/**
  * @param {string} suffix
  * @param {(editor: any) => Promise<void>} codeCheck
  * @param {boolean} darkMode
@@ -266,6 +287,6 @@ export function getExtensions(
         ...(lspClient && fileUri
             ? [lspClient.plugin(fileUri, 'minizinc')]
             : []),
-        EditorView.updateListener.of(debounce(codeCheck, 250)),
+        debouncedCodeCheck(codeCheck),
     ];
 }
