@@ -53,6 +53,7 @@ export async function solvers() {
 export class Model {
     constructor() {
         this.files = [];
+        this.runtime = 'latest';
         models.push(this);
     }
 

@@ -17,7 +17,10 @@ export default mergeConfig(
                     ),
                 'https://cdn.jsdelivr.net/npm/minizinc@edge/dist/minizinc.mjs':
                     fileURLToPath(
-                        new URL('./tests/mocks/minizinc.js', import.meta.url),
+                        new URL(
+                            './tests/mocks/minizinc-edge.js',
+                            import.meta.url,
+                        ),
                     ),
             },
         },
