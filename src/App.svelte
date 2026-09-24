@@ -365,8 +365,8 @@
         onrunFinished={(payload) => notifyEmbed('run-finished', payload)}
         onrunError={(payload) => notifyEmbed('run-error', payload)}
     >
-        {#if !embedded}
-            {#snippet navbarBeforeShareButtons({ isMobile })}
+        {#snippet navbarBeforeShareButtons({ isMobile })}
+            {#if !embedded}
                 {#if isMobile}
                     <!-- svelte-ignore a11y_invalid_attribute -->
                     <a
@@ -396,7 +396,9 @@
                         </div>
                     </div>
                 {/if}
-            {/snippet}
+            {/if}
+        {/snippet}
+        {#if !embedded}
             <RecentProjectsModal
                 projects={recentProjects}
                 active={openRecent}
