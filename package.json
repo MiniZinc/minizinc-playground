@@ -40,7 +40,7 @@
         "@codemirror/lang-json": "^6.0.2",
         "@fortawesome/fontawesome-svg-core": "^7.3.1",
         "@fortawesome/free-solid-svg-icons": "^7.3.1",
-        "@lezer/highlight": "^1.2.4",
+        "@lezer/highlight": "^1.2.5",
         "@lezer/lr": "^1.4.10",
         "bulma": "^1.0.4",
         "codemirror": "^6.0.2",
