@@ -28,9 +28,9 @@
         "minizinc": "^4.5.2",
         "prettier": "^3.9.10",
         "prettier-plugin-svelte": "^4.1.1",
-        "sass": "^1.105.2",
+        "sass": "^1.106.1",
         "svelte": "^5.57.2",
-        "vite": "^8.3.4",
+        "vite": "^8.3.5",
         "vitest": "^5.0.0"
     },
     "dependencies": {
