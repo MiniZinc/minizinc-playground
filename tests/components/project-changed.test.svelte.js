@@ -64,3 +64,34 @@ test('the reported project matches getProject()', async () => {
         component.getProject().files,
     );
 });
+
+test('preserves a new selection made before editor state is flushed', async () => {
+    const { component, container } = render(Playground, {
+        project: null,
+        autoFocus: false,
+    });
+    await component.loadProject(project);
+
+    const view = EditorView.findFromDOM(container.querySelector('.cm-editor'));
+    // Store a document state whose selection spans the original line. This
+    // schedules Svelte's prop update just as a real edit does.
+    view.dispatch({
+        changes: { from: view.state.doc.length, insert: '!' },
+        selection: { anchor: 0, head: view.state.doc.length },
+        userEvent: 'input.type',
+    });
+    // Before the scheduled prop update runs, select only `nt`.
+    view.dispatch({ selection: { anchor: 1, head: 3 } });
+    await Promise.resolve();
+
+    view.dispatch({
+        changes: {
+            from: view.state.selection.main.from,
+            to: view.state.selection.main.to,
+            insert: 'Z',
+        },
+        userEvent: 'input.type',
+    });
+
+    expect(view.state.doc.toString()).toBe('iZ: x = 1;!');
+});
