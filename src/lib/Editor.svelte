@@ -6,7 +6,7 @@
     /**
      * @typedef {Object} Props
      * @property {import('@codemirror/state').EditorState} [state]
-     * @property {(state: import('@codemirror/state').EditorState) => void} [onChange]
+     * @property {(state: import('@codemirror/state').EditorState, docChanged: boolean) => void} [onChange]
      */
     /** @type {Props} */
     let { state: editorState, onChange = () => {} } = $props();
@@ -27,9 +27,14 @@
             // user edit, and Playground reports project loads by itself.
             dispatchTransactions: (transactions, editorView) => {
                 editorView.update(transactions);
-                if (transactions.some((tr) => tr.docChanged)) {
-                    onChange(editorView.state);
-                }
+                // Keep the parent copy in sync for selection-only transactions
+                // too. A document edit can schedule a prop update; without the
+                // newer selection, that update can restore the old selection
+                // just before the next keystroke.
+                onChange(
+                    editorView.state,
+                    transactions.some((tr) => tr.docChanged),
+                );
             },
         });
     });

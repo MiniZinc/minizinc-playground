@@ -255,14 +255,17 @@
         }
     }
 
-    /** @param {import('@codemirror/state').EditorState} state */
-    function editorChanged(state) {
+    /**
+     * @param {import('@codemirror/state').EditorState} state
+     * @param {boolean} docChanged
+     */
+    function editorChanged(state, docChanged) {
         if (!currentFile) {
             return;
         }
         files[currentIndex] = { ...currentFile, state };
         files = files;
-        if (shackleLs && currentFile?.name.endsWith('.mzn')) {
+        if (docChanged && shackleLs && currentFile?.name.endsWith('.mzn')) {
             shackleLs.client.notification('textDocument/didChange', {
                 textDocument: {
                     uri: fileUri(currentFile.name),
@@ -271,7 +274,9 @@
                 contentChanges: [{ text: state.doc.toString() }],
             });
         }
-        notifyProjectChanged();
+        if (docChanged) {
+            notifyProjectChanged();
+        }
     }
 
     function registerWorkspaceFiles() {
