@@ -93,7 +93,6 @@
     .mzn-editor :global(.cm-mzn-underline-error),
     .mzn-editor :global(.cm-mzn-underline-warning) {
         position: relative;
-        display: inline-block;
     }
 
     .mzn-editor :global(.cm-mzn-underline-error),
