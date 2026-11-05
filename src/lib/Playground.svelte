@@ -33,7 +33,7 @@
     import SolverConfig from './SolverConfig.svelte';
     import Dropdown from './Dropdown.svelte';
     import { addErrors, lineCharToPos } from '../lang/underline';
-    import { onMount, tick, untrack } from 'svelte';
+    import { onDestroy, onMount, tick, untrack } from 'svelte';
 
     import * as MiniZincLatest from 'https://cdn.jsdelivr.net/npm/minizinc/dist/minizinc.mjs';
     import * as MiniZincEdge from 'https://cdn.jsdelivr.net/npm/minizinc@edge/dist/minizinc.mjs';
@@ -196,6 +196,13 @@
             }
             languageServerLoading.finally(resolve);
         });
+    });
+
+    // A debounced CodeMirror update can begin while Svelte is tearing down the
+    // component. Its callback must not access child bindings after that point.
+    let destroyed = false;
+    onDestroy(() => {
+        destroyed = true;
     });
 
     /** @param {Record<string, any> | null | undefined} project */
@@ -1321,15 +1328,17 @@
     let prevText = null;
     /** @param {any} editor */
     async function checkCode(editor) {
-        if (shackleEnabled && shackleLs) {
+        if (destroyed || (shackleEnabled && shackleLs)) {
             // The LSP plugin owns document versions and diagnostics. In particular,
             // do not run MiniZinc.Model#check in a flagged build.
             return;
         }
         const view = editor.view;
         if (
+            destroyed ||
             busyCount !== 0 ||
             !currentSolver ||
+            !solverConfig ||
             !currentFile ||
             !currentFile.name.endsWith('.mzn')
         ) {
@@ -1351,7 +1360,7 @@
                     currentSolver.id,
                 ),
             });
-            if (view.state.doc.toString() !== text) {
+            if (destroyed || view.state.doc.toString() !== text) {
                 // Out of date
                 return;
             }
