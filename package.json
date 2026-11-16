@@ -24,13 +24,13 @@
         "@testing-library/jest-dom": "^7.0.1",
         "@testing-library/svelte": "^5.4.2",
         "@vitest/ui": "^5.1.0",
-        "jsdom": "^31.0.0",
+        "jsdom": "^31.0.1",
         "minizinc": "^4.5.2",
-        "prettier": "^3.9.10",
+        "prettier": "^3.10.1",
         "prettier-plugin-svelte": "^4.1.1",
-        "sass": "^1.108.0",
+        "sass": "^1.108.2",
         "svelte": "^5.57.3",
-        "vite": "^8.3.6",
+        "vite": "^8.3.8",
         "vitest": "^5.0.0"
     },
     "dependencies": {
