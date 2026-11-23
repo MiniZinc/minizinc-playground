@@ -97,8 +97,10 @@
                 <button
                     class="button"
                     type="button"
-                    onclick={() => oncancel?.()}>Cancel</button
+                    onclick={() => oncancel?.()}
                 >
+                    Cancel
+                </button>
             </div>
         {/snippet}
     </Modal>
@@ -158,16 +160,17 @@
             <p class="menu-label">Import</p>
             <ul class="menu-list">
                 <li>
-                    <button type="button" onclick={() => fileInput.click()}
-                        >Upload file(s)</button
-                    >
+                    <button type="button" onclick={() => fileInput.click()}>
+                        Upload file(s)
+                    </button>
                 </li>
                 <li>
                     <button
                         type="button"
                         onclick={() => (importingFromUrl = true)}
-                        >Import from URL</button
                     >
+                        Import from URL
+                    </button>
                 </li>
             </ul>
         </aside>

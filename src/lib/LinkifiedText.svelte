@@ -55,8 +55,10 @@
             class="ext-link"
             href={part.href}
             target="_blank"
-            rel="noopener noreferrer">{part.text}</a
+            rel="noopener noreferrer"
         >
+            {part.text}
+        </a>
     {:else}
         {part.text}
     {/if}
