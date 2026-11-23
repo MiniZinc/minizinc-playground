@@ -189,9 +189,9 @@
                         type="checkbox"
                         bind:checked={config.verboseCompilation}
                     />
-                    <label for="enable-verbose-compile"
-                        >Verbose compilation</label
-                    >
+                    <label for="enable-verbose-compile">
+                        Verbose compilation
+                    </label>
                 </p>
             </div>
 
@@ -203,8 +203,9 @@
                             type="checkbox"
                             bind:checked={config.verboseSolving}
                         />
-                        <label for="enable-verbose-solve">Verbose solving</label
-                        >
+                        <label for="enable-verbose-solve">
+                            Verbose solving
+                        </label>
                     </p>
                 </div>
             {/if}
@@ -216,9 +217,9 @@
                         type="checkbox"
                         bind:checked={config.compilerStatistics}
                     />
-                    <label for="enable-compilation-satistics"
-                        >Compilation statistics</label
-                    >
+                    <label for="enable-compilation-satistics">
+                        Compilation statistics
+                    </label>
                 </p>
             </div>
 
@@ -230,9 +231,9 @@
                             type="checkbox"
                             bind:checked={config.solvingStatistics}
                         />
-                        <label for="enable-solving-satistics"
-                            >Solving statistics</label
-                        >
+                        <label for="enable-solving-satistics">
+                            Solving statistics
+                        </label>
                     </p>
                 </div>
             {/if}
@@ -244,9 +245,9 @@
                         type="checkbox"
                         bind:checked={config.outputTime}
                     />
-                    <label for="enable-timing-information"
-                        >Timing information</label
-                    >
+                    <label for="enable-timing-information">
+                        Timing information
+                    </label>
                 </p>
             </div>
 
@@ -258,8 +259,10 @@
                     <button
                         type="button"
                         class="button is-danger"
-                        onclick={reset}>Reset to defaults</button
+                        onclick={reset}
                     >
+                        Reset to defaults
+                    </button>
                 </p>
             </div>
         </form>

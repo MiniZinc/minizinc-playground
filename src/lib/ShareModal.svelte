@@ -105,8 +105,10 @@
                         event.preventDefault();
                         activeTab = 'link';
                         copied = false;
-                    }}>Link</a
+                    }}
                 >
+                    Link
+                </a>
             </li>
             <li class:is-active={activeTab === 'embed'}>
                 <a
@@ -115,8 +117,10 @@
                         event.preventDefault();
                         activeTab = 'embed';
                         copied = false;
-                    }}>Embed</a
+                    }}
                 >
+                    Embed
+                </a>
             </li>
         </ul>
     </div>
@@ -150,9 +154,9 @@
         <details class="advanced-options-details">
             <summary>Advanced options</summary>
             <div class="field advanced-options">
-                <label class="label" for="embed-options"
-                    >Embed options (JSON)</label
-                >
+                <label class="label" for="embed-options">
+                    Embed options (JSON)
+                </label>
                 <div class="control">
                     <textarea
                         id="embed-options"

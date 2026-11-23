@@ -1778,11 +1778,11 @@
                                         <span class="icon">
                                             <Fa icon={faShuffle} />
                                         </span>
-                                        <span
-                                            >Switch to the {edgeMiniZinc
+                                        <span>
+                                            Switch to the {edgeMiniZinc
                                                 ? 'latest'
-                                                : 'edge'} version of MiniZinc</span
-                                        >
+                                                : 'edge'} version of MiniZinc
+                                        </span>
                                     </a>
                                 {/if}
                                 {@render navbarBeforeShareButtons?.({
@@ -1944,8 +1944,10 @@
                                                         href="javascript:void(0);"
                                                         onclick={() => {
                                                             visualisationOpen = false;
-                                                        }}>Output</a
+                                                        }}
                                                     >
+                                                        Output
+                                                    </a>
                                                 </li>
                                                 <li
                                                     class:is-active={visualisationOpen}
@@ -1956,8 +1958,10 @@
                                                         href="javascript:void(0);"
                                                         onclick={() => {
                                                             visualisationOpen = true;
-                                                        }}>Visualisation</a
+                                                        }}
                                                     >
+                                                        Visualisation
+                                                    </a>
                                                 </li>
                                                 {#if canSwitchOrientation}
                                                     <li class="tab-end">
@@ -1966,11 +1970,11 @@
                                                             title="Switch orientation"
                                                             onclick={switchOrientation}
                                                         >
-                                                            <span class="icon"
-                                                                ><Fa
+                                                            <span class="icon">
+                                                                <Fa
                                                                     icon={faRotate}
-                                                                /></span
-                                                            >
+                                                                />
+                                                            </span>
                                                         </button>
                                                     </li>
                                                 {/if}
@@ -2015,11 +2019,11 @@
                                                             title="Switch orientation"
                                                             onclick={switchOrientation}
                                                         >
-                                                            <span class="icon"
-                                                                ><Fa
+                                                            <span class="icon">
+                                                                <Fa
                                                                     icon={faRotate}
-                                                                /></span
-                                                            >
+                                                                />
+                                                            </span>
                                                         </button>
                                                     {/if}
                                                 </p>
@@ -2062,9 +2066,9 @@
             oncancel={() => (deleteFileRequested = null)}
         >
             <p>
-                Are you sure you wish to delete <code
-                    >{files[deleteFileRequested].name}</code
-                >?
+                Are you sure you wish to delete <code>
+                    {files[deleteFileRequested].name}
+                </code>?
             </p>
             <p>This cannot be undone.</p>
             {#snippet footer()}
@@ -2079,8 +2083,9 @@
                         type="button"
                         class="button"
                         onclick={() => (deleteFileRequested = null)}
-                        >Cancel</button
                     >
+                        Cancel
+                    </button>
                 </div>
             {/snippet}
         </Modal>
